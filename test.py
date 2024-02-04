@@ -1,8 +1,6 @@
-import pandas as pd
-
-filepath = 'tc2000.txt'
-df = pd.read_csv(filepath, parse_dates=[0], dayfirst=True)
-
-print(df)
-
-
+gg = ['v', 'o', 'v', 'a']
+engg = enumerate(gg)
+print(engg)
+for i, s in engg:
+    if i < 4:
+        print(s)
