@@ -9,7 +9,7 @@ file_pattern = '*.txt'
 file_list = glob.glob(file_pattern)
 print('Files list: ', file_list)
 
-data_frames = [pd.read_csv(file) for file in file_list]
+data_frames = [pd.read_csv(file).assign(Filename=file) for file in file_list]
 print('Dataframes from each csv: ', data_frames)
 
 merged_df = pd.concat(data_frames, ignore_index=True)
@@ -18,17 +18,22 @@ print('Merged dataframes: ', merged_df)
 
 merged_df.to_csv(f'merged_data.csv', index=False)
 
-# file_path = 'merged_data.csv'
+file_path = 'merged_data.csv'
 # file_path = 'exel.txt'
-file_path = 'spr.txt'
+# file_path = 'spr.txt'
 # file_path = 'zim.txt'
 # file_path = 'extr.txt'
 # file_path = 'aehr.txt'
+# file_path = 'neog.txt'
 
-columns_to_parce = ['Date', 'Open', 'High', 'Low', 'Close']
+
+columns_to_parce = ['Date', 'Open', 'High', 'Low', 'Close', 'Filename']
 
 df = pd.read_csv(file_path, parse_dates=[0], dayfirst=True, usecols=columns_to_parce, index_col=0)
 print('Dataframe from merged csv: ', df)
+
+file_name = df['Filename']
+print('HERE', file_name)
 
 # Converting to numeric dates in order to plot multiple charts within the same dates range
 numeric_dates = date2num(df.index)
@@ -36,7 +41,7 @@ print('Numeric dates: ', numeric_dates)
 
 
 # Pattern type
-signal = talib.CDL3OUTSIDE(df['Open'], df['High'], df['Low'], df['Close'])
+signal = talib.CDL3INSIDE(df['Open'], df['High'], df['Low'], df['Close'])
 print(list(enumerate(signal)))
 
 # Print the signals
@@ -64,15 +69,16 @@ print('date_time_dates: ', date_time_dates)
 for i, s in enumerate(signal):
     if s == 100:
         signal_date = date_time_dates[i].strftime("%d-%m-%Y-%H-%M")
-        annotation_text = f'Bullish signal on {signal_date}'
+        file_name = df['Filename'].iloc[i]
+        annotation_text = f'Bullish signal on {signal_date} in {file_name}'
         plt.annotate(annotation_text, xy=(numeric_dates[i], df['Close'].iloc[i]),
-                     xytext=(numeric_dates[i], df['Close'].iloc[i] + 1),
+                     xytext=(numeric_dates[i], df['Close'].iloc[i] + 0.1),
                      arrowprops=dict(arrowstyle='->'))
     elif s == -100:
         signal_date = date_time_dates[i].strftime("%d-%m-%Y-%H-%M")
-        annotation_text = f'Bearish signal on {signal_date}'
+        annotation_text = f'Bearish signal on {signal_date} {file_path}'
         plt.annotate(annotation_text, xy=(numeric_dates[i], df['Close'].iloc[i]),
-                     xytext=(numeric_dates[i], df['Close'].iloc[i] + 1),
+                     xytext=(numeric_dates[i], df['Close'].iloc[i] + 0.1),
                      arrowprops=dict(arrowstyle='->'))
 
 
