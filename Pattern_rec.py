@@ -18,9 +18,9 @@ print('Merged dataframes: ', merged_df)
 
 merged_df.to_csv(f'merged_data.csv', index=False)
 
-file_path = 'merged_data.csv'
+# file_path = 'merged_data.csv'
 # file_path = 'exel.txt'
-# file_path = 'spr.txt'
+file_path = 'spr.txt'
 # file_path = 'zim.txt'
 # file_path = 'extr.txt'
 # file_path = 'aehr.txt'
@@ -49,7 +49,7 @@ for i, s in enumerate(signal):
 # Plot chart
 plt.figure(figsize=(15, 8))
 plt.plot(numeric_dates, df['Close'], label='Stock Prices', marker='o')
-plt.title('Line chart')
+plt.title(f'{file_path}'.upper())
 plt.xlabel('Index')
 plt.ylabel('Price')
 plt.legend()
