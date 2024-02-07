@@ -72,7 +72,7 @@ def date_range():
 
     on_off = True
 
-    if on_off == True:
+    if on_off is True:
         start_date = '2023-06-23'
         end_date = '2023-06-23'
 
