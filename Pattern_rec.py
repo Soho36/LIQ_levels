@@ -56,6 +56,8 @@ print('\nDatafiles in folder: ', file_names)
 # file_path = 'TXT/tsla_m1.csv'
 # file_path = 'TXT/MT4/BTCUSD_D1.csv'
 file_path = 'TXT/MT4/BTCUSD_m5.csv'
+# file_path = 'TXT/MT4/BTCUSD60.csv'
+
 
 print('\nCurrent file is: ', file_path)
 
@@ -68,13 +70,13 @@ print('\nDataframe from csv: ', df_csv.head())
 
 
 # Parsing date range
-def date_range():
+def date_range_func():
 
     on_off = True
 
     if on_off:
         start_date = '2023-06-23'
-        end_date = '2023-06-23'
+        end_date = '2024-06-23'
 
         # start_date = pd.to_datetime(start_date)
         # end_date = pd.to_datetime(end_date)
@@ -91,7 +93,8 @@ def date_range():
         print('df_filtered_by_date: ', df_filtered_by_date)
         print(df_filtered_by_date.info())
 
-date_range()
+
+date_range_func()
 
 
 #  ----------------------------------------------
@@ -101,7 +104,7 @@ date_range()
 
 df_pattern = pd.read_csv('Ta-lib patterns.csv')  # Reading Pattern codes from CSV
 
-idx = 2     # Choose the index of pattern here (from Ta-lib patterns.csv)
+idx = 16     # Choose the index of pattern here (from Ta-lib patterns.csv)
 pattern_code = df_pattern['PatternCode'].iloc[idx]
 pattern_name = df_pattern['PatternName'].iloc[idx]
 print('Current Pattern is: ', pattern_code, pattern_name)
@@ -131,9 +134,6 @@ print_signals()
 #  ----------------------------------------------
 #  PLOT CHART
 #  ----------------------------------------------
-
-
-
 
 
 def plot_chart():
@@ -178,13 +178,13 @@ def highlight_signal_on_chart():
                 annotation_text = f'Bullish signal on {signal_date} in {file_name}'
                 # the point where the arrow will be pointing to:
                 plt.annotate(annotation_text, xy=(df_csv['Datetime'].iloc[i], df_csv['Close'].iloc[i]),
-                             xytext=(df_csv['Datetime'].iloc[i], df_csv['Close'].iloc[i] + 500),
+                             xytext=(df_csv['Datetime'].iloc[i], df_csv['Close'].iloc[i] + 100),
                              arrowprops=dict(arrowstyle='->'))
             elif s == -100:
                 signal_date = date_time_dates[i].strftime("%d-%m-%Y-%H-%M")
                 annotation_text = f'Bearish signal on {signal_date} {file_path}'
                 plt.annotate(annotation_text, xy=(df_csv['Datetime'].iloc[i], df_csv['Close'].iloc[i]),
-                             xytext=(df_csv['Datetime'].iloc[i], df_csv['Close'].iloc[i] + 500),
+                             xytext=(df_csv['Datetime'].iloc[i], df_csv['Close'].iloc[i] + 100),
                              arrowprops=dict(arrowstyle='->'))
 
 
