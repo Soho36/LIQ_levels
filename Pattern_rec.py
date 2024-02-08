@@ -3,7 +3,7 @@ import pandas as pd
 import glob
 import os
 import matplotlib.pyplot as plt
-from matplotlib.dates import date2num
+# from matplotlib.dates import date2num
 
 
 #  ----------------------------------------------
@@ -14,7 +14,7 @@ def merging_files():
 
     need_merge = False
 
-    if need_merge is True:
+    if need_merge:
         folder_path = 'TXT'
         file_pattern = f'{folder_path}/*.csv'
         file_list = glob.glob(file_pattern)
@@ -72,7 +72,7 @@ def date_range():
 
     on_off = True
 
-    if on_off is True:
+    if on_off:
         start_date = '2023-06-23'
         end_date = '2023-06-23'
 
@@ -89,7 +89,7 @@ def date_range():
 
         df_filtered_by_date = df_csv[dates_in_range]
         print('df_filtered_by_date: ', df_filtered_by_date)
-
+        print(df_filtered_by_date.info())
 
 date_range()
 
@@ -115,14 +115,14 @@ signal = pattern_function(df_csv['Open'], df_csv['High'], df_csv['Low'], df_csv[
 
 def print_signals():
 
-    on_off = True
+    on_off = False
 
-    if on_off is True:
+    if on_off:
         for i, s in enumerate(signal):
             if s == 100:
-                print("Signal bullish:", s)
+                print("Signal bullish:", i, s)
             elif s == -100:
-                print("Signal bearish:", s)
+                print("Signal bearish:", i, s)
 
 
 print_signals()
@@ -132,16 +132,18 @@ print_signals()
 #  PLOT CHART
 #  ----------------------------------------------
 
-# Converting to numeric dates in order to plot multiple charts within the same dates range
-numeric_dates = date2num(df_csv.index)
+
+
+
 
 def plot_chart():
 
     on_off = True
 
     if on_off is True:
+        df_csv['Datetime'] = df_csv['Date'] + pd.to_timedelta(df_csv['Time'])
         plt.figure(figsize=(15, 8))
-        plt.plot(numeric_dates, df_csv['Close'], label='Ticker prices', marker='o')
+        plt.plot(df_csv['Datetime'], df_csv['Close'], label='Ticker prices', marker='o')
         plt.title(f'{file_path}'.upper())
         plt.xlabel('Index')
         plt.ylabel('Price')
@@ -150,30 +152,39 @@ def plot_chart():
 
 plot_chart()
 
+# Converting to numeric dates in order to plot multiple charts within the same dates range
+# numeric_dates = date2num(df_csv['Datetime'])
+# print('numeric_dates', numeric_dates)
 # Converting numeric dates back to daytime in order to print a date Signal occurred
-date_time_dates = pd.to_datetime(numeric_dates, unit='D')
+
 
 #  ----------------------------------------------
 #  HIGHLIGHT SIGNALS
 #  ----------------------------------------------
+
+date_time_dates = pd.to_datetime(df_csv['Datetime'])
+print('date_time_dates', date_time_dates)
+
+
 def highlight_signal_on_chart():
 
-    on_off = False
+    on_off = True
 
-    if on_off is True:
+    if on_off:
         for i, s in enumerate(signal):
             if s == 100:
                 signal_date = date_time_dates[i].strftime("%d-%m-%Y-%H-%M")
                 file_name = df_csv['Filename'].iloc[i]
                 annotation_text = f'Bullish signal on {signal_date} in {file_name}'
-                plt.annotate(annotation_text, xy=(numeric_dates[i], df_csv['Close'].iloc[i]),
-                             xytext=(numeric_dates[i], df_csv['Close'].iloc[i] + 0.1),
+                # the point where the arrow will be pointing to:
+                plt.annotate(annotation_text, xy=(df_csv['Datetime'].iloc[i], df_csv['Close'].iloc[i]),
+                             xytext=(df_csv['Datetime'].iloc[i], df_csv['Close'].iloc[i] + 500),
                              arrowprops=dict(arrowstyle='->'))
             elif s == -100:
                 signal_date = date_time_dates[i].strftime("%d-%m-%Y-%H-%M")
                 annotation_text = f'Bearish signal on {signal_date} {file_path}'
-                plt.annotate(annotation_text, xy=(numeric_dates[i], df_csv['Close'].iloc[i]),
-                             xytext=(numeric_dates[i], df_csv['Close'].iloc[i] + 0.1),
+                plt.annotate(annotation_text, xy=(df_csv['Datetime'].iloc[i], df_csv['Close'].iloc[i]),
+                             xytext=(df_csv['Datetime'].iloc[i], df_csv['Close'].iloc[i] + 500),
                              arrowprops=dict(arrowstyle='->'))
 
 
