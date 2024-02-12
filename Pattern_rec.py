@@ -25,7 +25,7 @@ def merging_files():
         print('Dataframes from each csv: ', data_frames)
 
         for file, dataframe in zip(file_list, data_frames):       # Writing dataframe to each CSV
-            df_csv.to_csv(file, index=False)
+            dataframe_from_csv.to_csv(file, index=False)
 
         merged_df = pd.concat(data_frames, ignore_index=True)
         print('Merged dataframes: ', merged_df.head())
@@ -34,7 +34,6 @@ def merging_files():
 
 
 merging_files()
-
 
 directory_path = 'TXT/'  # Making a list of files in TXT folder
 file_names = []
@@ -55,8 +54,8 @@ print('\nDatafiles in folder: ', file_names)
 # file_path = 'TXT/tsla_m5.csv'
 # file_path = 'TXT/tsla_m1.csv'
 # file_path = 'TXT/MT4/BTCUSD_D1.csv'
-file_path = 'TXT/MT4/BTCUSD_m5.csv'
 # file_path = 'TXT/MT4/BTCUSD60.csv'
+file_path = 'TXT/MT4/BTCUSD_m5.csv'
 
 
 print('\nCurrent file is: ', file_path)
@@ -64,93 +63,97 @@ print('\nCurrent file is: ', file_path)
 columns_to_parce = ['Date', 'Time', 'Open', 'High', 'Low', 'Close', 'Filename']
 
 #  for MT4 files set dayfirst=False
-df_csv = pd.read_csv(file_path, parse_dates=[0], dayfirst=False, usecols=columns_to_parce)
-print('\nDataframe from csv: ', df_csv.head())
-# print(df_csv.info())
+dataframe_from_csv = pd.read_csv(file_path, parse_dates=[0], dayfirst=False, usecols=columns_to_parce)
+print('\nDataframe derived from CSV: \n', dataframe_from_csv.head())
 
 
 # Parsing date range
-def date_range_func():
+def date_range_func(df):
 
     on_off = True
 
     if on_off:
         start_date = '2023-06-23'
-        end_date = '2024-06-23'
-
-        # start_date = pd.to_datetime(start_date)
-        # end_date = pd.to_datetime(end_date)
-        # print(start_date)
-        # print(end_date)
+        end_date = '2023-11-25'
 
         date_range = pd.date_range(start=start_date, end=end_date, freq='D')
-        print('Date range: ', list(date_range))
+        print('Date range: \n', list(date_range))
 
-        date_column = df_csv['Date']
-        dates_in_range = date_column.isin(date_range)
+        date_column = df['Date']        # Select the 'Date' column from the DataFrame
+        dates_in_range = date_column.isin(date_range)   # checks which dates from date_column fall within the generated
+        # date range, resulting in a boolean mask
 
-        df_filtered_by_date = df_csv[dates_in_range]
-        print('df_filtered_by_date: ', df_filtered_by_date)
-        print(df_filtered_by_date.info())
+        df_filtered_by_date = df[dates_in_range]
+        return df_filtered_by_date
 
 
-date_range_func()
+filtered_by_date_dataframe = date_range_func(dataframe_from_csv)
+print('Filtered by date dataframe: \n', filtered_by_date_dataframe)
 
 
 #  ----------------------------------------------
 #  PATTERN RECOGNITION
 #  ----------------------------------------------
 
-
-df_pattern = pd.read_csv('Ta-lib patterns.csv')  # Reading Pattern codes from CSV
-
-idx = 16     # Choose the index of pattern here (from Ta-lib patterns.csv)
-pattern_code = df_pattern['PatternCode'].iloc[idx]
-pattern_name = df_pattern['PatternName'].iloc[idx]
-print('Current Pattern is: ', pattern_code, pattern_name)
-
-pattern_function = getattr(talib, pattern_code)
-signal = pattern_function(df_csv['Open'], df_csv['High'], df_csv['Low'], df_csv['Close'])
+patterns_dataframe = pd.read_csv('Ta-lib patterns.csv')
 
 
+def pattern_recognition_func(patterns_df):  # Reading Pattern codes from CSV
+
+    idx = 16     # Choose the index of pattern here (from Ta-lib patterns.csv)
+    pattern_code = patterns_df['PatternCode'].iloc[idx]
+    pattern_name = patterns_df['PatternName'].iloc[idx]
+    print('Current Pattern is: ', pattern_code, pattern_name)
+
+    pattern_function = getattr(talib, pattern_code)
+    signal = pattern_function(filtered_by_date_dataframe['Open'], filtered_by_date_dataframe['High'],
+                              filtered_by_date_dataframe['Low'], filtered_by_date_dataframe['Close'])
+
+    return signal
+
+
+recognized_pattern = pattern_recognition_func(patterns_dataframe)
 # Print the signals if any
 
 
-def print_signals():
+def print_signals_to_cmd():
 
     on_off = False
 
     if on_off:
-        for i, s in enumerate(signal):
+        for i, s in enumerate(recognized_pattern):
             if s == 100:
                 print("Signal bullish:", i, s)
             elif s == -100:
                 print("Signal bearish:", i, s)
 
 
-print_signals()
+print_signals_to_cmd()
 
 
 #  ----------------------------------------------
 #  PLOT CHART
 #  ----------------------------------------------
 
+#  Adding datetime column to dataframe
 
-def plot_chart():
+filtered_by_date_dataframe = (filtered_by_date_dataframe.assign(
+    Datetime=(filtered_by_date_dataframe['Date'] + pd.to_timedelta(filtered_by_date_dataframe['Time']))))
 
+
+def plot_chart(df):
     on_off = True
 
-    if on_off is True:
-        df_csv['Datetime'] = df_csv['Date'] + pd.to_timedelta(df_csv['Time'])
+    if on_off:
         plt.figure(figsize=(15, 8))
-        plt.plot(df_csv['Datetime'], df_csv['Close'], label='Ticker prices', marker='o')
+        plt.plot(df['Datetime'], df['Close'], label='Ticker prices', marker='o')
         plt.title(f'{file_path}'.upper())
         plt.xlabel('Index')
         plt.ylabel('Price')
         plt.legend()
 
 
-plot_chart()
+plot_chart(filtered_by_date_dataframe)
 
 # Converting to numeric dates in order to plot multiple charts within the same dates range
 # numeric_dates = date2num(df_csv['Datetime'])
@@ -162,32 +165,32 @@ plot_chart()
 #  HIGHLIGHT SIGNALS
 #  ----------------------------------------------
 
-date_time_dates = pd.to_datetime(df_csv['Datetime'])
-print('date_time_dates', date_time_dates)
+
+date_time_dates = pd.to_datetime(filtered_by_date_dataframe['Datetime'])
+print('Date_time_dates: \n', date_time_dates)
 
 
-def highlight_signal_on_chart():
-
+def highlight_signal_on_chart(df):
     on_off = True
 
     if on_off:
-        for i, s in enumerate(signal):
+        for i, s in enumerate(recognized_pattern):
             if s == 100:
-                signal_date = date_time_dates[i].strftime("%d-%m-%Y-%H-%M")
-                file_name = df_csv['Filename'].iloc[i]
+                signal_date = df['Datetime'].iloc[i].strftime("%d-%m-%Y-%H-%M")
+                file_name = df['Filename'].iloc[i]
                 annotation_text = f'Bullish signal on {signal_date} in {file_name}'
                 # the point where the arrow will be pointing to:
-                plt.annotate(annotation_text, xy=(df_csv['Datetime'].iloc[i], df_csv['Close'].iloc[i]),
-                             xytext=(df_csv['Datetime'].iloc[i], df_csv['Close'].iloc[i] + 100),
+                plt.annotate(annotation_text, xy=(df['Datetime'].iloc[i], df['Close'].iloc[i]),
+                             xytext=(df['Datetime'].iloc[i], df['Close'].iloc[i] + 100),
                              arrowprops=dict(arrowstyle='->'))
             elif s == -100:
-                signal_date = date_time_dates[i].strftime("%d-%m-%Y-%H-%M")
+                signal_date = df['Datetime'].iloc[i].strftime("%d-%m-%Y-%H-%M")
                 annotation_text = f'Bearish signal on {signal_date} {file_path}'
-                plt.annotate(annotation_text, xy=(df_csv['Datetime'].iloc[i], df_csv['Close'].iloc[i]),
-                             xytext=(df_csv['Datetime'].iloc[i], df_csv['Close'].iloc[i] + 100),
+                plt.annotate(annotation_text, xy=(df['Datetime'].iloc[i], df['Close'].iloc[i]),
+                             xytext=(df['Datetime'].iloc[i], df['Close'].iloc[i] + 100),
                              arrowprops=dict(arrowstyle='->'))
 
 
-highlight_signal_on_chart()
+highlight_signal_on_chart(filtered_by_date_dataframe)
 
 plt.show()
