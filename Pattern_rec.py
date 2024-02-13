@@ -158,6 +158,7 @@ def highlight_signal_on_chart(df):
             elif s == -100:
                 signal_date = df['Datetime'].iloc[i].strftime("%d-%m-%Y-%H-%M")
                 annotation_text = f'Bearish signal on {signal_date} {file_path}'
+                # the point where the arrow will be pointing to:
                 plt.annotate(annotation_text, xy=(df['Datetime'].iloc[i], df['Close'].iloc[i]),
                              xytext=(df['Datetime'].iloc[i], df['Close'].iloc[i] + 100),
                              arrowprops=dict(arrowstyle='->'))
