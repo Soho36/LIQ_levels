@@ -23,8 +23,8 @@ import numpy as np
 file_path = 'TXT/MT4/BTCUSD_m5.csv'
 # ------------------------------------------
 start_date = '2024-01-01'     # Choose the start date to begin from
-end_date = '2024-01-01'     # Choose the end date
-code_of_pattern = 6     # Choose the index of pattern (from Ta-lib patterns.csv)
+end_date = '2024-01-02'     # Choose the end date
+code_of_pattern = 9     # Choose the index of pattern (from Ta-lib patterns.csv)
 
 
 def getting_dataframe_from_file(path):
@@ -183,7 +183,8 @@ def plot_candlestick_chart(df, signals):
         for i, s in enumerate(signals):     # Iterate over signals and add non-zero signals to add_plots
             if s != 0:
                 # Add the signals as a subplot
-                add_plots.append(mpf.make_addplot(signals_with_nan, type='scatter', markersize=1000, marker='+', panel=0))
+                add_plots.append(mpf.make_addplot(signals_with_nan,
+                                                  type='scatter', color='black', markersize=250, marker='+', panel=0))
                 # Plot candlestick chart with additional plot
                 print(add_plots)
 

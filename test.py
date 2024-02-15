@@ -6,3 +6,4 @@ if signals is not None and not signals.empty:
 # Plot candlestick chart with additional plot
 mpf.plot(df, type='candle', figsize=(15, 8), title=f'{file_path}'.upper(), ylabel='Price', addplot=add_plots)
 print('Signals are plotted to candlestick chart')
+
