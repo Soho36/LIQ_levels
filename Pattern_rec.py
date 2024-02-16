@@ -12,19 +12,23 @@ import numpy as np
 # file_path = 'TXT/zim.csv'
 # file_path = 'TXT/extr.csv'
 # file_path = 'TXT/aehr.csv'
-# file_path = 'TXT/neog.csv'
 # file_path = 'TXT/tsla_D1.csv'
 # file_path = 'TXT/neog_D1.csv'
 # file_path = 'TXT/meta_D1.csv'
 # file_path = 'TXT/tsla_m5.csv'
 # file_path = 'TXT/tsla_m1.csv'
 # file_path = 'TXT/MT4/BTCUSD_D1.csv'
-# file_path = 'TXT/MT4/BTCUSD60.csv'
+# file_path = 'TXT/MT4/BTCUSD_m60.csv'
 file_path = 'TXT/MT4/BTCUSD_m5.csv'
 # ------------------------------------------
-start_date = '2024-01-01'     # Choose the start date to begin from
-end_date = '2024-01-02'     # Choose the end date
-code_of_pattern = 9     # Choose the index of pattern (from Ta-lib patterns.csv)
+# pd.set_option('display.max_columns', 10)  # Uncomment to display all columns
+
+
+# ******************************************************************************
+start_date = '2024-01-05'     # Choose the start date to begin from
+end_date = '2024-01-10'     # Choose the end date
+code_of_pattern = 18     # Choose the index of pattern (from Ta-lib patterns.csv)
+# ******************************************************************************
 
 
 def getting_dataframe_from_file(path):
@@ -60,11 +64,15 @@ def date_range_func(df, start, end):
         # date range, resulting in a boolean mask
 
         df_filtered_by_date = df[dates_in_range]
-        return df_filtered_by_date
+        if df_filtered_by_date.empty:
+            # print('NB! Dataframe is empty, check the date range!')
+            raise ValueError('NB! Dataframe is empty, check the date range!')
+        else:
+            return df_filtered_by_date
 
 
 filtered_by_date_dataframe = date_range_func(dataframe_from_csv, start_date, end_date)
-print('Filtered by date dataframe: \n', filtered_by_date_dataframe)
+print('\nFiltered by date dataframe: \n', filtered_by_date_dataframe.head())
 
 
 #  ----------------------------------------------
@@ -78,7 +86,7 @@ def pattern_recognition_func(patterns_df, code):  # Reading Pattern codes from C
 
     pattern_code = patterns_df['PatternCode'].iloc[code]
     pattern_name = patterns_df['PatternName'].iloc[code]
-    print('Current Pattern is: ', pattern_code, ',', pattern_name)
+    print('\nCurrent Pattern is: ', pattern_code, ',', pattern_name)
 
     pattern_function = getattr(talib, pattern_code)
     signal = pattern_function(filtered_by_date_dataframe['Open'], filtered_by_date_dataframe['High'],
@@ -88,22 +96,33 @@ def pattern_recognition_func(patterns_df, code):  # Reading Pattern codes from C
 
 
 recognized_pattern = pattern_recognition_func(patterns_dataframe, code_of_pattern)
+
+
 # Print the signals if any
-
-
-def print_signals_to_cmd():
+def print_signals_to_cmd(pdf):
 
     on_off = True
 
     if on_off:
+
+        counter = 0
         for i, s in enumerate(recognized_pattern):
             if s == 100:
-                print("\nSignal bullish", "Index:", i,  "Value:", s)
+                counter += 1
+                date = pdf.iloc[i]['Date']
+                print("\nSignal bullish", "at: ", date, ", ",  "Value:", s)
             elif s == -100:
-                print("\nSignal bearish", "Index:", i, "Value:", s)
+                counter += 1
+                date = pdf.iloc[i]['Date']
+                print("\nSignal bearish", "at: ", date, ", ", "Value:", s)
+
+        print('Patterns discovered: ', counter)
+
+        if counter == 0:
+            print("Try other pattern or broader date range")
 
 
-print_signals_to_cmd()
+print_signals_to_cmd(filtered_by_date_dataframe)
 
 
 #  ----------------------------------------------
@@ -146,8 +165,7 @@ def highlight_signal_on_chart(df):
         for i, s in enumerate(recognized_pattern):
             if s == 100:
                 signal_date = df['Datetime'].iloc[i].strftime("%d-%m-%Y-%H-%M")
-                file_name = df['Filename'].iloc[i]
-                annotation_text = f'Bullish signal on {signal_date} in {file_name}'
+                annotation_text = f'Bullish signal on {signal_date} in {file_path}'
                 # the point where the arrow will be pointing to:
                 plt.annotate(annotation_text,
                              xy=(df['Datetime'].iloc[i], df['Close'].iloc[i]),
@@ -157,10 +175,7 @@ def highlight_signal_on_chart(df):
             elif s == -100:
                 signal_date = df['Datetime'].iloc[i].strftime("%d-%m-%Y-%H-%M")
                 annotation_text = f'Bearish signal on {signal_date} {file_path}'
-
                 # the point where the arrow will be pointing to:
-
-
                 plt.annotate(annotation_text,
                              xy=(df['Datetime'].iloc[i], df['Close'].iloc[i]),
                              xytext=(df['Datetime'].iloc[i], df['Close'].iloc[i] + 100),
@@ -172,6 +187,7 @@ highlight_signal_on_chart(filtered_by_date_dataframe)
 
 
 def plot_candlestick_chart(df, signals):
+    # warn_too_much_data = 200
     on_off = True
 
     if on_off:
@@ -179,8 +195,8 @@ def plot_candlestick_chart(df, signals):
 
         add_plots = []  # Prepare additional plots
         # Add signals if provided
-        print(add_plots)
-        print(signals)
+        # print(add_plots)
+        # print(signals)
 
         signals_with_nan = signals.where(signals != 0, np.nan)  # replace values where the condition is False
 
@@ -188,12 +204,14 @@ def plot_candlestick_chart(df, signals):
             if s != 0:
                 # Add the signals as a subplot
                 add_plots.append(mpf.make_addplot(signals_with_nan,
-                                                  type='scatter', color='black', markersize=250, marker='+', panel=0))
+                                                  type='scatter', color='black', markersize=250, marker='+', panel=1))
                 # Plot candlestick chart with additional plot
-                print(add_plots)
-
-        mpf.plot(df, type='candle', figsize=(15, 8), title=f'{file_path}'.upper(), ylabel='Price', addplot=add_plots)
-        print('Signals are plotted to candlestick chart')
+                # print(add_plots)
+            else:
+                pass
+        print('\nCandlestick chart plotted')
+        mpf.plot(df, type='candle', figsize=(15, 8), title=f'{file_path}'.upper(), ylabel='Price', addplot=add_plots,
+                 warn_too_much_data=5000)
 
 
 plot_candlestick_chart(filtered_by_date_dataframe, recognized_pattern)
