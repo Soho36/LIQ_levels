@@ -12,21 +12,21 @@ import numpy as np
 # file_path = 'TXT/zim.csv'
 # file_path = 'TXT/extr.csv'
 # file_path = 'TXT/aehr.csv'
-# file_path = 'TXT/tsla_D1.csv'
+file_path = 'TXT/tsla_D1.csv'
 # file_path = 'TXT/neog_D1.csv'
 # file_path = 'TXT/meta_D1.csv'
 # file_path = 'TXT/tsla_m5.csv'
 # file_path = 'TXT/tsla_m1.csv'
 # file_path = 'TXT/MT4/BTCUSD_D1.csv'
 # file_path = 'TXT/MT4/BTCUSD_m60.csv'
-file_path = 'TXT/MT4/BTCUSD_m5.csv'
+# file_path = 'TXT/MT4/BTCUSD_m5.csv'
 # ------------------------------------------
 # pd.set_option('display.max_columns', 10)  # Uncomment to display all columns
 
 
 # ******************************************************************************
-start_date = '2024-01-05'     # Choose the start date to begin from
-end_date = '2024-01-10'     # Choose the end date
+start_date = '2023-04-06'     # Choose the start date to begin from
+end_date = '2023-05-20'     # Choose the end date
 code_of_pattern = 18     # Choose the index of pattern (from Ta-lib patterns.csv)
 # ******************************************************************************
 
@@ -86,7 +86,8 @@ def pattern_recognition_func(patterns_df, code):  # Reading Pattern codes from C
 
     pattern_code = patterns_df['PatternCode'].iloc[code]
     pattern_name = patterns_df['PatternName'].iloc[code]
-    print('\nCurrent Pattern is: ', pattern_code, ',', pattern_name)
+    pattern_index = patterns_df.index[code]
+    print('\nCurrent Pattern is: ', pattern_code, ',', pattern_name, ', ', pattern_index)
 
     pattern_function = getattr(talib, pattern_code)
     signal = pattern_function(filtered_by_date_dataframe['Open'], filtered_by_date_dataframe['High'],
@@ -95,34 +96,98 @@ def pattern_recognition_func(patterns_df, code):  # Reading Pattern codes from C
     return signal
 
 
-recognized_pattern = pattern_recognition_func(patterns_dataframe, code_of_pattern)
+recognized_pattern = pattern_recognition_func(patterns_dataframe, code_of_pattern)  # Returns series
+# print(recognized_pattern)
 
 
-# Print the signals if any
-def print_signals_to_cmd(pdf):
+#  ----------------------------------------------
+#  TRADES SIMULATION
+#  ----------------------------------------------
 
+
+def trades_simulation(filtered_df):
     on_off = True
-
     if on_off:
-
         counter = 0
-        for i, s in enumerate(recognized_pattern):
-            if s == 100:
-                counter += 1
-                date = pdf.iloc[i]['Date']
-                print("\nSignal bullish", "at: ", date, ", ",  "Value:", s)
-            elif s == -100:
-                counter += 1
-                date = pdf.iloc[i]['Date']
-                print("\nSignal bearish", "at: ", date, ", ", "Value:", s)
+        for signal_index, signal_value in enumerate(recognized_pattern):
 
-        print('Patterns discovered: ', counter)
+            # LONG TRADES LOGIC
+            if signal_value == 100:
+                counter += 1
+                date = filtered_df.iloc[signal_index]['Date']
+                candle_close_entry = round(filtered_df.iloc[signal_index]['Close'], 2)
+                low = round(filtered_df.iloc[signal_index]['Low'], 2)
+                stop_loss_price = low
+                take_profit_price = round((candle_close_entry - low) * 2) + candle_close_entry
+                print('\nOpen long trade: '.upper(), date,
+                      '| Entry price:', candle_close_entry,
+                      '  Stop:', stop_loss_price,
+                      '  Take:', take_profit_price)
+                print()
+                for j in range(signal_index + 1, len(filtered_df)):
+                    current_candle_date = filtered_df.iloc[j]['Date']
+                    current_candle_open = filtered_df.iloc[j]['Open']
+                    current_candle_high = filtered_df.iloc[j]['High']
+                    current_candle_low = filtered_df.iloc[j]['Low']
+                    current_candle_close = filtered_df.iloc[j]['Close']
+
+                    print('Current candle OHLC: ', current_candle_date, '|',
+                          'O', current_candle_open,
+                          'H', current_candle_high,
+                          'L', current_candle_low,
+                          'C', current_candle_close)
+                    if current_candle_high >= take_profit_price:
+                        print(f'Take profit hit at {take_profit_price}')
+                        break
+                    elif current_candle_low <= stop_loss_price:
+                        print(f'Stop Loss hit at {stop_loss_price}')
+                        break
+                    else:
+                        pass
+                        # print('Still Open')
+
+            # SHORT TRADES LOGIC
+            elif signal_value == -100:
+                counter += 1
+                date = filtered_df.iloc[signal_index]['Date']
+                candle_close_entry = round(filtered_df.iloc[signal_index]['Close'], 2)
+                high = round(filtered_df.iloc[signal_index]['High'], 2)
+                stop_loss_price = high
+                take_profit_price = candle_close_entry - round((high - candle_close_entry) * 2)
+                print('\nOpen short trade: '.upper(), date,
+                      '| Entry price:', candle_close_entry,
+                      '  Stop:', stop_loss_price,
+                      '  Take:', take_profit_price)
+                print()
+                for j in range(signal_index + 1, len(filtered_df)):
+                    current_candle_date = filtered_df.iloc[j]['Date']
+                    current_candle_open = filtered_df.iloc[j]['Open']
+                    current_candle_high = filtered_df.iloc[j]['High']
+                    current_candle_low = filtered_df.iloc[j]['Low']
+                    current_candle_close = filtered_df.iloc[j]['Close']
+
+                    print('Current candle OHLC: ', current_candle_date, '|',
+                          'O', current_candle_open,
+                          'H', current_candle_high,
+                          'L', current_candle_low,
+                          'C', current_candle_close)
+                    if current_candle_low <= take_profit_price:
+                        print(f'Take profit hit at {take_profit_price}')
+                        break
+                    elif current_candle_high >= stop_loss_price:
+                        print(f'Stop Loss hit at {stop_loss_price}')
+                        break
+                    else:
+                        pass
+                        # print('Still Open')
+
+        print('Executed trades: ', counter)
 
         if counter == 0:
-            print("Try other pattern or broader date range")
+            print("No trades were placed! Try other pattern or broader date range")
 
 
-print_signals_to_cmd(filtered_by_date_dataframe)
+trades_simulation(filtered_by_date_dataframe)
 
 
 #  ----------------------------------------------
@@ -135,7 +200,7 @@ filtered_by_date_dataframe = (filtered_by_date_dataframe.assign(
 
 
 def plot_line_chart(df):
-    on_off = True   # To disable printing chart set to False
+    on_off = False   # To disable Line chart set to False
 
     if on_off:
         plt.figure(figsize=(15, 8))
@@ -159,7 +224,7 @@ plot_line_chart(filtered_by_date_dataframe)
 
 
 def highlight_signal_on_chart(df):
-    on_off = True   # To disable printing signals set to False
+    on_off = False   # To disable printing Line chart signals set to False
 
     if on_off:
         for i, s in enumerate(recognized_pattern):
