@@ -1,9 +1,18 @@
-if signals is not None and not signals.empty:
-    # Convert signals to NaN where there are no signals
-    signals_with_nan = signals.where(signals != 0, np.nan)  # replace values where the condition is False
-    # Add the signals as a subplot
-    add_plots.append(mpf.make_addplot(signals_with_nan, type='scatter', markersize=1000, marker='+', panel=0))
-# Plot candlestick chart with additional plot
-mpf.plot(df, type='candle', figsize=(15, 8), title=f'{file_path}'.upper(), ylabel='Price', addplot=add_plots)
-print('Signals are plotted to candlestick chart')
+testlist = [-69.39, -144.01, 729.0, 519.0, 984.0, 235.0, -45.88, -339.46, 5, 45]
+result = []
 
+for i in testlist:
+    if i > 0:
+        result.append('profit')
+    else:
+        result.append('loss')
+
+trades_count = len(result)
+profitable_trades_count = result.count('profit')
+loss_trades_count = result.count('loss')
+win_percent = (profitable_trades_count * 100) / trades_count
+loss_percent = (loss_trades_count * 100) / trades_count
+
+print(f'Trades: {trades_count}')
+print(f'Profitable trades: {profitable_trades_count} ({win_percent}%)')
+print(f'Profitable trades: {loss_trades_count} ({loss_percent}%)')
