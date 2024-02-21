@@ -12,12 +12,12 @@ import numpy as np
 # file_path = 'TXT/zim.csv'
 # file_path = 'TXT/extr.csv'
 # file_path = 'TXT/aehr.csv'
-# file_path = 'TXT/tsla_D1.csv'
+file_path = 'TXT/tsla_D1.csv'
 # file_path = 'TXT/neog_D1.csv'
 # file_path = 'TXT/meta_D1.csv'
 # file_path = 'TXT/tsla_m5.csv'
 # file_path = 'TXT/tsla_m1.csv'
-file_path = 'TXT/MT4/BTCUSD_D1.csv'
+# file_path = 'TXT/MT4/BTCUSD_D1.csv'
 # file_path = 'TXT/MT4/BTCUSD_m60.csv'
 # file_path = 'TXT/MT4/BTCUSD_m5.csv'
 # ------------------------------------------
@@ -25,11 +25,11 @@ file_path = 'TXT/MT4/BTCUSD_D1.csv'
 
 
 # ******************************************************************************
-start_date = '2017-04-18'     # Choose the start date to begin from
-end_date = '2017-10-06'     # Choose the end date
-code_of_pattern = 18     # Choose the index of pattern (from Ta-lib patterns.csv)
+start_date = '2023-01-18'     # Choose the start date to begin from
+end_date = '2024-02-05'     # Choose the end date
+code_of_pattern = 50     # Choose the index of pattern (from Ta-lib patterns.csv)
 risk_reward_ratio = 2   # Chose risk/reward ratio (how much you are aiming to win compared to lose)
-stop_loss_offset = 0    # Place stop with offset from original price
+stop_loss_offset = -2    # Place stop with offset from original price
 # ******************************************************************************
 
 
@@ -58,25 +58,22 @@ dataframe_from_csv = getting_dataframe_from_file(file_path)
 
 def date_range_func(df, start, end):
 
-    on_off = True
+    date_range = pd.date_range(start=start, end=end, freq='D')
+    # print('Date range: \n', list(date_range))
 
-    if on_off:
-        date_range = pd.date_range(start=start, end=end, freq='D')
-        # print('Date range: \n', list(date_range))
-
-        date_column = df['Date']        # Select the 'Date' column from the DataFrame
-        dates_in_range = date_column.isin(date_range)   # checks which dates from date_column fall within the generated
-        # date range, resulting in a boolean mask
-
-        df_filtered_by_date = df[dates_in_range]
-        if df_filtered_by_date.empty:
-            # print('NB! Dataframe is empty, check the date range!')
-            raise ValueError('NB! Dataframe is empty, check the date range!')
-        else:
-            return df_filtered_by_date
+    date_column = df['Date']        # Select the 'Date' column from the DataFrame
+    dates_in_range = date_column.isin(date_range)   # checks which dates from date_column fall within the generated
+    # date range, resulting in a boolean mask
+    df_filtered_by_date = df[dates_in_range]
+    if df_filtered_by_date.empty:
+        # print('NB! Dataframe is empty, check the date range!')
+        raise ValueError('NB! Dataframe is empty, check the date range!')
+    else:
+        return df_filtered_by_date
 
 
 filtered_by_date_dataframe = date_range_func(dataframe_from_csv, start_date, end_date)
+
 print()
 print(f'Dataframe filtered by date:\n {filtered_by_date_dataframe.head()}')
 print()
@@ -118,11 +115,14 @@ def trades_simulation(filtered_df, risk_reward, sl_offset):
     if on_off:
         trades_counter = 0
         trade_result = []
+        trade_direction = []
+        profit_loss_long_short = []     # List of profits and losses by longs and shorts
         for signal_index, signal_value in enumerate(recognized_pattern):
 
             # LONG TRADES LOGIC
             if signal_value == 100:
                 trades_counter += 1
+                trade_direction.append('Long')
                 signal_candle_date = filtered_df.iloc[signal_index]['Date']
                 signal_candle_close_entry = round(filtered_df.iloc[signal_index]['Close'], 2)
                 signal_candle_low = round(filtered_df.iloc[signal_index]['Low'], 2)
@@ -144,7 +144,7 @@ def trades_simulation(filtered_df, risk_reward, sl_offset):
                     current_candle_low = filtered_df.iloc[j]['Low']
                     current_candle_close = filtered_df.iloc[j]['Close']
 
-                    print('Current candle: ', current_candle_date, '|',
+                    print('Next candle: ', current_candle_date, '|',
                           'O', current_candle_open,
                           'H', current_candle_high,
                           'L', current_candle_low,
@@ -152,6 +152,7 @@ def trades_simulation(filtered_df, risk_reward, sl_offset):
 
                     if current_candle_high >= take_profit_price:
                         trade_result.append(take_profit_price - signal_candle_close_entry)
+                        profit_loss_long_short.append('LongProfit')
                         print(f'○ ○ ○ Take profit hit ○ ○ ○ at {current_candle_date}')
                         print()
                         print(f'Close price: {round(take_profit_price, 2)}')
@@ -162,7 +163,8 @@ def trades_simulation(filtered_df, risk_reward, sl_offset):
                         break
                     elif current_candle_low <= stop_loss_price:
                         trade_result.append(stop_loss_price - signal_candle_close_entry)
-                        print(f'● ● ● Stop Loss hit ● ● ● at {current_candle_date}')
+                        profit_loss_long_short.append('LongLoss')
+                        print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date}')
                         print()
                         print(f'Close price: {round(stop_loss_price, 2)}')
                         print(f'P/L: ${round(stop_loss_price - signal_candle_close_entry, 2)}')
@@ -177,6 +179,7 @@ def trades_simulation(filtered_df, risk_reward, sl_offset):
             # SHORT TRADES LOGIC
             elif signal_value == -100:
                 trades_counter += 1
+                trade_direction.append('Short')
                 signal_candle_date = filtered_df.iloc[signal_index]['Date']
                 signal_candle_close_entry = round(filtered_df.iloc[signal_index]['Close'], 2)
                 signal_candle_high = round(filtered_df.iloc[signal_index]['High'], 2)
@@ -198,12 +201,14 @@ def trades_simulation(filtered_df, risk_reward, sl_offset):
                     current_candle_low = filtered_df.iloc[j]['Low']
                     current_candle_close = filtered_df.iloc[j]['Close']
 
-                    print('Current candle: ', current_candle_date, '|',
+                    print('Next candle: ', current_candle_date, '|',
                           'O', current_candle_open,
                           'H', current_candle_high,
                           'L', current_candle_low,
                           'C', current_candle_close)
                     if current_candle_low <= take_profit_price:
+                        trade_result.append(signal_candle_close_entry - take_profit_price)
+                        profit_loss_long_short.append('ShortProfit')
                         print(f'○ ○ ○ Take profit hit ○ ○ ○ at {current_candle_date}')
                         print()
                         print(f'Close price: {round(take_profit_price, 2)}')
@@ -211,63 +216,108 @@ def trades_simulation(filtered_df, risk_reward, sl_offset):
                         print(
                             '------------------------------------------------------------------------------------------'
                         )
-                        trade_result.append(signal_candle_close_entry - take_profit_price)
+
                         break
                     elif current_candle_high >= stop_loss_price:
-                        print(f'● ● ● Stop Loss hit ● ● ● at {current_candle_date}')
+                        trade_result.append(signal_candle_close_entry - stop_loss_price)
+                        profit_loss_long_short.append('ShortLoss')
+                        print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date}')
                         print()
                         print(f'Close price: {round(stop_loss_price, 2)}')
                         print(f'P/L: ${round(signal_candle_close_entry - stop_loss_price, 2)}')
                         print(
                             '------------------------------------------------------------------------------------------'
                         )
-                        trade_result.append(signal_candle_close_entry - stop_loss_price)
                         break
                     else:
                         pass
 
-        return trade_result, trades_counter
+        return trade_result, trades_counter, trade_direction, profit_loss_long_short
 
 
-trade_results_to_trade_analysis, trades_counter_to_trade_analysis = (
-    trades_simulation(filtered_by_date_dataframe, risk_reward_ratio, stop_loss_offset))
+(trade_results_to_trade_analysis, trades_counter_to_trade_analysis,
+ trade_direction_to_trade_analysis, profit_loss_long_short_to_trade_analysis) = (
+    trades_simulation(filtered_by_date_dataframe, risk_reward_ratio, stop_loss_offset)
+)
 
 
-def trades_analysis(trade_result, trades_counter):
+def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_long_short, df):
 
-    print()
-    print('************************************TRADES ANALYSIS************************************')
-    print()
-    print(f'Trades count: {trades_counter}')
+    on_off = True
 
-    if trades_counter == 0:
-        print("No trades were placed! Try other pattern or broader date range")
+    if on_off:
 
-    rounded_trades_list = [round(num, 2) for num in trade_result]
-    print(f'Trades List: {rounded_trades_list}')
+        first_row = df.iloc[0]['Date']
+        last_row = df.iloc[-1]['Date']
+        print()
+        print('************************************TRADES ANALYSIS************************************')
+        print()
+        print(f'Selected Date range: {start_date} - {end_date}'.upper(),
+              f'(available period: {first_row}-{last_row})'.title()
+              )
+        print()
 
-    print(f'Dollar per Share profit2: ${round(sum(trade_result), 2)}')
+        if trades_counter == 0:
+            print("No trades were placed! Try other pattern or broader date range")
 
-    result = []
-    for i in rounded_trades_list:
-        if i > 0:
-            result.append('profit')
-        else:
-            result.append('loss')
+        rounded_trades_list = [round(num, 2) for num in trade_result]   # List of all trades results in dollar amount
+        print(f"Trades List: {rounded_trades_list}")
 
-    print(result)
-    trades_count = len(result)
-    profitable_trades_count = result.count('profit')
-    loss_trades_count = result.count('loss')
-    win_percent = (profitable_trades_count * 100) / trades_count
-    loss_percent = (loss_trades_count * 100) / trades_count
+        outcomes = []     # List of trade outcomes: profit or loss in order to calculate profitability %
+        for num in rounded_trades_list:
+            if num > 0:
+                outcomes.append('profit')
+            else:
+                outcomes.append('loss')
 
-    print(f'Closed trades: {trades_count}')
-    print(f'Profitable trades: {profitable_trades_count} ({round(win_percent, 2)}%)')
-    print(f'Loss trades: {loss_trades_count} ({round(loss_percent, 2)}%)')
+        results_as_balance_change = []   # Accumulate the sum of consecutive elements to illustrate balance change over time
+        running_sum = rounded_trades_list[0]
+        for num in rounded_trades_list[1:]:
+            running_sum += num
+            results_as_balance_change.append(running_sum)
+
+        rounded_results_as_balance_change = [round(x, 2) for x in results_as_balance_change]
+
+        # print(result)
+        trades_count = len(outcomes)  # Total trades number
+        profitable_trades_count = outcomes.count('profit')    # Profitable trades number
+        loss_trades_count = outcomes.count('loss')    # Losing trades number
+        win_percent = (profitable_trades_count * 100) / trades_count    # Profitable trades %
+        loss_percent = (loss_trades_count * 100) / trades_count     # Losing trades %
+        days_number_analyzed = len(filtered_by_date_dataframe)      # Total days(candles) in analysis
+        trades_per_day = round(trades_count / days_number_analyzed, 2)  # How many trades are placed in one day
+        days_per_trade = round(1 / trades_per_day)      # 1 trade is placed in how many days
+        count_longs = trade_direction.count('Long')
+        count_shorts = trade_direction.count('Short')
+        count_profitable_longs_percent = round((profit_loss_long_short.count('LongProfit') * 100) / count_longs, 2)
+        count_profitable_shorts_percent = round((profit_loss_long_short.count('ShortProfit') * 100) / count_shorts, 2)
+
+        # print(f'{profit_loss_long_short}')
+        # print(f'list {trade_direction}')
+        print(f'Balance change over time list: {rounded_results_as_balance_change}')
+        print(f'Total days in range: {days_number_analyzed}'.title())
+        print(f'Trades per day: {trades_per_day} or 1 trade every {days_per_trade} days'.title())
+        print(f'Trades count: {trades_counter}'.title())
+        print(f'Closed trades: {trades_count}'.title())
+        print()
+        print(f'Long trades: {count_longs} ({count_profitable_longs_percent}% profitable out of all longs)'.title())
+        print(f'Short trades: {count_shorts} ({count_profitable_shorts_percent}% profitable out of all shorts)'.title())
+        print(f'Profitable trades: {profitable_trades_count} ({round(win_percent, 2)}%)'.title())
+        print(f'Losing trades: {loss_trades_count} ({round(loss_percent, 2)}%)'.title())
+        print(f'Best trade: ${max(rounded_trades_list)}'.title())
+        print(f'Worst trade: ${min(rounded_trades_list)}'.title())
+        print()
+        print(f'Dollar per Share profit: ${round(sum(trade_result), 2)}'.title())
+
+        print('***************************************************************************************')
+
+        return rounded_trades_list, rounded_results_as_balance_change
 
 
-trades_analysis(trade_results_to_trade_analysis, trades_counter_to_trade_analysis)
+rounded_trades_list_to_chart_profits_losses, rounded_results_as_balance_change_to_chart_profits = trades_analysis(
+    trade_results_to_trade_analysis, trades_counter_to_trade_analysis,
+    trade_direction_to_trade_analysis, profit_loss_long_short_to_trade_analysis, dataframe_from_csv
+)
 
 #  ----------------------------------------------
 #  PLOT CHART
@@ -291,6 +341,38 @@ def plot_line_chart(df):
 
 
 plot_line_chart(filtered_by_date_dataframe)
+
+
+def plot_line_chart_balance_change(rounded_results_as_balance_change):
+
+    on_off = True
+
+    if on_off:
+        plt.figure(figsize=(15, 8))
+        plt.plot(rounded_results_as_balance_change)
+        plt.xlabel('Index')
+        plt.ylabel('Value')
+        plt.title('Balance change over specified date range')
+        plt.grid(axis='y')
+
+
+plot_line_chart_balance_change(rounded_results_as_balance_change_to_chart_profits)
+
+
+def plot_line_chart_profits_losses(rounded_trades_list):
+
+    on_off = True
+
+    if on_off:
+        plt.figure(figsize=(15, 8))
+        plt.plot(rounded_trades_list)
+        plt.xlabel('Index')
+        plt.ylabel('Value')
+        plt.title('Trades over specified date range')
+        plt.grid(axis='y')
+
+
+plot_line_chart_profits_losses(rounded_trades_list_to_chart_profits_losses)
 
 
 #  ----------------------------------------------
