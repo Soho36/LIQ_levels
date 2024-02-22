@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import mplfinance as mpf
 import numpy as np
 import statistics
+from API_file import dataframe_from_api
 
 # ------------------------------------------
 # The list of paths to datafiles:
@@ -27,6 +28,7 @@ file_path = 'TXT/tsla_D1.csv'
 
 
 # ******************************************************************************
+dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
 start_date = '2018-02-20'     # Choose the start date to begin from
 end_date = '2024-02-05'     # Choose the end date
 code_of_pattern = 50     # Choose the index of pattern (from Ta-lib patterns.csv)
@@ -61,10 +63,16 @@ def getting_dataframe_from_file(path):
 dataframe_from_csv = getting_dataframe_from_file(file_path)
 
 
-def date_range_func(df, start, end):
+def date_range_func(df_csv, df_api, start, end):
 
     date_range = pd.date_range(start=start, end=end, freq='D')
     # print('Date range: \n', list(date_range))
+
+    if dataframe_source_api_or_csv:
+        df = df_api
+        print(f'Dataframe derived from API:\n {df}', )
+    else:
+        df = df_csv
 
     date_column = df['Date']        # Select the 'Date' column from the DataFrame
     dates_in_range = date_column.isin(date_range)   # checks which dates from date_column fall within the generated
@@ -77,10 +85,10 @@ def date_range_func(df, start, end):
         return df_filtered_by_date
 
 
-filtered_by_date_dataframe = date_range_func(dataframe_from_csv, start_date, end_date)
+filtered_by_date_dataframe = date_range_func(dataframe_from_csv, dataframe_from_api, start_date, end_date)
 
 print()
-print(f'Dataframe filtered by date:\n {filtered_by_date_dataframe.head()}')
+print(f'Dataframe filtered by date:\n {filtered_by_date_dataframe}')
 print()
 print('************************************TRADES SIMULATION************************************')
 
@@ -389,7 +397,7 @@ rounded_trades_list_to_chart_profits_losses, rounded_results_as_balance_change_t
 #  PLOT CHART
 #  ----------------------------------------------
 
-#  Adding datetime column to dataframe
+#  Adding datetime column to dataframe for chart plotting
 filtered_by_date_dataframe = (filtered_by_date_dataframe.assign(
     Datetime=(filtered_by_date_dataframe['Date'] + pd.to_timedelta(filtered_by_date_dataframe['Time']))))
 
