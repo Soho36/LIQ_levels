@@ -28,11 +28,11 @@ file_path = 'TXT/tsla_D1.csv'
 
 
 # ******************************************************************************
-dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2018-02-20'     # Choose the start date to begin from
-end_date = '2024-02-05'     # Choose the end date
+dataframe_source_api_or_csv = True    # True for API or response file, False for CSV
+start_date = '2021-09-30'     # Choose the start date to begin from
+end_date = '2022-07-21'     # Choose the end date
 code_of_pattern = 50     # Choose the index of pattern (from Ta-lib patterns.csv)
-risk_reward_ratio = 5   # Chose risk/reward ratio (how much you are aiming to win compared to lose)
+risk_reward_ratio = 10   # Chose risk/reward ratio (how much you are aiming to win compared to lose)
 stop_loss_as_candle_min_max = True  # Must be True if next condition is false
 
 stop_loss_as_plus_candle = False     # Must be True if previous condition is false
@@ -70,22 +70,25 @@ def date_range_func(df_csv, df_api, start, end):
 
     if dataframe_source_api_or_csv:
         df = df_api
+        ticker = df['Symbol'].iloc[0]
+        print(ticker)
         print(f'Dataframe derived from API:\n {df}', )
     else:
         df = df_csv
-
+        ticker = df['Filename'].iloc[0]
     date_column = df['Date']        # Select the 'Date' column from the DataFrame
     dates_in_range = date_column.isin(date_range)   # checks which dates from date_column fall within the generated
     # date range, resulting in a boolean mask
     df_filtered_by_date = df[dates_in_range]
+
     if df_filtered_by_date.empty:
         # print('NB! Dataframe is empty, check the date range!')
         raise ValueError('NB! Dataframe is empty, check the date range!')
     else:
-        return df_filtered_by_date
+        return ticker, df_filtered_by_date
 
 
-filtered_by_date_dataframe = date_range_func(dataframe_from_csv, dataframe_from_api, start_date, end_date)
+ticker_name, filtered_by_date_dataframe = date_range_func(dataframe_from_csv, dataframe_from_api, start_date, end_date)
 
 print()
 print(f'Dataframe filtered by date:\n {filtered_by_date_dataframe}')
@@ -314,6 +317,8 @@ def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_l
         print()
         print('************************************TRADES ANALYSIS************************************')
         print()
+        print(f'Ticker: {ticker_name}')
+        print()
         print(f'Selected Date range: {start_date} - {end_date}'.upper(),
               f'(available period: {first_row}-{last_row})'.title()
               )
@@ -390,7 +395,7 @@ def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_l
 
 rounded_trades_list_to_chart_profits_losses, rounded_results_as_balance_change_to_chart_profits = trades_analysis(
     trade_results_to_trade_analysis, trades_counter_to_trade_analysis,
-    trade_direction_to_trade_analysis, profit_loss_long_short_to_trade_analysis, dataframe_from_csv,
+    trade_direction_to_trade_analysis, profit_loss_long_short_to_trade_analysis, filtered_by_date_dataframe,
     trade_result_longs_to_trade_analysis, trade_result_shorts_to_trade_analysis)
 
 #  ----------------------------------------------
@@ -514,7 +519,7 @@ def plot_candlestick_chart(df, signals):
                 pass
         print()
         print('Candlestick chart plotted')
-        mpf.plot(df, type='candle', figsize=(15, 8), title=f'{file_path}'.upper(), ylabel='Price', addplot=add_plots,
+        mpf.plot(df, type='candle', figsize=(15, 8), title=f'{ticker_name}'.upper(), ylabel='Price', addplot=add_plots,
                  warn_too_much_data=5000)
 
 

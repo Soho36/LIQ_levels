@@ -1,10 +1,10 @@
 import requests
 import json
 import pandas as pd
-# from config import api_key
+from config import api_key
 
-api_key = 'DEMO'
-symbol = 'IBM'
+# api_key = 'DEMO'
+symbol = 'INDO'
 
 interval = 'Daily'
 # interval = '1min'
@@ -14,6 +14,7 @@ interval = 'Daily'
 # interval = '60min'
 
 data_from_file_from_url = False  # True for url, False for file
+
 
 # ADDED OPTION TO CREATE JSON FILE FOR DEVELOPMENT PURPOSES TO REDUCE API REQUESTS (MEET THE LIMITS)
 def get_data():
@@ -34,7 +35,7 @@ def get_data():
             print(f'Error: Unable to fetch data. Status code: {response.status_code}')
 
     else:
-        with open('Json/TSLA_D1_api_response.json', 'r') as f:
+        with open(f'Json/{symbol}_D1_api_response.json', 'r') as f:
             data = json.load(f)
             return data
 
@@ -67,6 +68,7 @@ def data_to_dataframe(data):
     dataframe['Close'] = pd.to_numeric(dataframe['Close'])
     dataframe['Volume'] = pd.to_numeric(dataframe['Volume'])
     dataframe['Time'] = dataframe['Time'].astype(str)
+    dataframe['Symbol'] = symbol
     if __name__ == "__main__":
         print(dataframe)
         print(dataframe.info())

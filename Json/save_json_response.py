@@ -4,7 +4,7 @@ from config import api_key
 
 # api_key = 'DEMO'
 # symbol = 'TSLA'
-symbol = 'NVDA'
+symbol = 'INDO'
 # symbol = 'MSFT'
 # interval = '5min'
 
@@ -21,7 +21,7 @@ response = requests.get(url_daily_full)
 
 if response.status_code == 200:
     data = response.json()
-    with open('NVDA_D1_api_response.json', 'w') as f:   # CHANGE THE NAME OF THE FILE
+    with open(f'{symbol}_D1_api_response.json', 'w') as f:   # CHANGE THE NAME OF THE FILE
         json.dump(data, f)
 else:
     print(f'Error: Unable to fetch data. Status code: {response.status_code}')
