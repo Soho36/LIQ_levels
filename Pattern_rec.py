@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 # from matplotlib.dates import date2num
 
 
-#  ----------------------------------------------
+#  -------------------------------------ta---------
 #  MERGING FILES HERE. COMMENT OUT IF NECESSARY
 #  ----------------------------------------------
 
@@ -75,8 +75,8 @@ def date_range_func():
     on_off = True
 
     if on_off:
-        start_date = '2023-06-23'
-        end_date = '2024-06-23'
+        start_date = '2023-07-23'
+        end_date = '2023-08-23'
 
         # start_date = pd.to_datetime(start_date)
         # end_date = pd.to_datetime(end_date)
@@ -92,6 +92,7 @@ def date_range_func():
         df_filtered_by_date = df_csv[dates_in_range]
         print('df_filtered_by_date: ', df_filtered_by_date)
         print(df_filtered_by_date.info())
+        return df_filtered_by_date
 
 
 date_range_func()
@@ -104,7 +105,7 @@ date_range_func()
 
 df_pattern = pd.read_csv('Ta-lib patterns.csv')  # Reading Pattern codes from CSV
 
-idx = 16     # Choose the index of pattern here (from Ta-lib patterns.csv)
+idx = 10     # Choose the index of pattern here (from Ta-lib patterns.csv)
 pattern_code = df_pattern['PatternCode'].iloc[idx]
 pattern_name = df_pattern['PatternName'].iloc[idx]
 print('Current Pattern is: ', pattern_code, pattern_name)
@@ -142,7 +143,7 @@ def plot_chart():
 
     if on_off is True:
         df_csv['Datetime'] = df_csv['Date'] + pd.to_timedelta(df_csv['Time'])
-        plt.figure(figsize=(15, 8))
+        plt.figure(figsize=(10, 5))
         plt.plot(df_csv['Datetime'], df_csv['Close'], label='Ticker prices', marker='o')
         plt.title(f'{file_path}'.upper())
         plt.xlabel('Index')
