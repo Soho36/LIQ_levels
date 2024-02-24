@@ -16,12 +16,12 @@ from API_file import dataframe_from_api
 # file_path = 'TXT/zim.csv'
 # file_path = 'TXT/extr.csv'
 # file_path = 'TXT/aehr.csv'
-file_path = 'TXT/tsla_D1.csv'
+# file_path = 'TXT/tsla_D1.csv'
 # file_path = 'TXT/neog_D1.csv'
 # file_path = 'TXT/meta_D1.csv'
 # file_path = 'TXT/tsla_m5.csv'
 # file_path = 'TXT/tsla_m1.csv'
-# file_path = 'TXT/MT4/BTCUSD_D1.csv'
+file_path = 'TXT/MT4/BTCUSD_D1.csv'
 # file_path = 'TXT/MT4/BTCUSD_m60.csv'
 # file_path = 'TXT/MT4/BTCUSD_m5.csv'
 # ------------------------------------------
@@ -29,15 +29,16 @@ file_path = 'TXT/tsla_D1.csv'
 
 
 # ******************************************************************************
-dataframe_source_api_or_csv = True    # True for API or response file, False for CSV
-start_date = '2021-09-30'     # Choose the start date to begin from
-end_date = '2022-07-21'     # Choose the end date
+dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
+start_date = '2010-06-29'     # Choose the start date to begin from
+end_date = '2024-02-21'     # Choose the end date
 code_of_pattern = 50     # Choose the index of pattern (from Ta-lib patterns.csv)
 risk_reward_ratio = 10   # Chose risk/reward ratio (how much you are aiming to win compared to lose)
 stop_loss_as_candle_min_max = True  # Must be True if next condition is false
 
 stop_loss_as_plus_candle = False     # Must be True if previous condition is false
 stop_loss_offset_multiplier = 1    # 1 places stop one candle away from H/L (only when stop_loss_as_plus_candle = True
+sr_levels_timeframe = 100
 # ******************************************************************************
 
 
@@ -59,7 +60,6 @@ def getting_dataframe_from_file(path):
     print(f'Dataframe derived from CSV:\n {csv_df}')
     print()
     return csv_df
-
 
 
 dataframe_from_csv = getting_dataframe_from_file(file_path)
@@ -413,7 +413,7 @@ def plot_line_chart(df):
     on_off = False   # To disable Line chart set to False
 
     if on_off:
-        plt.figure(figsize=(15, 8))
+        plt.figure(figsize=(10, 6))
         plt.plot(df['Datetime'], df['Close'], label='Ticker prices', marker='o')
         plt.title(f'{file_path}'.upper())
         plt.xlabel('Index')
@@ -430,7 +430,7 @@ def plot_line_chart_balance_change(rounded_results_as_balance_change):
     on_off = True
 
     if on_off:
-        plt.figure(figsize=(15, 8))
+        plt.figure(figsize=(10, 6))
         plt.plot(rounded_results_as_balance_change)
         plt.xlabel('Date')
         plt.ylabel('Value')
@@ -444,10 +444,10 @@ plot_line_chart_balance_change(rounded_results_as_balance_change_to_chart_profit
 #  P/L LINE CHART
 def plot_line_chart_profits_losses(rounded_trades_list):
 
-    on_off = True
+    on_off = False   # Set to False to hide chart
 
     if on_off:
-        plt.figure(figsize=(15, 8))
+        plt.figure(figsize=(10, 6))
         plt.plot(rounded_trades_list)
         plt.xlabel('Index')
         plt.ylabel('Value')
@@ -467,7 +467,7 @@ plot_line_chart_profits_losses(rounded_trades_list_to_chart_profits_losses)
 # print('Date_time_dates: \n', date_time_dates)
 
 
-def highlight_signal_on_chart(df):
+def highlight_signal_on_line_chart(df):
     on_off = False   # To disable printing Line chart signals set to False
 
     if on_off:
@@ -492,21 +492,23 @@ def highlight_signal_on_chart(df):
                              )
 
 
-highlight_signal_on_chart(filtered_by_date_dataframe)
+highlight_signal_on_line_chart(filtered_by_date_dataframe)
 
 
 #  CANDLESTICK CHART
-def plot_candlestick_chart(df, signals):
+def plot_candlestick_chart(df, signals, sr_timeframe):
     # warn_too_much_data = 200
     on_off = True
 
     if on_off:
+
         df.set_index('Datetime', inplace=True)
 
-        add_plots = []  # Prepare additional plots
-        # Add signals if provided
-        # print(add_plots)
-        # print(signals)
+        swing_highs = talib.MAX(df['High'], sr_timeframe)
+        swing_lows = talib.MIN(df['Low'], sr_timeframe)
+
+        add_plots = [mpf.make_addplot(swing_highs, scatter=True, marker='v', markersize=50, color='green'),
+                     mpf.make_addplot(swing_lows, scatter=True, marker='^', markersize=50, color='red')]
 
         signals_with_nan = signals.where(signals != 0, np.nan)  # replace values where the condition is False
 
@@ -521,11 +523,11 @@ def plot_candlestick_chart(df, signals):
                 pass
         print()
         print('Candlestick chart plotted')
-        mpf.plot(df, type='candle', figsize=(15, 8), title=f'{ticker_name}'.upper(), ylabel='Price', addplot=add_plots,
+        mpf.plot(df, type='candle', figsize=(10, 6), title=f'{ticker_name}'.upper(), ylabel='Price', addplot=add_plots,
                  warn_too_much_data=5000)
 
 
-plot_candlestick_chart(filtered_by_date_dataframe, recognized_pattern)
+plot_candlestick_chart(filtered_by_date_dataframe, recognized_pattern, sr_levels_timeframe)
 
 
 plt.show()

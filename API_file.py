@@ -4,7 +4,7 @@ import pandas as pd
 from config import api_key
 
 # api_key = 'DEMO'
-symbol = 'INDO'
+symbol = 'TSLA'
 
 interval = 'Daily'
 # interval = '1min'
@@ -13,12 +13,12 @@ interval = 'Daily'
 # interval = '30min'
 # interval = '60min'
 
-data_from_file_from_url = False  # True for url, False for file
+data_from_api_from_file = False  # True for Api, False for file
 
 
 # ADDED OPTION TO CREATE JSON FILE FOR DEVELOPMENT PURPOSES TO REDUCE API REQUESTS (MEET THE LIMITS)
 def get_data():
-    if data_from_file_from_url:
+    if data_from_api_from_file:
 
         url_intraday = (f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol={symbol}&'
                         f'interval={interval}&apikey={api_key}')
