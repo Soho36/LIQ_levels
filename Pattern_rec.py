@@ -30,15 +30,18 @@ file_path = 'TXT/MT4/BTCUSD_D1.csv'
 
 # ******************************************************************************
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2010-06-29'     # Choose the start date to begin from
-end_date = '2024-02-21'     # Choose the end date
+start_date = '2017-05-18'     # Choose the start date to begin from
+end_date = '2023-08-21'     # Choose the end date
 code_of_pattern = 50     # Choose the index of pattern (from Ta-lib patterns.csv)
 risk_reward_ratio = 10   # Chose risk/reward ratio (how much you are aiming to win compared to lose)
 stop_loss_as_candle_min_max = True  # Must be True if next condition is false
 
 stop_loss_as_plus_candle = False     # Must be True if previous condition is false
 stop_loss_offset_multiplier = 1    # 1 places stop one candle away from H/L (only when stop_loss_as_plus_candle = True
-sr_levels_timeframe = 100
+sr_levels_timeframe = 10
+
+show_patterns_signals = False
+show_level_pierce_signals = True
 # ******************************************************************************
 
 
@@ -57,7 +60,10 @@ def getting_dataframe_from_file(path):
     #  for MT4 files set dayfirst=False
     csv_df = pd.read_csv(path, parse_dates=[0], dayfirst=False, usecols=columns_to_parce)
     print()
-    print(f'Dataframe derived from CSV:\n {csv_df}')
+    if dataframe_source_api_or_csv is False:
+        print(f'Dataframe derived from CSV:\n {csv_df}')
+    else:
+        pass
     print()
     return csv_df
 
@@ -113,15 +119,46 @@ def pattern_recognition_func(patterns_df, code):  # Reading Pattern codes from C
     print(f'Current Pattern is: {pattern_code}, {pattern_name}, {pattern_index}')
 
     pattern_function = getattr(talib, pattern_code)
+    # filtered_by_date_dataframe.reset_index(drop=True, inplace=True)
     signal = pattern_function(filtered_by_date_dataframe['Open'], filtered_by_date_dataframe['High'],
                               filtered_by_date_dataframe['Low'], filtered_by_date_dataframe['Close'])
 
     return signal
 
 
-recognized_pattern = pattern_recognition_func(patterns_dataframe, code_of_pattern)  # Returns series
-# print(recognized_pattern)
+recognized_pattern_signal = pattern_recognition_func(patterns_dataframe, code_of_pattern)  # Returns series
+print('recognized_pattern_signal', recognized_pattern_signal)
 
+
+def level_peirce_recognition():
+
+    swing_highs = talib.MAX(filtered_by_date_dataframe['High'], sr_levels_timeframe)
+
+    filtered_by_date_dataframe.reset_index(drop=True, inplace=True)
+    swing_highs.reset_index(drop=True, inplace=True)
+    pierce_signals = []
+
+    for i in range(1, len(filtered_by_date_dataframe)):
+
+        if filtered_by_date_dataframe['High'][i] > swing_highs[i - 1]:
+
+            if filtered_by_date_dataframe['Close'][i] < swing_highs[i - 1]:
+                pierce_signals.append(100)  # Append 100 if signal is discovered
+            else:
+                pierce_signals.append(0)
+        else:
+            pierce_signals.append(0)
+
+    pierce_signals_series = pd.Series(pierce_signals)
+
+    # filtered_by_date_dataframe['Signal'] = pd.Series(signals, index=filtered_by_date_dataframe.index)
+    print(f'Level pierce signals: {pierce_signals}')
+    print('Signals len ', len(pierce_signals))
+    print('Dataframe len ', len(filtered_by_date_dataframe))
+    return pierce_signals_series
+
+
+pierce_signals_series_to_chart = level_peirce_recognition()
 
 #  ----------------------------------------------
 #  TRADES SIMULATION
@@ -146,7 +183,7 @@ def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
         trade_result_shorts = []
         trade_direction = []
         profit_loss_long_short = []     # List of profits and losses by longs and shorts
-        for signal_index, signal_value in enumerate(recognized_pattern):
+        for signal_index, signal_value in enumerate(recognized_pattern_signal):
 
             # LONG TRADES LOGIC
             if signal_value == 100:
@@ -385,8 +422,17 @@ def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_l
         print(f'Best trade: ${max(rounded_trades_list)}'.title())
         print(f'Worst trade: ${min(rounded_trades_list)}'.title())
         print()
-        print(f'Average profitable trade: ${round(statistics.mean(outcomes_positive), 2)}')
-        print(f'Average losing trade: ${round(statistics.mean(outcomes_negative), 2)}')
+
+        if len(outcomes_positive) > 0:
+            print(f'Average profitable trade: ${round(statistics.mean(outcomes_positive), 2)}')
+        else:
+            print(f'Average profitable trade: No profitable trades')
+
+        if len(outcomes_negative) > 0:
+            print(f'Average losing trade: ${round(statistics.mean(outcomes_negative), 2)}')
+        else:
+            print(f'Average losing trade: No losing trades')
+
         print()
         print(f'Dollar per Share profit/loss: ${round(sum(trade_result), 2)}'.title())
 
@@ -427,7 +473,7 @@ plot_line_chart(filtered_by_date_dataframe)
 # BALANCE CHANGE CHART
 def plot_line_chart_balance_change(rounded_results_as_balance_change):
 
-    on_off = True
+    on_off = False
 
     if on_off:
         plt.figure(figsize=(10, 6))
@@ -471,7 +517,7 @@ def highlight_signal_on_line_chart(df):
     on_off = False   # To disable printing Line chart signals set to False
 
     if on_off:
-        for i, s in enumerate(recognized_pattern):
+        for i, s in enumerate(recognized_pattern_signal):
             if s == 100:
                 signal_date = df['Datetime'].iloc[i].strftime("%d-%m-%Y-%H-%M")
                 annotation_text = f'Bullish signal on {signal_date} in {file_path}'
@@ -496,8 +542,8 @@ highlight_signal_on_line_chart(filtered_by_date_dataframe)
 
 
 #  CANDLESTICK CHART
-def plot_candlestick_chart(df, signals, sr_timeframe):
-    # warn_too_much_data = 200
+def plot_candlestick_chart(df, pattern_signals, sr_timeframe, pierce_signals_series):
+
     on_off = True
 
     if on_off:
@@ -510,24 +556,43 @@ def plot_candlestick_chart(df, signals, sr_timeframe):
         add_plots = [mpf.make_addplot(swing_highs, scatter=True, marker='v', markersize=50, color='green'),
                      mpf.make_addplot(swing_lows, scatter=True, marker='^', markersize=50, color='red')]
 
-        signals_with_nan = signals.where(signals != 0, np.nan)  # replace values where the condition is False
+        pattern_signals_with_nan = pattern_signals.where(pattern_signals != 0, np.nan)  # skip values which are true, others replace NaN
+        pierce_signals_with_nan = pierce_signals_series.where(pierce_signals_series != 0, np.nan)  # skip values which are true, others replace NaN
+        print('Pattern Signals with nan:', pattern_signals_with_nan)
+        print('Pierce Signals with nan:', pierce_signals_with_nan)
+        if show_patterns_signals:
 
-        for i, s in enumerate(signals):     # Iterate over signals and add non-zero signals to add_plots
-            if s != 0:
-                # Add the signals as a subplot
-                add_plots.append(mpf.make_addplot(signals_with_nan,
-                                                  type='scatter', color='black', markersize=250, marker='+', panel=1))
-                # Plot candlestick chart with additional plot
-                # print(add_plots)
+            for i, s in enumerate(pattern_signals_with_nan):     # Iterate over signals and add non-zero signals to add_plots
+                if s != 0:
+                    # Add the signals as a subplot
+                    add_plots.append(mpf.make_addplot(pattern_signals_with_nan,
+                                                      type='scatter', color='black',
+                                                      markersize=250, marker='+', panel=1))
+                else:
+                    pass
+
+        if show_level_pierce_signals:
+
+            for i, s in enumerate(pierce_signals_with_nan):
+                if s != 0:
+
+                    add_plots.append(mpf.make_addplot(pierce_signals_with_nan,  # Add the signals as a subplot
+                                                      type='scatter', color='black',
+                                                      markersize=250, marker='+', panel=1))
             else:
                 pass
+
+        else:
+            pass
+
         print()
-        print('Candlestick chart plotted')
         mpf.plot(df, type='candle', figsize=(10, 6), title=f'{ticker_name}'.upper(), ylabel='Price', addplot=add_plots,
                  warn_too_much_data=5000)
 
 
-plot_candlestick_chart(filtered_by_date_dataframe, recognized_pattern, sr_levels_timeframe)
+plot_candlestick_chart(filtered_by_date_dataframe, recognized_pattern_signal, sr_levels_timeframe,
+                       pierce_signals_series_to_chart)
 
 
 plt.show()
+print('Candlestick chart plotted')
