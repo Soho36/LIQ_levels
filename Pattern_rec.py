@@ -28,9 +28,9 @@ file_path = 'TXT/MT4/BTCUSD_D1.csv'
 # pd.set_option('display.max_columns', 10)  # Uncomment to display all columns
 
 
-# ******************************************************************************
+# **************************************** SETTINGS **************************************
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2018-08-10'     # Choose the start date to begin from
+start_date = '2019-08-10'     # Choose the start date to begin from
 end_date = '2020-08-10'     # Choose the end date
 code_of_pattern = 50     # Choose the index of pattern (from Ta-lib patterns.csv)
 risk_reward_ratio = 10   # Chose risk/reward ratio (how much you are aiming to win compared to lose)
@@ -38,10 +38,18 @@ stop_loss_as_candle_min_max = True  # Must be True if next condition is false
 
 stop_loss_as_plus_candle = False     # Must be True if previous condition is false
 stop_loss_offset_multiplier = 1    # 1 places stop one candle away from H/L (only when stop_loss_as_plus_candle = True
+
+# CHARTS
+show_candlestick_chart = True
+show_line_chart = False
+show_signal_line_chart = False
+show_profits_losses_line_chart = False
+show_balance_change_line_chart = False
+
+
+# SIGNALS
 sr_levels_timeframe = 10
-
 show_swing_highs_lows = True
-
 show_patterns_signals = False
 show_level_pierce_signals = True
 # ******************************************************************************
@@ -466,9 +474,8 @@ filtered_by_date_dataframe = (filtered_by_date_dataframe.assign(
 
 
 def plot_line_chart(df):
-    on_off = False   # To disable Line chart set to False
 
-    if on_off:
+    if show_line_chart:
         plt.figure(figsize=(10, 6))
         plt.plot(df['Datetime'], df['Close'], label='Ticker prices', marker='o')
         plt.title(f'{file_path}'.upper())
@@ -483,9 +490,7 @@ plot_line_chart(filtered_by_date_dataframe)
 # BALANCE CHANGE CHART
 def plot_line_chart_balance_change(rounded_results_as_balance_change):
 
-    on_off = False
-
-    if on_off:
+    if show_balance_change_line_chart:
         plt.figure(figsize=(10, 6))
         plt.plot(rounded_results_as_balance_change)
         plt.xlabel('Date')
@@ -500,9 +505,7 @@ plot_line_chart_balance_change(rounded_results_as_balance_change_to_chart_profit
 #  P/L LINE CHART
 def plot_line_chart_profits_losses(rounded_trades_list):
 
-    on_off = False   # Set to False to hide chart
-
-    if on_off:
+    if show_profits_losses_line_chart:
         plt.figure(figsize=(10, 6))
         plt.plot(rounded_trades_list)
         plt.xlabel('Index')
@@ -524,9 +527,8 @@ plot_line_chart_profits_losses(rounded_trades_list_to_chart_profits_losses)
 
 
 def highlight_signal_on_line_chart(df):
-    on_off = False   # To disable printing Line chart signals set to False
 
-    if on_off:
+    if show_signal_line_chart:
         for i, s in enumerate(pattern_signal_series_to_chart):
             if s == 100:
                 signal_date = df['Datetime'].iloc[i].strftime("%d-%m-%Y-%H-%M")
@@ -554,9 +556,7 @@ highlight_signal_on_line_chart(filtered_by_date_dataframe)
 #  CANDLESTICK CHART
 def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series, sr_timeframe):
 
-    on_off = True
-
-    if on_off:
+    if show_candlestick_chart:
 
         pattern_signals_series.reset_index(drop=True, inplace=True)
         df.set_index('Datetime', inplace=True)
@@ -587,8 +587,8 @@ def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series, sr
                 if s != 'NaN':
                     # Add signals as a subplot
                     plots_list.append(mpf.make_addplot(pattern_signals_with_nan,
-                                                      type='scatter', color='black',
-                                                      markersize=250, marker='+', panel=1))
+                                                       type='scatter', color='black',
+                                                       markersize=250, marker='+', panel=1))
                 else:
                     pass
 
@@ -602,8 +602,8 @@ def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series, sr
                 if s != 'NaN':
                     # Add signals as a subplot
                     plots_list.append(mpf.make_addplot(pierce_signals_with_nan,  # Add the signals as a subplot
-                                                      type='scatter', color='blue',
-                                                      markersize=250, marker='*', panel=1))
+                                                       type='scatter', color='blue',
+                                                       markersize=250, marker='*', panel=1))
             else:
                 pass
         else:
