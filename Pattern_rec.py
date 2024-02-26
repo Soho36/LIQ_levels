@@ -30,28 +30,37 @@ file_path = 'TXT/MT4/BTCUSD_D1.csv'
 
 # **************************************** SETTINGS **************************************
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2019-08-10'     # Choose the start date to begin from
-end_date = '2020-08-10'     # Choose the end date
-code_of_pattern = 50     # Choose the index of pattern (from Ta-lib patterns.csv)
-risk_reward_ratio = 10   # Chose risk/reward ratio (how much you are aiming to win compared to lose)
-stop_loss_as_candle_min_max = True  # Must be True if next condition is false
+start_date = '2017-04-18'     # Choose the start date to begin from
+end_date = '2024-02-06'     # Choose the end date
 
+# ENTRY CONDITIONS
+code_of_pattern = 50     # Choose the index of pattern (from Ta-lib patterns.csv)
+use_pattern_recognition = False
+use_piercing_signal = True
+
+# RISK MANAGEMENT
+risk_reward_ratio = 2   # Chose risk/reward ratio (aiming to win compared to lose)
+stop_loss_as_candle_min_max = True  # Must be True if next condition is false
 stop_loss_as_plus_candle = False     # Must be True if previous condition is false
 stop_loss_offset_multiplier = 1    # 1 places stop one candle away from H/L (only when stop_loss_as_plus_candle = True
+
+# SIMULATION
+start_simulation = True
+show_trade_analysis = True
 
 # CHARTS
 show_candlestick_chart = True
 show_line_chart = False
 show_signal_line_chart = False
-show_profits_losses_line_chart = False
-show_balance_change_line_chart = False
+show_profits_losses_line_chart = False  # Only when Simulation is True
+show_balance_change_line_chart = True   # Only when Simulation is True
 
 
 # SIGNALS
 sr_levels_timeframe = 10
 show_swing_highs_lows = True
 show_patterns_signals = False
-show_level_pierce_signals = True
+show_level_pierce_signals = False
 # ******************************************************************************
 
 
@@ -136,8 +145,8 @@ def pattern_recognition(patterns_df, code):  # Reading Pattern codes from CSV
     return pattern_signal
 
 
-pattern_signal_series_to_chart = pattern_recognition(patterns_dataframe, code_of_pattern)  # Returns series
-print('recognized_pattern_signal', pattern_signal_series_to_chart)
+pattern_signal_series_outside = pattern_recognition(patterns_dataframe, code_of_pattern)  # Returns series
+print('recognized_pattern_signal', pattern_signal_series_outside)
 
 
 def level_peirce_recognition():
@@ -176,32 +185,32 @@ def level_peirce_recognition():
     return pierce_signals_series
 
 
-pierce_signals_series_to_chart = level_peirce_recognition()
+pierce_signals_series_outside = level_peirce_recognition()
 
 #  ----------------------------------------------
 #  TRADES SIMULATION
 #  ----------------------------------------------
 
-# # STOP LOSS PRICE CALCULATION
-# def stop_loss_price_definition(signal_candle_high_low_stop, filtered_df):
-#     signal_candle_low = round(filtered_df.iloc[signal_index]['Low'], 2)
-#     if signal_candle_high_low_stop:
-#         stop_loss_price = signal_candle_low - sl_offset
-#
-#
-# stop_loss_price_definition(use_signal_candle_high_low_as_stop)
-
 
 def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
-    on_off = True
-    if on_off:
+
+    if start_simulation:
         trades_counter = 0
         trade_result = []
         trade_result_longs = []
         trade_result_shorts = []
         trade_direction = []
         profit_loss_long_short = []     # List of profits and losses by longs and shorts
-        for signal_index, signal_value in enumerate(pattern_signal_series_to_chart):
+
+        signal_series = pattern_signal_series_outside   # Default value if both Settings set to False
+
+        if use_pattern_recognition:
+            signal_series = pattern_signal_series_outside
+
+        elif use_piercing_signal:
+            signal_series = pierce_signals_series_outside
+
+        for signal_index, signal_value in enumerate(signal_series):
 
             # LONG TRADES LOGIC
             if signal_value == 100:
@@ -211,13 +220,13 @@ def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
                 signal_candle_open = round(filtered_df.iloc[signal_index]['Open'], 3)
                 signal_candle_high = round(filtered_df.iloc[signal_index]['High'], 3)
                 signal_candle_low = round(filtered_df.iloc[signal_index]['Low'], 3)
-                signal_candle_close_entry = round(filtered_df.iloc[signal_index]['Close'], 3)
+                signal_candle_close_entry = round(filtered_df.iloc[signal_index]['Close'], 3)   # ENTRY
 
                 stop_loss_price = None
                 take_profit_price = None
                 if stop_loss_as_candle_min_max:
-                    stop_loss_price = signal_candle_low
-                    take_profit_price = (((signal_candle_close_entry - signal_candle_low) * risk_reward) +
+                    stop_loss_price = signal_candle_low     # STOP
+                    take_profit_price = (((signal_candle_close_entry - signal_candle_low) * risk_reward) +      # TAKE
                                          signal_candle_close_entry)
 
                 elif stop_loss_as_plus_candle:
@@ -355,6 +364,9 @@ def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
 
         return (trade_result, trades_counter, trade_direction, profit_loss_long_short, trade_result_longs,
                 trade_result_shorts)
+    else:
+        print('Trade simulation is OFF')
+        return None, None, None, None, None, None   # Return Nones in order to avoid error when function is OFF
 
 
 (trade_results_to_trade_analysis, trades_counter_to_trade_analysis, trade_direction_to_trade_analysis,
@@ -365,9 +377,7 @@ def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
 def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_long_short, df, trade_result_longs,
                     trade_result_short):
 
-    on_off = True
-
-    if on_off:
+    if show_trade_analysis and start_simulation:
 
         first_row = df.iloc[0]['Date']
         last_row = df.iloc[-1]['Date']
@@ -458,6 +468,11 @@ def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_l
 
         return rounded_trades_list, rounded_results_as_balance_change
 
+    else:
+        print('Trade analysis is turned off')
+        print()
+        return None, None    # Return Nones in order to avoid error when function is OFF
+
 
 rounded_trades_list_to_chart_profits_losses, rounded_results_as_balance_change_to_chart_profits = trades_analysis(
     trade_results_to_trade_analysis, trades_counter_to_trade_analysis,
@@ -490,7 +505,7 @@ plot_line_chart(filtered_by_date_dataframe)
 # BALANCE CHANGE CHART
 def plot_line_chart_balance_change(rounded_results_as_balance_change):
 
-    if show_balance_change_line_chart:
+    if show_balance_change_line_chart and start_simulation:
         plt.figure(figsize=(10, 6))
         plt.plot(rounded_results_as_balance_change)
         plt.xlabel('Date')
@@ -502,10 +517,10 @@ def plot_line_chart_balance_change(rounded_results_as_balance_change):
 plot_line_chart_balance_change(rounded_results_as_balance_change_to_chart_profits)
 
 
-#  P/L LINE CHART
+# P/L LINE CHART
 def plot_line_chart_profits_losses(rounded_trades_list):
 
-    if show_profits_losses_line_chart:
+    if show_profits_losses_line_chart and start_simulation:
         plt.figure(figsize=(10, 6))
         plt.plot(rounded_trades_list)
         plt.xlabel('Index')
@@ -529,7 +544,7 @@ plot_line_chart_profits_losses(rounded_trades_list_to_chart_profits_losses)
 def highlight_signal_on_line_chart(df):
 
     if show_signal_line_chart:
-        for i, s in enumerate(pattern_signal_series_to_chart):
+        for i, s in enumerate(pattern_signal_series_outside):
             if s == 100:
                 signal_date = df['Datetime'].iloc[i].strftime("%d-%m-%Y-%H-%M")
                 annotation_text = f'Bullish signal on {signal_date} in {file_path}'
@@ -616,8 +631,8 @@ def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series, sr
                  warn_too_much_data=5000)
 
 
-plot_candlestick_chart(filtered_by_date_dataframe, pattern_signal_series_to_chart,
-                       pierce_signals_series_to_chart, sr_levels_timeframe)
+plot_candlestick_chart(filtered_by_date_dataframe, pattern_signal_series_outside,
+                       pierce_signals_series_outside, sr_levels_timeframe)
 
 
 plt.show()
