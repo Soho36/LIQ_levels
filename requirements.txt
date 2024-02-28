@@ -16,3 +16,4 @@ six==1.16.0
 TA-Lib==0.4.28
 tzdata==2023.4
 zipp==3.17.0
+requests==2.31.0

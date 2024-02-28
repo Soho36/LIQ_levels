@@ -1,6 +1,6 @@
 import talib
 import pandas as pd
-import os
+# import os
 import matplotlib.pyplot as plt
 import mplfinance as mpf
 import numpy as np
@@ -29,12 +29,13 @@ file_path = 'TXT/MT4/BTCUSD_D1.csv'
 
 
 # **************************************** SETTINGS **************************************
-dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2017-04-18'     # Choose the start date to begin from
-end_date = '2024-02-06'     # Choose the end date
+# symbol = 'TSLA'
+dataframe_source_api_or_csv = True    # True for API or response file, False for CSV
+start_date = '2023-01-14'     # Choose the start date to begin from
+end_date = '2023-12-20'     # Choose the end date
 
 # ENTRY CONDITIONS
-code_of_pattern = 50     # Choose the index of pattern (from Ta-lib patterns.csv)
+code_of_pattern = 15     # Choose the index of pattern (from Ta-lib patterns.csv)
 use_pattern_recognition = False
 use_piercing_signal = True
 
@@ -58,21 +59,60 @@ show_balance_change_line_chart = True   # Only when Simulation is True
 
 # SIGNALS
 sr_levels_timeframe = 10
-show_swing_highs_lows = True
-show_patterns_signals = False
+show_swing_highs_lows = False
+show_patterns_signals = True    # IS TRUE BY DEFAULT
 show_level_pierce_signals = False
 # ******************************************************************************
 
 
+def print_settings():
+    print('************************************ SETTINGS ************************************')
+    print()
+    print(f'dataframe_source_api_or_csv: {dataframe_source_api_or_csv}')
+    print(f'start_date: {start_date}')
+    print(f'end_date: {end_date}')
+    print()
+    print('ENTRY CONDITIONS')
+    print(f'code_of_pattern: {code_of_pattern}')
+    print(f'use_pattern_recognition: {use_pattern_recognition}')
+    print(f'use_piercing_signal: {use_piercing_signal}')
+    print()
+    print('RISK MANAGEMENT')
+    print(f'risk_reward_ratio: {risk_reward_ratio}')
+    print(f'stop_loss_as_candle_min_max: {stop_loss_as_candle_min_max}')
+    print(f'stop_loss_as_plus_candle: {stop_loss_as_plus_candle}')
+    print(f'stop_loss_offset_multiplier: {stop_loss_offset_multiplier}')
+    print()
+    print('SIMULATION')
+    print(f'start_simulation: {start_simulation}')
+    print(f'show_trade_analysis: {show_trade_analysis}')
+    print()
+    print('CHARTS')
+    print(f'show_candlestick_chart: {show_candlestick_chart}')
+    print(f'show_line_chart: {show_line_chart}')
+    print(f'show_signal_line_chart: {show_signal_line_chart}')
+    print(f'show_profits_losses_line_chart: {show_profits_losses_line_chart}')
+    print(f'show_balance_change_line_chart: {show_balance_change_line_chart}')
+    print()
+    print('SIGNALS')
+    print(f'sr_levels_timeframe: {sr_levels_timeframe}')
+    print(f'show_swing_highs_lows: {show_swing_highs_lows}')
+    print(f'show_patterns_signals: {show_patterns_signals}')
+    print(f'show_level_pierce_signals: {show_level_pierce_signals}')
+
+
+print_settings()
+
+
 def getting_dataframe_from_file(path):
 
-    directory_path = 'TXT/'
+    # directory_path = 'TXT/'
     print()
-    print('Datafiles in folder: ')
-    for filename in os.listdir(directory_path):     # Making a list of files located in TXT folder
-        print(filename)
-    print()
-    print(f'Current file is: {path}')
+    # print('Datafiles in folder: ')
+    # for filename in os.listdir(directory_path):     # Making a list of files located in TXT folder
+    #     print(filename)
+    # print()
+    # print(f'Current file is: {path}')
 
     columns_to_parce = ['Date', 'Time', 'Open', 'High', 'Low', 'Close', 'Filename']
 
@@ -120,7 +160,7 @@ ticker_name, filtered_by_date_dataframe = date_range_func(dataframe_from_csv, da
 print()
 print(f'Dataframe filtered by date:\n {filtered_by_date_dataframe}')
 print()
-print('************************************TRADES SIMULATION************************************')
+print('************************************ TRADES SIMULATION ************************************')
 
 #  ----------------------------------------------
 #  PATTERN RECOGNITION
@@ -146,7 +186,8 @@ def pattern_recognition(patterns_df, code):  # Reading Pattern codes from CSV
 
 
 pattern_signal_series_outside = pattern_recognition(patterns_dataframe, code_of_pattern)  # Returns series
-print('recognized_pattern_signal', pattern_signal_series_outside)
+# print('recognized_pattern_signal', pattern_signal_series_outside)
+print(f'Pattern signals: {list(pattern_signal_series_outside)}')
 
 
 def level_peirce_recognition():
@@ -266,7 +307,7 @@ def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
                         profit_loss_long_short.append('LongProfit')
                         print(f'○ ○ ○ Take profit hit ○ ○ ○ at {current_candle_date}')
                         print()
-                        print(f'Close price: {round(take_profit_price, 3)}')
+                        print(f'Trade Trade Close Price: {round(take_profit_price, 3)}')
                         print(f'P/L: ${round(take_profit_price - signal_candle_close_entry, 3)}')
                         print(
                             '------------------------------------------------------------------------------------------'
@@ -278,7 +319,7 @@ def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
                         profit_loss_long_short.append('LongLoss')
                         print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date}')
                         print()
-                        print(f'Close price: {round(stop_loss_price, 3)}')
+                        print(f'Trade Close Price: {round(stop_loss_price, 3)}')
                         print(f'P/L: ${round(stop_loss_price - signal_candle_close_entry, 3)}')
                         print(
                             '------------------------------------------------------------------------------------------'
@@ -340,7 +381,7 @@ def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
                         profit_loss_long_short.append('ShortProfit')
                         print(f'○ ○ ○ Take profit hit ○ ○ ○ at {current_candle_date}')
                         print()
-                        print(f'Close price: {round(take_profit_price, 3)}')
+                        print(f'Trade Close Price: {round(take_profit_price, 3)}')
                         print(f'P/L: ${round(signal_candle_close_entry - take_profit_price, 3)}')
                         print(
                             '------------------------------------------------------------------------------------------'
@@ -353,7 +394,7 @@ def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
                         profit_loss_long_short.append('ShortLoss')
                         print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date}')
                         print()
-                        print(f'Close price: {round(stop_loss_price, 3)}')
+                        print(f'Trade Close Price: {round(stop_loss_price, 3)}')
                         print(f'P/L: ${round(signal_candle_close_entry - stop_loss_price, 3)}')
                         print(
                             '------------------------------------------------------------------------------------------'
@@ -361,7 +402,8 @@ def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
                         break
                     else:
                         pass
-
+        else:
+            print("Neither chosen")
         return (trade_result, trades_counter, trade_direction, profit_loss_long_short, trade_result_longs,
                 trade_result_shorts)
     else:
@@ -375,14 +417,18 @@ def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
 
 
 def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_long_short, df, trade_result_longs,
-                    trade_result_short):
+                    trade_result_short, df_csv, df_api):
 
     if show_trade_analysis and start_simulation:
 
-        first_row = df.iloc[0]['Date']
-        last_row = df.iloc[-1]['Date']
+        if dataframe_source_api_or_csv:
+            first_row = df_api.iloc[0]['Date']
+            last_row = df_api.iloc[-1]['Date']
+        else:
+            first_row = df_csv.iloc[0]['Date']
+            last_row = df_csv.iloc[-1]['Date']
         print()
-        print('************************************TRADES ANALYSIS************************************')
+        print('************************************ TRADES ANALYSIS ************************************')
         print()
         print(f'Ticker: {ticker_name}')
         print()
@@ -399,7 +445,8 @@ def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_l
 
         outcomes_string = []     # List of trade outcomes: profit or loss in order to calculate profitability %
         outcomes_positive = []      # List of positive trades
-        outcomes_negative = []     # List of negative trades
+
+        outcomes_negative = []      # List of negative trades
 
         for num in rounded_trades_list:
             if num > 0:
@@ -408,7 +455,8 @@ def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_l
             else:
                 outcomes_string.append('loss')
                 outcomes_negative.append(num)
-
+        print(f'Profitable trades list: {outcomes_positive}')
+        print(f'Losing trades list: {outcomes_negative}')
         # Accumulate the sum of consecutive elements to illustrate balance change over time
         results_as_balance_change = []
         running_sum = rounded_trades_list[0]
@@ -429,15 +477,29 @@ def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_l
         days_per_trade = round(1 / trades_per_day)      # 1 trade is placed in how many days
         count_longs = trade_direction.count('Long')
         count_shorts = trade_direction.count('Short')
-        count_profitable_longs_percent = round((profit_loss_long_short.count('LongProfit') * 100) / count_longs, 2)
-        count_profitable_shorts_percent = round((profit_loss_long_short.count('ShortProfit') * 100) / count_shorts, 2)
+        try:
+            count_profitable_longs_percent = round((profit_loss_long_short.count('LongProfit') * 100) /
+                                                   count_longs, 2)
+        except ZeroDivisionError:
+            count_profitable_longs_percent = 0
+            # print("No long trades were made")
+        try:
+            count_profitable_shorts_percent = round((profit_loss_long_short.count('ShortProfit') * 100) /
+                                                    count_shorts, 2)
+        except ZeroDivisionError:
+            count_profitable_shorts_percent = 0
+            # print("No short trades were made")
+
         # print(f'{profit_loss_long_short}')
         # print(f'List {trade_direction}')
         print(f'Balance change over time list: {rounded_results_as_balance_change}')
+        print()
         print(f'Total days in range: {days_number_analyzed}'.title())
         print(f'Trades per day: {trades_per_day} or 1 trade every {days_per_trade} days'.title())
         print(f'Trades count: {trades_counter}'.title())
         print(f'Closed trades: {trades_count}'.title())
+        print()
+        print(f'risk_reward_ratio: {risk_reward_ratio}')
         print()
         print(f'Profitable trades: {profitable_trades_count} ({round(win_percent, 2)}%)'.title())
         print(f'Losing trades: {loss_trades_count} ({round(loss_percent, 2)}%)'.title())
@@ -477,7 +539,7 @@ def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_l
 rounded_trades_list_to_chart_profits_losses, rounded_results_as_balance_change_to_chart_profits = trades_analysis(
     trade_results_to_trade_analysis, trades_counter_to_trade_analysis,
     trade_direction_to_trade_analysis, profit_loss_long_short_to_trade_analysis, filtered_by_date_dataframe,
-    trade_result_longs_to_trade_analysis, trade_result_shorts_to_trade_analysis)
+    trade_result_longs_to_trade_analysis, trade_result_shorts_to_trade_analysis, dataframe_from_csv, dataframe_from_api)
 
 #  ----------------------------------------------
 #  PLOT CHART
