@@ -11,7 +11,7 @@ time_series_daily = False
 time_series_intraday = True
 output_size_full = True
 
-symbol = 'NVDA'
+symbol = 'TSLA'
 
 interval = 'Daily'
 # interval = '1min'

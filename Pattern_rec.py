@@ -31,16 +31,16 @@ file_path = 'TXT/MT4/BTCUSD_D1.csv'
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = True    # True for API or response file, False for CSV
-start_date = '2023-01-14'     # Choose the start date to begin from
+start_date = '2023-10-14'     # Choose the start date to begin from
 end_date = '2023-12-20'     # Choose the end date
 
 # ENTRY CONDITIONS
-code_of_pattern = 15     # Choose the index of pattern (from Ta-lib patterns.csv)
+code_of_pattern = 16     # Choose the index of pattern (from Ta-lib patterns.csv)
 use_pattern_recognition = False
 use_piercing_signal = True
 
 # RISK MANAGEMENT
-risk_reward_ratio = 2   # Chose risk/reward ratio (aiming to win compared to lose)
+risk_reward_ratio = 3   # Chose risk/reward ratio (aiming to win compared to lose)
 stop_loss_as_candle_min_max = True  # Must be True if next condition is false
 stop_loss_as_plus_candle = False     # Must be True if previous condition is false
 stop_loss_offset_multiplier = 1    # 1 places stop one candle away from H/L (only when stop_loss_as_plus_candle = True
@@ -51,10 +51,10 @@ show_trade_analysis = True
 
 # CHARTS
 show_candlestick_chart = True
-show_line_chart = False
+show_line_chart = True
 show_signal_line_chart = False
 show_profits_losses_line_chart = False  # Only when Simulation is True
-show_balance_change_line_chart = True   # Only when Simulation is True
+show_balance_change_line_chart = False   # Only when Simulation is True
 
 
 # SIGNALS
@@ -227,6 +227,14 @@ def level_peirce_recognition():
 
 
 pierce_signals_series_outside = level_peirce_recognition()
+
+
+def two_signals_at_once(pattern_signals, pierce_signals):
+    print(pattern_signals, pierce_signals)
+
+
+two_signals_at_once(pattern_signal_series_outside, pierce_signals_series_outside)
+
 
 #  ----------------------------------------------
 #  TRADES SIMULATION
@@ -636,6 +644,9 @@ def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series, sr
     if show_candlestick_chart:
 
         pattern_signals_series.reset_index(drop=True, inplace=True)
+        print(df)
+        print('pattern\n', pattern_signals_series)
+        print('pierce\n', pierce_signals_series)
         df.set_index('Datetime', inplace=True)
         plots_list = []
         # print('Dataframe in candlestick chart: ', df)
@@ -654,35 +665,40 @@ def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series, sr
         #  Converting zeros to NAN more suitable for plotting. Skip values which are true, others replace NaN
         pattern_signals_with_nan = pattern_signals_series.where(pattern_signals_series != 0, np.nan)
         pierce_signals_with_nan = pierce_signals_series.where(pierce_signals_series != 0, np.nan)
-
+        print(pattern_signals_with_nan)
+        print(pierce_signals_with_nan)
         # print('Pattern Signals with nan:', pattern_signals_with_nan)
         # print('Pierce Signals with nan:', pierce_signals_with_nan)
 
         if show_patterns_signals:
             # Iterate over signals and add non-zero signals to add_plots
-            for i, s in enumerate(pattern_signals_with_nan):
-                if s != 'NaN':
-                    # Add signals as a subplot
-                    plots_list.append(mpf.make_addplot(pattern_signals_with_nan,
-                                                       type='scatter', color='black',
-                                                       markersize=250, marker='+', panel=1))
-                else:
-                    pass
+            if pattern_signals_with_nan.isna().all():   # Need to check it to avoid empty array error
+                pass
+            else:
+                for i, s in enumerate(pattern_signals_with_nan):
+                    if s != 'NaN':
+                        # Add signals as a subplot
+                        plots_list.append(mpf.make_addplot(pattern_signals_with_nan,
+                                                           type='scatter', color='black',
+                                                           markersize=250, marker='+', panel=1))
+                # else:
+                #     pass
 
         else:
             print('Patterns showing is switched off')
         # print('Print plots_list after patterns append: \n', plots_list)
 
         if show_level_pierce_signals:
-
-            for i, s in enumerate(pierce_signals_with_nan):
-                if s != 'NaN':
-                    # Add signals as a subplot
-                    plots_list.append(mpf.make_addplot(pierce_signals_with_nan,  # Add the signals as a subplot
-                                                       type='scatter', color='blue',
-                                                       markersize=250, marker='*', panel=1))
-            else:
+            if pierce_signals_with_nan.isna().all():    # Need to check it to avoid empty array error
                 pass
+            else:
+                for i, s in enumerate(pierce_signals_with_nan):
+                    if s != 'NaN':
+                        # Add signals as a subplot
+                        plots_list.append(mpf.make_addplot(pierce_signals_with_nan,  # Add the signals as a subplot
+                                                           type='scatter', color='blue',
+                                                           markersize=250, marker='*', panel=1))
+
         else:
             print('Pierce showing is switched off')
 
