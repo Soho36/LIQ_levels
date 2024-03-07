@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import mplfinance as mpf
 import numpy as np
 import statistics
-from API_file import dataframe_from_api
+from API_or_Json import dataframe_from_api
 
 
 # ------------------------------------------
