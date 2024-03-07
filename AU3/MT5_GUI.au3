@@ -2,9 +2,9 @@
 
 Local $trade_direction_buy = False
 Local $trade_direction_sell = True
-Local $volume = 120
-Local $stop_loss = 173.89
-Local $take_profit = 183.66
+Local $volume = 100
+Local $stop_loss = 179.25
+Local $take_profit = 178.75
 Local $sleep = 1000
 
 ;IF LINES ARE ADDED OR REMOVED WITHIN THIS BLOCK CORRESPONDING INDEXES MUST BE UPDATED IN PYTHON SCRIPT
