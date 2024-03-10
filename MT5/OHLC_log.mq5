@@ -1,105 +1,43 @@
 //+------------------------------------------------------------------+
-//|                                               OHLC_Logger.mq5    |
-//|                        Copyright 2024, MetaQuotes Ltd.           |
-//|                                              https://www.mql5.com|
+//| Expert tick function                                             |
 //+------------------------------------------------------------------+
-#property strict
+void OnTick()
+  {
+// We will use the static Old_Time variable to serve the bar time.
+// At each OnTick execution we will check the current bar time with the saved one.
+// If the bar time isn't equal to the saved time, it indicates that we have a new tick.
+   static datetime Old_Time;
+   datetime New_Time[1];
+   bool IsNewBar=false;
 
-// include <Trade\Trade.mqh> // Include for trading functions
-// include <ChartObjects\ChartObject.mqh> // Include for object functions
+// copying the last bar time to the element New_Time[0]
+   int copied=CopyTime(_Symbol,_Period,0,1,New_Time);
+   if(copied>0) // ok, the data has been copied successfully
+     {
+      if(Old_Time!=New_Time[0]) // if old time isn't equal to new bar time
+        {
+         IsNewBar=true;   // if it isn't a first call, the new bar has appeared
+ 
+         // Print OHLC of the new bar
+         double open = iOpen(_Symbol, _Period, 1); // Open price of the previous bar
+         double high = iHigh(_Symbol, _Period, 1); // High price of the previous bar
+         double low = iLow(_Symbol, _Period, 1); // Low price of the previous bar
+         double close = iClose(_Symbol, _Period, 1); // Close price of the previous bar
+         Print("Open: ", open, ", High: ", high, ", Low: ", low, ", Close: ", close);
+         
+         Old_Time=New_Time[0];            // saving bar time
+        }
+     }
+   else
+     {
+      Alert("Error in copying historical times data, error =",GetLastError());
+      ResetLastError();
+      return;
+     }
 
-// File handle
-int fileHandle;
-
-//+------------------------------------------------------------------+
-//| Expert initialization function                                   |
-//+------------------------------------------------------------------+
-int OnInit()
-{
-    // Open the file for writing
-    fileHandle = FileOpen("OHLC_Log.csv", FILE_WRITE|FILE_TXT|FILE_CSV);
-    if(fileHandle == INVALID_HANDLE)
-    {
-        Print("Failed to open file for writing! Error code: ", GetLastError());
-        return INIT_FAILED;
-    }
-    
-    // Set timer to check for completed candles every second
-    EventSetTimer(1);
-    
-    return INIT_SUCCEEDED;
-}
-
-//+------------------------------------------------------------------+
-//| Expert deinitialization function                                 |
-//+------------------------------------------------------------------+
-void OnDeinit(const int reason)
-{
-    // Close the file
-    FileClose(fileHandle);
-    
-    // Reset timer
-    EventKillTimer();
-}
-
-//+------------------------------------------------------------------+
-//| Expert timer function                                           |
-//+------------------------------------------------------------------+
-// Declare a boolean variable to keep track of whether the condition is met
-bool conditionMet = false;
-
-void OnTimer()
-{
-    // Get the opening time of the last completed candle
-    datetime previousCandleTime = iTime(Symbol(), Period(), 1);
-
-    // Get the current time
-    datetime currentTime = TimeCurrent();
-
-    MqlDateTime currentCandle, previousCandle;
-    TimeToStruct(currentTime, currentCandle);
-    TimeToStruct(previousCandleTime, previousCandle);
-
-    // Check if a new candle has formed and the condition is met
-    // Prints OHLC every minute
-    // if (currentCandle.min != previousCandle.min && currentCandle.sec == 0 && !conditionMet)
-    bool isNewHour = previousCandle.sec < currentTime && currentTime < currentCandle.sec;
-    
-    // Prints OHLC every 5 minute  
-    // if (currentCandle.min % 5 == 0 && currentCandle.min != previousCandle.min && !conditionMet)
-    if (isNewHour)
-    {
-        // Print a debug message to verify the conditions are met
-        // Print("Current Time: ", TimeToString(currentTime, TIME_DATE | TIME_MINUTES));
-        // Print("Previous Candle Time: ", TimeToString(previousCandleTime, TIME_DATE | TIME_MINUTES));
-
-        // Get the closed candle OHLC data
-        double openPrice = iOpen(Symbol(), Period(), 1);
-        double highPrice = iHigh(Symbol(), Period(), 1);
-        double lowPrice = iLow(Symbol(), Period(), 1);
-        double closePrice = iClose(Symbol(), Period(), 1);
-        datetime candleTime = previousCandleTime; // Time of the completed candle
-
-        // Format the data
-        string dataRow = TimeToString(candleTime, TIME_DATE) + "," +
-                         TimeToString(candleTime, TIME_MINUTES) + "," +
-                         DoubleToString(openPrice, _Digits) + "," +
-                         DoubleToString(highPrice, _Digits) + "," +
-                         DoubleToString(lowPrice, _Digits) + "," +
-                         DoubleToString(closePrice, _Digits);
-        
-        // Print data to terminal and log file
-        Print(dataRow);
-        // Write data row to the log file
-        FileWriteString(fileHandle, dataRow + "\n");
-        
-        // Set the conditionMet variable to true
-        conditionMet = true;
-    }
-    
-    // Reset conditionMet if the condition is no longer met
-    if (currentCandle.min % 5 != 0 || currentCandle.min == previousCandle.min)
-    {
-        conditionMet = false;
-    }
-}
+//--- EA should only check for new trade if we have a new bar
+   if(IsNewBar==false)
+     {
+      return;
+     }
+  }
