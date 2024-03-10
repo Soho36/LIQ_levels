@@ -5,8 +5,8 @@
 //+------------------------------------------------------------------+
 #property strict
 
-#include <Trade\Trade.mqh> // Include for trading functions
-#include <ChartObjects\ChartObject.mqh> // Include for object functions
+// include <Trade\Trade.mqh> // Include for trading functions
+// include <ChartObjects\ChartObject.mqh> // Include for object functions
 
 // File handle
 int fileHandle;
@@ -61,11 +61,17 @@ void OnTimer()
     TimeToStruct(previousCandleTime, previousCandle);
 
     // Check if a new candle has formed and the condition is met
-    if (currentCandle.min % 5 == 0 && currentCandle.min != previousCandle.min && !conditionMet)
+    // Prints OHLC every minute
+    // if (currentCandle.min != previousCandle.min && currentCandle.sec == 0 && !conditionMet)
+    bool isNewHour = previousCandle.sec < currentTime && currentTime < currentCandle.sec;
+    
+    // Prints OHLC every 5 minute  
+    // if (currentCandle.min % 5 == 0 && currentCandle.min != previousCandle.min && !conditionMet)
+    if (isNewHour)
     {
         // Print a debug message to verify the conditions are met
-        Print("Current Time: ", TimeToString(currentTime, TIME_DATE | TIME_MINUTES));
-        Print("Previous Candle Time: ", TimeToString(previousCandleTime, TIME_DATE | TIME_MINUTES));
+        // Print("Current Time: ", TimeToString(currentTime, TIME_DATE | TIME_MINUTES));
+        // Print("Previous Candle Time: ", TimeToString(previousCandleTime, TIME_DATE | TIME_MINUTES));
 
         // Get the closed candle OHLC data
         double openPrice = iOpen(Symbol(), Period(), 1);
@@ -81,7 +87,9 @@ void OnTimer()
                          DoubleToString(highPrice, _Digits) + "," +
                          DoubleToString(lowPrice, _Digits) + "," +
                          DoubleToString(closePrice, _Digits);
-
+        
+        // Print data to terminal and log file
+        Print(dataRow);
         // Write data row to the log file
         FileWriteString(fileHandle, dataRow + "\n");
         
