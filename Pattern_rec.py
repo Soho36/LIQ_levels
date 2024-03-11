@@ -113,10 +113,10 @@ def getting_dataframe_from_file(path):
     # print()
     # print(f'Current file is: {path}')
 
-    columns_to_parce = ['Date', 'Time', 'Open', 'High', 'Low', 'Close', 'Filename']
+    columns_to_parse = ['Date', 'Time', 'Open', 'High', 'Low', 'Close', 'Filename']
 
     #  for MT4 files set dayfirst=False
-    csv_df = pd.read_csv(path, parse_dates=[0], dayfirst=False, usecols=columns_to_parce)
+    csv_df = pd.read_csv(path, parse_dates=[0], dayfirst=False, usecols=columns_to_parse)
     print()
     if dataframe_source_api_or_csv is False:
         print(f'Dataframe derived from CSV:\n {csv_df}')
