@@ -7,7 +7,8 @@ import pandas as pd
 file_path = ('C:/Users/Liikurserv/AppData/Roaming/MetaQuotes/Terminal/010E047102812FC0C18890992854220E/MQL5/'
              'Logs/20240312.log')
 
-log_file_reading_interval = 2
+
+log_file_reading_interval = 5   # File reading interval (sec)
 
 try:
     while True:
@@ -28,14 +29,15 @@ try:
 
         columns_to_drop = ['1', '2', 'Volume']
         dataframe_from_log = dataframe_from_log.drop(columns=columns_to_drop)
-        print('Modified dataframe:')
-        print(dataframe_from_log)
+        # print('Modified dataframe:')
+        # print(dataframe_from_log)
 
         daytime = pd.to_datetime(dataframe_from_log['Time'], format='mixed')
-        print('Converted daytime')
-        print(daytime)
+        # print('Converted daytime')
+        # print(daytime)
         dataframe_from_log = dataframe_from_log.assign(Datetime=daytime)
         dataframe_from_log = dataframe_from_log.drop(columns='Time')
+        print('Working dataframe:')
         print(dataframe_from_log)
 
         time.sleep(log_file_reading_interval)
