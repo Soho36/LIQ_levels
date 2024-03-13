@@ -21,21 +21,22 @@ from API_or_Json import dataframe_from_api
 # file_path = 'TXT/meta_D1.csv'
 # file_path = 'TXT/tsla_m5.csv'
 # file_path = 'TXT/tsla_m1.csv'
-file_path = 'TXT/MT4/BTCUSD_D1.csv'
+# file_path = 'TXT/MT4/BTCUSD_D1.csv'
 # file_path = 'TXT/MT4/BTCUSD_m60.csv'
 # file_path = 'TXT/MT4/BTCUSD_m5.csv'
+file_path = 'TXT/MT4/BTCUSD1.csv'
 # ------------------------------------------
 # pd.set_option('display.max_columns', 10)  # Uncomment to display all columns
 
 
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
-dataframe_source_api_or_csv = True    # True for API or response file, False for CSV
-start_date = '2010-06-29'     # Choose the start date to begin from
-end_date = '2024-02-21'     # Choose the end date
+dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
+start_date = '2024-03-12'     # Choose the start date to begin from
+end_date = '2024-03-12'     # Choose the end date
 
 # ENTRY CONDITIONS
-code_of_pattern = 60  # Choose the index of pattern (from Ta-lib patterns.csv)
+number_of_pattern = 51  # Choose the index of pattern (from Ta-lib patterns.csv)
 use_pattern_recognition = True
 use_piercing_signal = False
 
@@ -50,7 +51,7 @@ start_simulation = True
 show_trade_analysis = True
 
 # CHARTS
-show_candlestick_chart = False
+show_candlestick_chart = True
 show_line_chart = False
 show_signal_line_chart = False
 show_profits_losses_line_chart = False  # Only when Simulation is True
@@ -72,7 +73,7 @@ def print_settings():
     print(f'end_date: {end_date}')
     print()
     print('ENTRY CONDITIONS')
-    print(f'code_of_pattern: {code_of_pattern}')
+    print(f'code_of_pattern: {number_of_pattern}')
     print(f'use_pattern_recognition: {use_pattern_recognition}')
     print(f'use_piercing_signal: {use_piercing_signal}')
     print()
@@ -168,12 +169,12 @@ print('************************************ TRADES SIMULATION ******************
 patterns_dataframe = pd.read_csv('Ta-lib patterns.csv')
 
 
-def pattern_recognition(patterns_df, code):  # Reading Pattern codes from CSV
+def pattern_recognition(patterns_df, pattern_number):  # Reading Pattern codes from CSV
 
     if use_pattern_recognition:
-        pattern_code = patterns_df['PatternCode'].iloc[code]
-        pattern_name = patterns_df['PatternName'].iloc[code]
-        pattern_index = patterns_df.index[code]
+        pattern_code = patterns_df['PatternCode'].iloc[pattern_number]
+        pattern_name = patterns_df['PatternName'].iloc[pattern_number]
+        pattern_index = patterns_df.index[pattern_number]
         active_pattern = {'Pattern_code': pattern_code,
                           'Pattern_name': pattern_name,
                           'Pattern_index': pattern_index}
@@ -194,7 +195,7 @@ def pattern_recognition(patterns_df, code):  # Reading Pattern codes from CSV
 
 
 # Returns series
-pattern_signal_series_outside, active_pattern_list = pattern_recognition(patterns_dataframe, code_of_pattern)
+pattern_signal_series_outside, active_pattern_list = pattern_recognition(patterns_dataframe, number_of_pattern)
 # print('recognized_pattern_signal', pattern_signal_series_outside)
 
 
@@ -547,11 +548,11 @@ def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_l
             loss_percent = (loss_trades_count * 100) / trades_count     # Losing trades %
         except ZeroDivisionError:
             pass
-        days_number_analyzed = len(filtered_by_date_dataframe)      # Total days(candles) in analysis
-        trades_per_day = round(trades_count / days_number_analyzed, 2)  # How many trades are placed in one day
+        candles_number_analyzed = len(filtered_by_date_dataframe)      # Total candles in analysis
+        trades_per_candle = round(trades_count / candles_number_analyzed, 2)  # How many trades are placed in one day
         days_per_trade = 0
         try:
-            days_per_trade = round(1 / trades_per_day)      # 1 trade is placed in how many days
+            days_per_trade = round(1 / trades_per_candle)      # 1 trade is placed in how many days
         except ZeroDivisionError:
             pass
         count_longs = trade_direction.count('Long')
@@ -573,9 +574,9 @@ def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_l
         # print(f'List {trade_direction}')
         print(f'Balance change over time list: {rounded_results_as_balance_change}')
         print()
-        print(f'Total days in range: {days_number_analyzed}'.title())
+        print(f'Total candles in range: {candles_number_analyzed}'.title())
         if days_per_trade > 0:
-            print(f'Trades per day: {trades_per_day} or 1 trade every {days_per_trade} days'.title())
+            print(f'Trades per candle: {trades_per_candle} or 1 trade every {days_per_trade} candles'.title())
         else:
             print('Trades per day: 0')
         print(f'Trades count: {trades_counter}'.title())
@@ -638,6 +639,7 @@ rounded_trades_list_to_chart_profits_losses, rounded_results_as_balance_change_t
 #  ----------------------------------------------
 
 #  Adding datetime column to dataframe for chart plotting
+
 filtered_by_date_dataframe = (filtered_by_date_dataframe.assign(
     Datetime=(filtered_by_date_dataframe['Date'] + pd.to_timedelta(filtered_by_date_dataframe['Time']))))
 

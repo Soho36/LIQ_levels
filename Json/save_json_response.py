@@ -4,8 +4,8 @@ from config import api_key
 
 # api_key = 'DEMO'
 
-symbol = 'DWAC'
-interval = '5min'
+symbol = 'BTCUSD'
+interval = '1min'
 
 time_series_daily = False
 time_series_intraday = True
