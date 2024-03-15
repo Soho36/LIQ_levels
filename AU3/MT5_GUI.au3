@@ -1,10 +1,10 @@
 ;IF LINES ARE ADDED OR REMOVED WITHIN THIS BLOCK CORRESPONDING INDEXES MUST BE UPDATED IN PYTHON SCRIPT
 ; ALL VALUES DERIVED FROM PYTHON SCRIPT
-Local $trade_direction_buy = True
-Local $trade_direction_sell = False
+Local $trade_direction_buy_or_sell = True
 Local $volume = 0.01
 Local $stop_loss = 0
 Local $take_profit = 0
+Local $sleep = 500
 Local $sleep = 500
 
 ;IF LINES ARE ADDED OR REMOVED WITHIN THIS BLOCK CORRESPONDING INDEXES MUST BE UPDATED IN PYTHON SCRIPT

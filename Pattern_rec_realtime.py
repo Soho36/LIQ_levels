@@ -3,23 +3,39 @@ import time
 import pandas as pd
 import mplfinance as mpf
 import subprocess
-import sys
+# import sys
 
 # import pandas.errors
 
 current_time = time.strftime('%H:%M:%S')
 # The path to MT5 directory containing log file:
-file_path = ('C:/Users/Liikurserv/AppData/Roaming/MetaQuotes/Terminal/010E047102812FC0C18890992854220E/MQL5/Files/'
-             'OHLCVData.csv')
+mt5_logging_file_path = ('C:/Users/Liikurserv/AppData/Roaming/MetaQuotes/Terminal/010E047102812FC0C18890992854220E/'
+                         'MQL5/Files/OHLCVData.csv')
 # autoit_script_path = 'AU3/MT5_GUI_test.au3'
-autoit_script_path = 'AU3/MT5_GUI.au3'
+autoit_script_path = 'AU3/MT5_GUI_test.au3'
 #  ********************************************************************************************************************
-log_file_reading_interval = 5   # File reading interval (sec)
+log_file_reading_interval = 5       # File reading interval (sec)
 number_of_pattern = 51
-
 #  ********************************************************************************************************************
+# ************************************** MT5 TRANSMIT SETTINGS ********************************************************
 
+volume_value = 0.01                 # 1000 MAX for stocks
+stop_loss_value = 0
+take_profit_value = 0
+sleep = 500
 
+# *********************************************************************************************************************
+# This block is responsible for replacing lines in AU3 script with modified lines reflecting ORDER settings
+line_number_direction_buy_or_sell = 3
+line_number_volume = 4
+line_number_stop = 5
+line_number_take = 6
+line_number_sleep = 7
+new_line_volume = f'Local $volume = {volume_value} ;replaceable line' + '\n'
+new_line_stop = f'Local $stop_loss = {stop_loss_value} ;replaceable line' + '\n'
+new_line_take = f'Local $take_profit = {take_profit_value} ;replaceable line' + '\n'
+# new_line_direction_buy_or_sell is located within the pattern_recognition()
+new_line_sleep = f'Local $sleep = {sleep} ;replaceable line' + '\n'
 
 
 try:
@@ -29,7 +45,7 @@ try:
     while True:     # Creating a loop for refreshing intervals
 
         def get_dataframe_from_file():
-            log_df = pd.read_csv(file_path, sep=';', encoding='utf-16', engine='python')
+            log_df = pd.read_csv(mt5_logging_file_path, sep=';', encoding='utf-16', engine='python')
             return log_df
 
         dataframe_from_log = get_dataframe_from_file()
@@ -58,18 +74,28 @@ try:
             pattern_function = getattr(talib, pattern_code)
             # pattern_signal = pattern_function(log_dataframe['Open'], log_dataframe['High'],
             #                                   log_dataframe['Low'], log_dataframe['Close'])
-            pattern_signal = [0, 0, 0, 0, 0, 100]
+            pattern_signal = [0, 0, 0, 0, 0, -100]
             print(f'Pattern signals: {list(pattern_signal)}')
 
             if pattern_signal[-1] == 100 and not buy_signal:
             #  if pattern_signal.iloc[-1] == 100 and not buy_signal:
                 print()
                 print('▲ ▲ ▲ Buy signal discovered! ▲ ▲ ▲'.upper())
-                # send_buy = True
-                # volume_value = 0.01  # 1000 MAX for stocks
-                # stop_loss_value = 0
-                # take_profit_value = 0
-                # sleep = 500
+                buy_or_sell_flag = True            # True for "BUY", False for "SELL"
+                new_line_direction_buy_or_sell = (f'Local $trade_direction_buy_or_sell = '
+                                                  f'{buy_or_sell_flag} ;replaceable line. '
+                                                  f'True for BUY, False for Sell') + '\n'
+                with open(autoit_script_path, 'r') as file:                         # Reading current au3.file
+                    lines = file.readlines()
+                lines[line_number_volume - 1] = new_line_volume
+                lines[line_number_stop - 1] = new_line_stop
+                lines[line_number_take - 1] = new_line_take
+                lines[line_number_direction_buy_or_sell - 1] = new_line_direction_buy_or_sell
+                lines[line_number_sleep - 1] = new_line_sleep
+
+                with open(autoit_script_path, 'w') as file:                         # Writing au3.file with new lines
+                    file.writelines(lines)
+
                 try:
                     subprocess.run(['start', autoit_script_path], shell=True)
                     print('AutoIt script executed successfully BUY')
@@ -81,6 +107,22 @@ try:
             #  if pattern_signal.iloc[-1] == -100 and not sell_signal:
                 print()
                 print('▼ ▼ ▼ Sell signal discovered! ▼ ▼ ▼'.upper())
+                buy_or_sell_flag = False            # True for "BUY", False for "SELL"
+                new_line_direction_buy_or_sell = (f'Local $trade_direction_buy_or_sell = '
+                                                  f'{buy_or_sell_flag} ;replaceable line. '
+                                                  f'True for BUY, False for Sell') + '\n'
+                with open(autoit_script_path, 'r') as file:                         # Reading current au3.file
+                    lines = file.readlines()
+                    # print(lines)
+                lines[line_number_volume - 1] = new_line_volume
+                lines[line_number_stop - 1] = new_line_stop
+                lines[line_number_take - 1] = new_line_take
+                lines[line_number_direction_buy_or_sell - 1] = new_line_direction_buy_or_sell
+                lines[line_number_sleep - 1] = new_line_sleep
+
+                with open(autoit_script_path, 'w') as file:                         # Writing au3.file with new lines
+                    file.writelines(lines)
+
                 try:
                     subprocess.run(['start', autoit_script_path], shell=True)
                     print('AutoIt script executed successfully SELL')
