@@ -19,10 +19,9 @@ number_of_pattern = 51
 #  ********************************************************************************************************************
 # ************************************** MT5 TRANSMIT SETTINGS ********************************************************
 
-volume_value = 0.01                 # 1000 MAX for stocks
-stop_loss_value = 0
-take_profit_value = 0
-sleep = 500
+volume_value = 0.01                # 1000 MAX for stocks
+risk_reward = 2
+sleep = 100
 
 # *********************************************************************************************************************
 # This block is responsible for replacing lines in AU3 script with modified lines reflecting ORDER settings
@@ -32,9 +31,6 @@ line_number_stop = 5
 line_number_take = 6
 line_number_sleep = 7
 new_line_volume = f'Local $volume = {volume_value} ;replaceable line' + '\n'
-new_line_stop = f'Local $stop_loss = {stop_loss_value} ;replaceable line' + '\n'
-new_line_take = f'Local $take_profit = {take_profit_value} ;replaceable line' + '\n'
-# new_line_direction_buy_or_sell is located within the pattern_recognition()
 new_line_sleep = f'Local $sleep = {sleep} ;replaceable line' + '\n'
 
 
@@ -57,7 +53,17 @@ try:
         daytime = pd.to_datetime(dataframe_from_log['Time'], format='mixed')    # Converting to DateTime format
 
         dataframe_from_log = dataframe_from_log.assign(Datetime=daytime)    # Insert Datetime column and...
-        dataframe_from_log = dataframe_from_log.drop(columns='Time')    # deleting old 'Time' column
+        dataframe_from_log = dataframe_from_log.drop(columns='Time')    # Deleting old 'Time' column
+        # Last candle OHLC
+        last_candle_open = dataframe_from_log['Open'].iloc[-1]
+        last_candle_high = dataframe_from_log['High'].iloc[-1]
+        last_candle_low = dataframe_from_log['Low'].iloc[-1]
+        last_candle_close = dataframe_from_log['Close'].iloc[-1]
+
+        print('Last Open', last_candle_open)
+        print('Last High', last_candle_high)
+        print('Last Low', last_candle_low)
+        print('Last Close', last_candle_close)
         print('Working dataframe:')
         print(dataframe_from_log)   # Printing the DataFrame to see whether it looks like as supposed to
 
@@ -72,19 +78,24 @@ try:
             print(f'Current Pattern is: {pattern_code}, {pattern_name}, {pattern_index}')
 
             pattern_function = getattr(talib, pattern_code)
-            # pattern_signal = pattern_function(log_dataframe['Open'], log_dataframe['High'],
-            #                                   log_dataframe['Low'], log_dataframe['Close'])
-            pattern_signal = [0, 0, 0, 0, 0, -100]
+            pattern_signal = pattern_function(log_dataframe['Open'], log_dataframe['High'],
+                                              log_dataframe['Low'], log_dataframe['Close'])
+            # pattern_signal = [0, 0, 0, 0, 0, -100]
             print(f'Pattern signals: {list(pattern_signal)}')
 
-            if pattern_signal[-1] == 100 and not buy_signal:
-            #  if pattern_signal.iloc[-1] == 100 and not buy_signal:
+            # if pattern_signal[-1] == 100 and not buy_signal:
+            if pattern_signal.iloc[-1] == 100 and not buy_signal:
                 print()
                 print('▲ ▲ ▲ Buy signal discovered! ▲ ▲ ▲'.upper())
                 buy_or_sell_flag = True            # True for "BUY", False for "SELL"
+                stop_loss_price = last_candle_low
+                take_profit_price = (((last_candle_close - last_candle_low) * risk_reward) + last_candle_close)
                 new_line_direction_buy_or_sell = (f'Local $trade_direction_buy_or_sell = '
                                                   f'{buy_or_sell_flag} ;replaceable line. '
                                                   f'True for BUY, False for Sell') + '\n'
+                new_line_stop = f'Local $stop_loss = {stop_loss_price} ;replaceable line' + '\n'
+                new_line_take = f'Local $take_profit = {take_profit_price} ;replaceable line' + '\n'
+
                 with open(autoit_script_path, 'r') as file:                         # Reading current au3.file
                     lines = file.readlines()
                 lines[line_number_volume - 1] = new_line_volume
@@ -103,14 +114,19 @@ try:
                     print(f'Error executing AutoIt script BUY: {e}')
 
                 buy_signal = True   # Setting flag back to TRUE
-            if pattern_signal[-1] == -100 and not sell_signal:
-            #  if pattern_signal.iloc[-1] == -100 and not sell_signal:
+            # if pattern_signal[-1] == -100 and not sell_signal:
+            if pattern_signal.iloc[-1] == -100 and not sell_signal:
                 print()
                 print('▼ ▼ ▼ Sell signal discovered! ▼ ▼ ▼'.upper())
                 buy_or_sell_flag = False            # True for "BUY", False for "SELL"
+                stop_loss_price = last_candle_high
+                take_profit_price = (last_candle_close - ((stop_loss_price - last_candle_close) * risk_reward))
                 new_line_direction_buy_or_sell = (f'Local $trade_direction_buy_or_sell = '
                                                   f'{buy_or_sell_flag} ;replaceable line. '
                                                   f'True for BUY, False for Sell') + '\n'
+                new_line_stop = f'Local $stop_loss = {stop_loss_price} ;replaceable line' + '\n'
+                new_line_take = f'Local $take_profit = {take_profit_price} ;replaceable line' + '\n'
+
                 with open(autoit_script_path, 'r') as file:                         # Reading current au3.file
                     lines = file.readlines()
                     # print(lines)
