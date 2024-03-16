@@ -1,11 +1,8 @@
 import talib
 import time
 import pandas as pd
-import mplfinance as mpf
 import subprocess
-# import sys
-
-# import pandas.errors
+import winsound
 
 current_time = time.strftime('%H:%M:%S')
 # The path to MT5 directory containing log file:
@@ -14,14 +11,14 @@ mt5_logging_file_path = ('C:/Users/Liikurserv/AppData/Roaming/MetaQuotes/Termina
 # autoit_script_path = 'AU3/MT5_GUI_test.au3'
 autoit_script_path = 'AU3/MT5_GUI_test.au3'
 #  ********************************************************************************************************************
-log_file_reading_interval = 5       # File reading interval (sec)
+log_file_reading_interval = 2       # File reading interval (sec)
 number_of_pattern = 51
 #  ********************************************************************************************************************
 # ************************************** MT5 TRANSMIT SETTINGS ********************************************************
 
-volume_value = 0.01                # 1000 MAX for stocks
-risk_reward = 2
-sleep = 100
+volume_value = 0.01                 # 1000 MAX for stocks
+risk_reward = 3                     # Risk/Reward ratio
+sleep = 200                          # Pause between switching fields in MT5 order submit window
 
 # *********************************************************************************************************************
 # This block is responsible for replacing lines in AU3 script with modified lines reflecting ORDER settings
@@ -60,12 +57,12 @@ try:
         last_candle_low = dataframe_from_log['Low'].iloc[-1]
         last_candle_close = dataframe_from_log['Close'].iloc[-1]
 
-        print('Last Open', last_candle_open)
-        print('Last High', last_candle_high)
-        print('Last Low', last_candle_low)
-        print('Last Close', last_candle_close)
-        print('Working dataframe:')
-        print(dataframe_from_log)   # Printing the DataFrame to see whether it looks like as supposed to
+        # print('Last Open', last_candle_open)
+        # print('Last High', last_candle_high)
+        # print('Last Low', last_candle_low)
+        # print('Last Close', last_candle_close)
+        # print('Working dataframe:')
+        # print(dataframe_from_log)   # Printing the DataFrame to see whether it looks like as supposed to
 
         patterns_dataframe = pd.read_csv('Ta-lib patterns.csv')
 
@@ -74,22 +71,24 @@ try:
             pattern_code = patterns_df['PatternCode'].iloc[pattern_number]
             pattern_name = patterns_df['PatternName'].iloc[pattern_number]
             pattern_index = patterns_df.index[pattern_number]
-            print()
-            print(f'Current Pattern is: {pattern_code}, {pattern_name}, {pattern_index}')
+            time_frame = dataframe_from_log['Timeframe'].iloc[-1]
+            print('--------------------------------------------------------------------')
+            print(f'Current Pattern is: {pattern_code}, {pattern_name}, {pattern_index}, {time_frame}')
 
             pattern_function = getattr(talib, pattern_code)
             pattern_signal = pattern_function(log_dataframe['Open'], log_dataframe['High'],
                                               log_dataframe['Low'], log_dataframe['Close'])
             # pattern_signal = [0, 0, 0, 0, 0, -100]
-            print(f'Pattern signals: {list(pattern_signal)}')
+            print(f'Pattern signals (last 10): {list(pattern_signal)[-10:]}')
 
             # if pattern_signal[-1] == 100 and not buy_signal:
             if pattern_signal.iloc[-1] == 100 and not buy_signal:
+                winsound.PlaySound('chord.wav', winsound.SND_FILENAME)
                 print()
                 print('▲ ▲ ▲ Buy signal discovered! ▲ ▲ ▲'.upper())
                 buy_or_sell_flag = True            # True for "BUY", False for "SELL"
                 stop_loss_price = last_candle_low
-                take_profit_price = (((last_candle_close - last_candle_low) * risk_reward) + last_candle_close)
+                take_profit_price = round((((last_candle_close - last_candle_low) * risk_reward) + last_candle_close), 3)
                 new_line_direction_buy_or_sell = (f'Local $trade_direction_buy_or_sell = '
                                                   f'{buy_or_sell_flag} ;replaceable line. '
                                                   f'True for BUY, False for Sell') + '\n'
@@ -116,11 +115,12 @@ try:
                 buy_signal = True   # Setting flag back to TRUE
             # if pattern_signal[-1] == -100 and not sell_signal:
             if pattern_signal.iloc[-1] == -100 and not sell_signal:
+                winsound.PlaySound('chord.wav', winsound.SND_FILENAME)
                 print()
                 print('▼ ▼ ▼ Sell signal discovered! ▼ ▼ ▼'.upper())
                 buy_or_sell_flag = False            # True for "BUY", False for "SELL"
                 stop_loss_price = last_candle_high
-                take_profit_price = (last_candle_close - ((stop_loss_price - last_candle_close) * risk_reward))
+                take_profit_price = round((last_candle_close - ((stop_loss_price - last_candle_close) * risk_reward)), 3)
                 new_line_direction_buy_or_sell = (f'Local $trade_direction_buy_or_sell = '
                                                   f'{buy_or_sell_flag} ;replaceable line. '
                                                   f'True for BUY, False for Sell') + '\n'
@@ -161,37 +161,3 @@ try:
 except KeyboardInterrupt:
     print()
     print('Program stopped manually')   # Catching 'Stop' error
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#   PLOTTING CHART FUNCTIONALITY FOR THIS SCRIPT MOSTLY DISABLED
-
-plot_candlestick_chart = False
-
-if plot_candlestick_chart:
-    def plot_candlestick_chart():
-
-        dataframe_from_log.set_index('Datetime', inplace=True)
-        try:
-            mpf.plot(dataframe_from_log, type='candle', figsize=(10, 6), title='Candlestick chart', ylabel='Price')
-        except IndexError:
-            print('Empty DataFrame')
-
-
-    plot_candlestick_chart()
-else:
-    print('Chart is switched off')

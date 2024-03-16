@@ -24,7 +24,8 @@ from API_or_Json import dataframe_from_api
 # file_path = 'TXT/MT4/BTCUSD_D1.csv'
 # file_path = 'TXT/MT4/BTCUSD_m60.csv'
 # file_path = 'TXT/MT4/BTCUSD_m5.csv'
-file_path = 'TXT/MT4/BTCUSD1.csv'
+# file_path = 'TXT/MT4/BTCUSD1.csv'
+file_path = 'TXT/MT4/BTCUSD5.csv'
 # ------------------------------------------
 # pd.set_option('display.max_columns', 10)  # Uncomment to display all columns
 
@@ -32,8 +33,8 @@ file_path = 'TXT/MT4/BTCUSD1.csv'
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2024-03-12'     # Choose the start date to begin from
-end_date = '2024-03-12'     # Choose the end date
+start_date = '2024-03-10'     # Choose the start date to begin from
+end_date = '2024-03-16'     # Choose the end date
 
 # ENTRY CONDITIONS
 number_of_pattern = 51  # Choose the index of pattern (from Ta-lib patterns.csv)

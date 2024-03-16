@@ -1,3 +1,4 @@
-import pandas as pd
-patterns_dataframe = pd.read_csv('Ta-lib patterns.csv')
-print(patterns_dataframe)
+ll = [1,2,3,5,4,9,56,5]
+ff = ll[-3:]
+
+print(ff)
