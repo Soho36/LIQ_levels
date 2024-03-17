@@ -44,8 +44,9 @@ use_piercing_signal = False
 # RISK MANAGEMENT
 risk_reward_ratio = 3   # Chose risk/reward ratio (aiming to win compared to lose)
 stop_loss_as_candle_min_max = True  # Must be True if next condition is false
-stop_loss_as_plus_candle = False     # Must be True if previous condition is false
+stop_loss_as_plus_candle = False    # Must be True if previous condition is false
 stop_loss_offset_multiplier = 15    # 1 places stop one candle away from H/L (only when stop_loss_as_plus_candle = True
+stop_loss_offset = 15               # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
 
 # SIMULATION
 start_simulation = True
@@ -291,8 +292,8 @@ def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
                     stop_loss_price = None
                     take_profit_price = None
                     if stop_loss_as_candle_min_max:
-                        stop_loss_price = signal_candle_low     # STOP
-                        take_profit_price = (((signal_candle_close_entry - signal_candle_low) * risk_reward) +    # TAKE
+                        stop_loss_price = signal_candle_low - stop_loss_offset    # STOP
+                        take_profit_price = (((signal_candle_close_entry - stop_loss_price) * risk_reward) +    # TAKE
                                              signal_candle_close_entry)
 
                     elif stop_loss_as_plus_candle:
@@ -382,9 +383,9 @@ def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
                     stop_loss_price = None
                     take_profit_price = None
                     if stop_loss_as_candle_min_max:
-                        stop_loss_price = signal_candle_high
+                        stop_loss_price = signal_candle_high + stop_loss_offset
                         take_profit_price = (signal_candle_close_entry -
-                                             ((signal_candle_high - signal_candle_close_entry) * risk_reward))
+                                             ((stop_loss_price - signal_candle_close_entry) * risk_reward))
 
                     elif stop_loss_as_plus_candle:
                         # Basically adding size of the signal candle to the stop
@@ -807,9 +808,11 @@ def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series, sr
                  warn_too_much_data=5000)
 
 
-plot_candlestick_chart(filtered_by_date_dataframe, pattern_signal_series_outside,
-                       pierce_signals_series_outside, sr_levels_timeframe)
+try:
+    plot_candlestick_chart(filtered_by_date_dataframe, pattern_signal_series_outside,
+                           pierce_signals_series_outside, sr_levels_timeframe)
+except KeyboardInterrupt:
+    print('Program stopped manually')
 
 
 plt.show()
-print('Candlestick chart plotted')

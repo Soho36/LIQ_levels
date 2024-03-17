@@ -18,7 +18,8 @@ number_of_pattern = 51
 
 volume_value = 0.01                 # 1000 MAX for stocks
 risk_reward = 3                     # Risk/Reward ratio
-sleep = 200                          # Pause between switching fields in MT5 order submit window
+sleep = 200                         # Pause between switching fields in MT5 order submit window
+stop_loss_offset = 15               # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
 
 # *********************************************************************************************************************
 # This block is responsible for replacing lines in AU3 script with modified lines reflecting ORDER settings
@@ -32,12 +33,12 @@ new_line_sleep = f'Local $sleep = {sleep} ;replaceable line' + '\n'
 
 
 try:
-    buy_signal_discovered = False
-    sell_signal_discovered = False
+    buy_signal_discovered = False                   # MUST BE FALSE BEFORE ENTERING MAIN LOOP
+    sell_signal_discovered = False                  # MUST BE FALSE BEFORE ENTERING MAIN LOOP
     print('Before entering loop buy: ', buy_signal_discovered)
     print('Before entering loop sell: ', sell_signal_discovered)
 
-    while True:     # Creating a loop for refreshing intervals
+    while True:                                     # Creating a loop for refreshing intervals
 
         def get_dataframe_from_file():
             log_df = pd.read_csv(mt5_logging_file_path, sep=';', encoding='utf-16', engine='python')
@@ -94,8 +95,8 @@ try:
                 print()
                 print('▲ ▲ ▲ Buy signal discovered! ▲ ▲ ▲'.upper())
                 buy_or_sell_flag = True            # True for "BUY", False for "SELL"
-                stop_loss_price = last_candle_low
-                take_profit_price = round((((last_candle_close - last_candle_low) * risk_reward) +
+                stop_loss_price = last_candle_low - stop_loss_offset
+                take_profit_price = round((((last_candle_close - stop_loss_price) * risk_reward) +
                                            last_candle_close), 3)
                 new_line_direction_buy_or_sell = (f'Local $trade_direction_buy_or_sell = '
                                                   f'{buy_or_sell_flag} ;replaceable line. '
@@ -132,7 +133,7 @@ try:
                 print()
                 print('▼ ▼ ▼ Sell signal discovered! ▼ ▼ ▼'.upper())
                 buy_or_sell_flag = False            # True for "BUY", False for "SELL"
-                stop_loss_price = last_candle_high
+                stop_loss_price = last_candle_high + stop_loss_offset
                 take_profit_price = round((last_candle_close - ((stop_loss_price - last_candle_close) *
                                                                 risk_reward)), 3)
                 new_line_direction_buy_or_sell = (f'Local $trade_direction_buy_or_sell = '
