@@ -34,6 +34,8 @@ new_line_sleep = f'Local $sleep = {sleep} ;replaceable line' + '\n'
 try:
     buy_signal_discovered = False
     sell_signal_discovered = False
+    print('Before entering loop buy: ', buy_signal_discovered)
+    print('Before entering loop sell: ', sell_signal_discovered)
 
     while True:     # Creating a loop for refreshing intervals
 
@@ -82,13 +84,19 @@ try:
             print(f'Pattern signals (last 10): {list(pattern_signal)[-10:]}')
 
             # if pattern_signal[-1] == 100 and not buy_signal:
+            # print('Right before IF buy: ', buy_signal, 'Pattern signal: ', pattern_signal.iloc[-1])
+
+            if pattern_signal.iloc[-1] == 0:    # Set Flags to False after signal has been discovered
+                buy_signal, sell_signal = False, False
+
             if pattern_signal.iloc[-1] == 100 and not buy_signal:
                 winsound.PlaySound('chord.wav', winsound.SND_FILENAME)
                 print()
                 print('▲ ▲ ▲ Buy signal discovered! ▲ ▲ ▲'.upper())
                 buy_or_sell_flag = True            # True for "BUY", False for "SELL"
                 stop_loss_price = last_candle_low
-                take_profit_price = round((((last_candle_close - last_candle_low) * risk_reward) + last_candle_close), 3)
+                take_profit_price = round((((last_candle_close - last_candle_low) * risk_reward) +
+                                           last_candle_close), 3)
                 new_line_direction_buy_or_sell = (f'Local $trade_direction_buy_or_sell = '
                                                   f'{buy_or_sell_flag} ;replaceable line. '
                                                   f'True for BUY, False for Sell') + '\n'
@@ -113,14 +121,20 @@ try:
                     print(f'Error executing AutoIt script BUY: {e}')
 
                 buy_signal = True   # Setting flag back to TRUE
+
             # if pattern_signal[-1] == -100 and not sell_signal:
+
+                print('Right before IF Sell: ', sell_signal, 'Pattern signal: ', pattern_signal.iloc[-1])
+
             if pattern_signal.iloc[-1] == -100 and not sell_signal:
+                print('Right inside IF sell: ', sell_signal)
                 winsound.PlaySound('chord.wav', winsound.SND_FILENAME)
                 print()
                 print('▼ ▼ ▼ Sell signal discovered! ▼ ▼ ▼'.upper())
                 buy_or_sell_flag = False            # True for "BUY", False for "SELL"
                 stop_loss_price = last_candle_high
-                take_profit_price = round((last_candle_close - ((stop_loss_price - last_candle_close) * risk_reward)), 3)
+                take_profit_price = round((last_candle_close - ((stop_loss_price - last_candle_close) *
+                                                                risk_reward)), 3)
                 new_line_direction_buy_or_sell = (f'Local $trade_direction_buy_or_sell = '
                                                   f'{buy_or_sell_flag} ;replaceable line. '
                                                   f'True for BUY, False for Sell') + '\n'
@@ -144,8 +158,9 @@ try:
                     print('AutoIt script executed successfully SELL')
                 except subprocess.CalledProcessError as e:
                     print(f'Error executing AutoIt script SELL: {e}')
-
+                print('Line 155: ', sell_signal)
                 sell_signal = True  # Setting flag back to TRUE
+                print('Line 157: ', sell_signal)
 
             return buy_signal, sell_signal
 
