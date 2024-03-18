@@ -2,8 +2,8 @@
 ; ALL VALUES DERIVED FROM PYTHON SCRIPT
 Local $trade_direction_buy_or_sell = False ;replaceable line. True for BUY, False for Sell
 Local $volume = 0.01 ;replaceable line
-Local $stop_loss = 68279.65 ;replaceable line
-Local $take_profit = 68096.53 ;replaceable line
+Local $stop_loss = 67386.83 ;replaceable line
+Local $take_profit = 67176.59 ;replaceable line
 Local $sleep = 200 ;replaceable line
 
 ;IF LINES ARE ADDED OR REMOVED WITHIN THIS BLOCK CORRESPONDING INDEXES MUST BE UPDATED IN PYTHON SCRIPT

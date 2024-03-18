@@ -1,1 +1,1 @@
-Use python 3.11-32bit
+Python 3.8.10-32bit

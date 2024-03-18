@@ -7,9 +7,9 @@ import winsound
 current_time = time.strftime('%H:%M:%S')
 # The path to MT5 directory containing log file:
 mt5_logging_file_path = ('C:/Users/Liikurserv/AppData/Roaming/MetaQuotes/Terminal/010E047102812FC0C18890992854220E/'
-                         'MQL5/Files/OHLCVData.csv')
-# autoit_script_path = 'AU3/MT5_GUI_test.au3'
-autoit_script_path = 'AU3/MT5_GUI_test.au3'
+                         'MQL5/Files/167_OHLCVData.csv')
+# autoit_script_path = 'AU3/MT5_GUI_167.au3'
+autoit_script_path = 'AU3/MT5_GUI_167.au3'
 #  ********************************************************************************************************************
 log_file_reading_interval = 2       # File reading interval (sec)
 number_of_pattern = 51
@@ -64,7 +64,7 @@ try:
         # print('Last High', last_candle_high)
         # print('Last Low', last_candle_low)
         # print('Last Close', last_candle_close)
-        # print('Working dataframe:')
+        # print(Working dataframe:)
         # print(dataframe_from_log)   # Printing the DataFrame to see whether it looks like as supposed to
 
         patterns_dataframe = pd.read_csv('Ta-lib patterns.csv')

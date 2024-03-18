@@ -3,7 +3,7 @@ import time
 import subprocess
 
 current_time = time.strftime('%H:%M:%S')
-file_name = 'AU3/MT5_GUI_test.au3'
+file_name = 'AU3/MT5_GUI_167.au3'
 
 # ************************************** SETTINGS ***************************************
 buy_or_sell_flag = False                                # True for "BUY", False for "SELL"
