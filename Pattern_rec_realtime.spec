@@ -5,7 +5,7 @@ a = Analysis(
     ['Pattern_rec_realtime.py'],
     pathex=[],
     binaries=[],
-    datas=[('Ta-lib patterns.csv')],
+    datas=[('Ta-lib patterns.csv', '.')],
     hiddenimports=['talib.stream'],
     hookspath=[],
     hooksconfig={},

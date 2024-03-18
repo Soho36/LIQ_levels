@@ -37,7 +37,7 @@ start_date = '2024-02-06'     # Choose the start date to begin from
 end_date = '2024-03-16'     # Choose the end date
 
 # ENTRY CONDITIONS
-number_of_pattern = 60  # Choose the index of pattern (from Ta-lib patterns.csv)
+number_of_pattern = 24  # Choose the index of pattern (from Ta-lib patterns.csv)
 use_pattern_recognition = True
 use_piercing_signal = False
 

@@ -1,0 +1,62 @@
+,PatternCode,PatternName
+0,CDL2CROWS,Two Crows
+1,CDL3BLACKCROWS,Three Black Crows
+2,CDL3INSIDE,Three Inside Up/Down
+3,CDL3LINESTRIKE,Three-Line Strike
+4,CDL3OUTSIDE,Three Outside Up/Down
+5,CDL3STARSINSOUTH,Three Stars In The South
+6,CDL3WHITESOLDIERS,Three Advancing White Soldiers
+7,CDLABANDONEDBABY,Abandoned Baby
+8,CDLADVANCEBLOCK,Advance Block
+9,CDLBELTHOLD,Belt-hold
+10,CDLBREAKAWAY,Breakaway
+11,CDLCLOSINGMARUBOZU,Closing Marubozu
+12,CDLCONCEALBABYSWALL,Concealing Baby Swallow
+13,CDLCOUNTERATTACK,Counterattack
+14,CDLDARKCLOUDCOVER,Dark Cloud Cover
+15,CDLDOJI,Doji
+16,CDLDOJISTAR,Doji Star
+17,CDLDRAGONFLYDOJI,Dragonfly Doji
+18,CDLENGULFING,Engulfing Pattern
+19,CDLEVENINGDOJISTAR,Evening Doji Star
+20,CDLEVENINGSTAR,Evening Star
+21,CDLGAPSIDESIDEWHITE,Up/Down-gap side-by-side white lines
+22,CDLGRAVESTONEDOJI,Gravestone Doji
+23,CDLHAMMER,Hammer
+24,CDLHANGINGMAN,Hanging Man
+25,CDLHARAMI,Harami Pattern
+26,CDLHARAMICROSS,Harami Cross Pattern
+27,CDLHIGHWAVE,High-Wave Candle
+28,CDLHIKKAKE,Hikkake Pattern
+29,CDLHIKKAKEMOD,Modified Hikkake Pattern
+30,CDLHOMINGPIGEON,Homing Pigeon
+31,CDLIDENTICAL3CROWS,Identical Three Crows
+32,CDLINNECK,In-Neck Pattern
+33,CDLINVERTEDHAMMER,Inverted Hammer
+34,CDLKICKING,Kicking
+35,CDLKICKINGBYLENGTH,Kicking - bull/bear determined by the longer marubozu
+36,CDLLADDERBOTTOM,Ladder Bottom
+37,CDLLONGLEGGEDDOJI,Long Legged Doji
+38,CDLLONGLINE,Long Line Candle
+39,CDLMARUBOZU,Marubozu
+40,CDLMATCHINGLOW,Matching Low
+41,CDLMATHOLD,Mat Hold
+42,CDLMORNINGDOJISTAR,Morning Doji Star
+43,CDLMORNINGSTAR,Morning Star
+44,CDLONNECK,On-Neck Pattern
+45,CDLPIERCING,Piercing Pattern
+46,CDLRICKSHAWMAN,Rickshaw Man
+47,CDLRISEFALL3METHODS,Rising/Falling Three Methods
+48,CDLSEPARATINGLINES,Separating Lines
+49,CDLSHOOTINGSTAR,Shooting Star
+50,CDLSHORTLINE,Short Line Candle
+51,CDLSPINNINGTOP,Spinning Top
+52,CDLSTALLEDPATTERN,Stalled Pattern
+53,CDLSTICKSANDWICH,Stick Sandwich
+54,CDLTAKURI,Takuri (Dragonfly Doji with very long lower shadow)
+55,CDLTASUKIGAP,Tasuki Gap
+56,CDLTHRUSTING,Thrusting Pattern
+57,CDLTRISTAR,Tristar Pattern
+58,CDLUNIQUE3RIVER,Unique 3 River
+59,CDLUPSIDEGAP2CROWS,Upside Gap Two Crows
+60,CDLXSIDEGAP3METHODS,Upside/Downside Gap Three Methods

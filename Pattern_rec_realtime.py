@@ -12,7 +12,7 @@ mt5_logging_file_path = ('C:/Users/Liikurserv/AppData/Roaming/MetaQuotes/Termina
 autoit_script_path = 'AU3/MT5_GUI_167.au3'
 #  ********************************************************************************************************************
 log_file_reading_interval = 2       # File reading interval (sec)
-number_of_pattern = 51
+number_of_pattern = 22
 #  ********************************************************************************************************************
 # ************************************** MT5 TRANSMIT SETTINGS ********************************************************
 
