@@ -33,11 +33,11 @@ file_path = 'TXT/MT4/BTCUSD5.csv'
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2024-02-06'     # Choose the start date to begin from
+start_date = '2024-03-06'     # Choose the start date to begin from
 end_date = '2024-03-16'     # Choose the end date
 
 # ENTRY CONDITIONS
-number_of_pattern = 24  # Choose the index of pattern (from Ta-lib patterns.csv)
+number_of_pattern = 15  # Choose the index of pattern (from Ta-lib patterns.csv)
 use_pattern_recognition = True
 use_piercing_signal = False
 
@@ -53,7 +53,7 @@ start_simulation = True
 show_trade_analysis = True
 
 # CHARTS
-show_candlestick_chart = False
+show_candlestick_chart = True
 show_line_chart = False
 show_signal_line_chart = False
 show_profits_losses_line_chart = False  # Only when Simulation is True

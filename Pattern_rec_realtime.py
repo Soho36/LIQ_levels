@@ -8,11 +8,12 @@ current_time = time.strftime('%H:%M:%S')
 # The path to MT5 directory containing log file:
 mt5_logging_file_path = ('C:/Users/Liikurserv/AppData/Roaming/MetaQuotes/Terminal/010E047102812FC0C18890992854220E/'
                          'MQL5/Files/167_OHLCVData.csv')
-# autoit_script_path = 'AU3/MT5_GUI_167.au3'
+
 autoit_script_path = 'AU3/MT5_GUI_167.au3'
+buy_sell_signals_for_mt5_filepath = 'buy_sell_signals_for_mt5'
 #  ********************************************************************************************************************
 log_file_reading_interval = 2       # File reading interval (sec)
-number_of_pattern = 22
+number_of_pattern = 15
 #  ********************************************************************************************************************
 # ************************************** MT5 TRANSMIT SETTINGS ********************************************************
 
@@ -59,6 +60,7 @@ try:
         last_candle_high = dataframe_from_log['High'].iloc[-1]
         last_candle_low = dataframe_from_log['Low'].iloc[-1]
         last_candle_close = dataframe_from_log['Close'].iloc[-1]
+        ticker = dataframe_from_log['Ticker'].iloc[-1]
 
         # print('Last Open', last_candle_open)
         # print('Last High', last_candle_high)
@@ -81,7 +83,7 @@ try:
             pattern_function = getattr(talib, pattern_code)
             pattern_signal = pattern_function(log_dataframe['Open'], log_dataframe['High'],
                                               log_dataframe['Low'], log_dataframe['Close'])
-            # pattern_signal = [0, 0, 0, 0, 0, -100]
+            # pattern_signal = [0, 0, 0, 0, 0, 100]
             print(f'Pattern signals (last 10): {list(pattern_signal)[-10:]}')
 
             # if pattern_signal[-1] == 100 and not buy_signal:
@@ -95,6 +97,8 @@ try:
                 print()
                 print('▲ ▲ ▲ Buy signal discovered! ▲ ▲ ▲'.upper())
                 buy_or_sell_flag = True            # True for "BUY", False for "SELL"
+
+                # ORDER PARAMETERS
                 stop_loss_price = last_candle_low - stop_loss_offset
                 take_profit_price = round((((last_candle_close - stop_loss_price) * risk_reward) +
                                            last_candle_close), 3)
@@ -103,6 +107,8 @@ try:
                                                   f'True for BUY, False for Sell') + '\n'
                 new_line_stop = f'Local $stop_loss = {stop_loss_price} ;replaceable line' + '\n'
                 new_line_take = f'Local $take_profit = {take_profit_price} ;replaceable line' + '\n'
+                # Line with order parameters to write to MT5 file for trade placement EA
+                line_order_parameters = f'{ticker}, Buy, {stop_loss_price}, {take_profit_price}'
 
                 with open(autoit_script_path, 'r') as file:                         # Reading current au3.file
                     lines = file.readlines()
@@ -114,6 +120,9 @@ try:
 
                 with open(autoit_script_path, 'w') as file:                         # Writing au3.file with new lines
                     file.writelines(lines)
+
+                with open(buy_sell_signals_for_mt5_filepath, 'w') as file:
+                    file.writelines(line_order_parameters)
 
                 try:
                     subprocess.run(['start', autoit_script_path], shell=True)

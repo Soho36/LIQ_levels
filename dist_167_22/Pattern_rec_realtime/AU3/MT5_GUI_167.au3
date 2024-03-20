@@ -1,9 +1,9 @@
 ;IF LINES ARE ADDED OR REMOVED WITHIN THIS BLOCK CORRESPONDING INDEXES MUST BE UPDATED IN PYTHON SCRIPT
 ; ALL VALUES DERIVED FROM PYTHON SCRIPT
-Local $trade_direction_buy_or_sell = False ;replaceable line. True for BUY, False for Sell
+Local $trade_direction_buy_or_sell = True ;replaceable line. True for BUY, False for Sell
 Local $volume = 0.01 ;replaceable line
-Local $stop_loss = 67515.07 ;replaceable line
-Local $take_profit = 67363.51 ;replaceable line
+Local $stop_loss = 62679.43 ;replaceable line
+Local $take_profit = 62832.39 ;replaceable line
 Local $sleep = 200 ;replaceable line
 
 ;IF LINES ARE ADDED OR REMOVED WITHIN THIS BLOCK CORRESPONDING INDEXES MUST BE UPDATED IN PYTHON SCRIPT
@@ -42,6 +42,11 @@ Send($stop_loss)
 ;Set Take Profit for BUY order2
 Send("{TAB}{BACKSPACE}")
 Send($take_profit)
+;Sleep($sleep)
+
+;Set Comment
+Send("{TAB}")
+Send("22")
 ;Sleep($sleep)
 
 ;Set Stop Loss for BUY order

@@ -44,6 +44,11 @@ Send("{TAB}{BACKSPACE}")
 Send($take_profit)
 ;Sleep($sleep)
 
+;Set Comment
+Send("{TAB}")
+Send("00")
+;Sleep($sleep)
+
 ;Set Stop Loss for BUY order
 ;ControlFocus("Order", "", "[CLASS:Edit; INSTANCE:26]")
 ;Sleep($sleep)
