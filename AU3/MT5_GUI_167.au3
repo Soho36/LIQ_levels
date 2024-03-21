@@ -1,17 +1,17 @@
 ;IF LINES ARE ADDED OR REMOVED WITHIN THIS BLOCK CORRESPONDING INDEXES MUST BE UPDATED IN PYTHON SCRIPT
 ; ALL VALUES DERIVED FROM PYTHON SCRIPT
-Local $trade_direction_buy_or_sell = False ;replaceable line. True for BUY, False for Sell
+Local $trade_direction_buy_or_sell = True ;replaceable line. True for BUY, False for Sell
 Local $volume = 0.01 ;replaceable line
-Local $stop_loss = 67386.83 ;replaceable line
-Local $take_profit = 67176.59 ;replaceable line
+Local $stop_loss = 65456.08 ;replaceable line
+Local $take_profit = 65567.52 ;replaceable line
 Local $sleep = 200 ;replaceable line
 
 ;IF LINES ARE ADDED OR REMOVED WITHIN THIS BLOCK CORRESPONDING INDEXES MUST BE UPDATED IN PYTHON SCRIPT
 ;************************************************************************************************************
 ; Activate MetaTrader window
-WinActivate("19079167")
+WinActivate("19079259")
 
-WinWaitActive("19079167")
+WinWaitActive("19079259")
 ;Send Alt+B shortcut to open new order window
 
 Sleep($sleep)

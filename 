@@ -1,0 +1,380 @@
+[33mcommit 09ac79057207a812c55f6e16e338b75e540b13eb[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Wed Mar 20 21:49:05 2024 +0200
+
+    before hardcoding signal
+
+[33mcommit 763e55897a0ac9b677d5425d28a4a1fc57876511[m[33m ([m[1;31morigin/master[m[33m)[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Tue Mar 19 00:57:26 2024 +0200
+
+    added 3 accounts .exe
+
+[33mcommit cdba53214698a808e8e9701be04686717a01411b[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Mon Mar 18 23:35:49 2024 +0200
+
+    .exe for 167 created
+
+[33mcommit 9d0c5bdc121a75eb01e75579bde2cd8ed0f49cef[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Mon Mar 18 22:23:58 2024 +0200
+
+    before exe creation
+
+[33mcommit cf37f376ba131d481b2af521a967195977795ea3[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Mon Mar 18 00:34:46 2024 +0200
+
+    working version
+
+[33mcommit b5df50bd875bd2fb3188e30d92d809f6ebc7cc2e[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Sun Mar 17 13:41:15 2024 +0200
+
+    changed command send in MT5_GUI_test for faster execution
+
+[33mcommit 9b5c25c539fe60e5192d0f1cff9a7a455c601e1e[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Sat Mar 16 18:31:04 2024 +0200
+
+    started in background to test
+
+[33mcommit 9eb8fabc527a72b46ca5cac060a7149a92253afa[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Sat Mar 16 14:46:59 2024 +0200
+
+    added sl tp
+
+[33mcommit d07991bac9a3acc553e56d69cc6805a1a30ded9e[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Sat Mar 16 01:15:40 2024 +0200
+
+    working rt rec without sl and tp
+
+[33mcommit 61595c68657d709593d06153f875d03c9ffa6a1c[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Thu Mar 14 23:16:08 2024 +0200
+
+    before inserting mt5 transmit logic
+
+[33mcommit 9f5814cf07ddd6a483f69d857369ad767a59ca2a[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Thu Mar 14 00:57:24 2024 +0200
+
+    improved csv_management file, realtime recognition generating signals
+
+[33mcommit faeeecb8d3b31596491e0da1d3e5b53945891777[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Wed Mar 13 01:11:58 2024 +0200
+
+    log file printing line by line now
+
+[33mcommit 4d2a428162910281d4de621fa75f91855dbed8bf[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Tue Mar 12 22:12:52 2024 +0200
+
+    before new branch
+
+[33mcommit a1091a79012f01c7394d4fd4c4644bc80270d76c[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Tue Mar 12 01:12:29 2024 +0200
+
+    log file reading
+
+[33mcommit 05174f076b86c6670752d18d119b9a5061ac6c10[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Mon Mar 11 00:22:38 2024 +0200
+
+    working mql5 logging
+
+[33mcommit 98c7a3210d46b325ad02e5b3f9a6aa2fae879154[m
+Author: Vova deduskin lap <vladimir.sehirev@gmail.com>
+Date:   Sun Mar 10 18:20:29 2024 +0200
+
+    before Tallinn
+
+[33mcommit 188281a75b824312606a76493ac134faba185a30[m
+Author: Vova deduskin lap <vladimir.sehirev@gmail.com>
+Date:   Sun Mar 10 00:39:46 2024 +0200
+
+    mql5 first
+
+[33mcommit f0116b975186591423e6c1484f971b627d3b3c4a[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Fri Mar 8 20:21:12 2024 +0200
+
+    .
+
+[33mcommit e93798ee2a903a8e9b8e69c30f34e8d72062ac32[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Fri Mar 8 00:48:24 2024 +0200
+
+    before Silla
+
+[33mcommit 25281809742d9e0afc18dd317bca983a76d404bf[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Thu Mar 7 22:11:31 2024 +0200
+
+    working raw mt5 version
+
+[33mcommit a7d1ca983b54cd75f9f8cce90bd8520d76a0c96f[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Thu Mar 7 01:09:36 2024 +0200
+
+    mt5 manipulation
+
+[33mcommit dfc381ec4f6478a2f9467ab98b4f364520c519b6[m[33m ([m[1;31morigin/two_signals_at_once[m[33m)[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Sat Mar 2 19:08:55 2024 +0200
+
+    before merge to master
+
+[33mcommit 0eb44e4342d06e08ab5cd8717e0807d275b6af74[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Thu Feb 29 01:10:14 2024 +0200
+
+    adressed some empty array error, before push
+
+[33mcommit f35acdb54dd4b1b6f60eb995b7889e47b33c6cb7[m[33m ([m[1;31morigin/pierce_sim[m[33m)[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Wed Feb 28 23:33:13 2024 +0200
+
+    before merging pierce sim with master
+
+[33mcommit 2ec64a725b539387703889e7fec107f92b090ca9[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Tue Feb 27 01:16:05 2024 +0200
+
+    peircing works but analisys seems incorrect
+
+[33mcommit 5219ce334ff30c8e01470f84ef8fbb7a4f9423b5[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Mon Feb 26 21:42:51 2024 +0200
+
+    before creating new pierce_sim branch
+
+[33mcommit 60fc2e951d80244a8f664deb196073c5afeb7b5c[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Mon Feb 26 00:49:49 2024 +0200
+
+    Level piersing added
+
+[33mcommit d3ac731aac8d97df237c18ce13482ae25fc2e2d9[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Sun Feb 25 20:26:00 2024 +0200
+
+    after pull Tallinn
+
+[33mcommit bd45d4371ac41fb850325b360a6b157e38980448[m
+Author: Vova deduskin lap <vladimir.sehirev@gmail.com>
+Date:   Sun Feb 25 15:52:00 2024 +0200
+
+    Before tallinn
+
+[33mcommit 9392d834f5def0f39aaf131461f46e9eeec44a8d[m
+Author: Vova deduskin lap <vladimir.sehirev@gmail.com>
+Date:   Sat Feb 24 19:07:18 2024 +0200
+
+    Added SR levels printing functionality
+
+[33mcommit 30a9aa8fffced516e3f96ce60292fff59d4edeb2[m
+Merge: 06554d1 52dceb8
+Author: Vova deduskin lap <vladimir.sehirev@gmail.com>
+Date:   Sat Feb 24 17:24:17 2024 +0200
+
+    conflicts resolved before pull
+
+[33mcommit 06554d110acc1785b0da192d687809be00622212[m
+Author: Vova deduskin lap <vladimir.sehirev@gmail.com>
+Date:   Fri Feb 23 23:46:43 2024 +0200
+
+    before pull
+
+[33mcommit 52dceb88a99ff71db6cefbe7d2b19577a0b849d5[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Fri Feb 23 19:19:53 2024 +0200
+
+    before silla
+
+[33mcommit f91ac2ece07cb329a18fd4f27dc625d1460f5a91[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Thu Feb 22 21:58:03 2024 +0200
+
+    Remove config.py from tracking
+
+[33mcommit cbd07f50e008c0be428bbbdfc0f2c67134e01e74[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Thu Feb 22 21:54:46 2024 +0200
+
+    Add config.py to .gitignore
+
+[33mcommit 2572270aade93224b1e09a37c8422a28a2b9591c[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Thu Feb 22 21:41:15 2024 +0200
+
+    added API functionality
+
+[33mcommit 488199334b2d4d0e14b5a828331b3d17180f2c7c[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Wed Feb 21 22:03:22 2024 +0200
+
+    working script for analysis and simulation, not allpatterns work but good to continue with API stuff
+
+[33mcommit 7d108ff008c193ee07ab7067f2b98cfd75a3d4fe[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Wed Feb 21 10:56:48 2024 +0200
+
+    work version but not for all patterns
+
+[33mcommit 6a0a81afe123f76706c0c942f0f92eeecdfe5f0b[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Sun Feb 18 20:17:55 2024 +0200
+
+    Added trade analysis
+
+[33mcommit cb701722a3b5371fee5df9b9aaad1066255894ad[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Sat Feb 17 22:02:04 2024 +0200
+
+    trades sim block
+
+[33mcommit b256915fa1a4189025e4bc31ed3143ae91220304[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Sat Feb 17 01:12:44 2024 +0200
+
+    working analysis
+
+[33mcommit c32fde593cdb52c4ebda3aa3c35e484f72a6753c[m
+Merge: 5cf5d6b ffb2741
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Thu Feb 15 22:16:39 2024 +0200
+
+    conflict
+
+[33mcommit 5cf5d6b60c06a0a12b23024f827f8165cf9924fc[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Thu Feb 15 22:12:19 2024 +0200
+
+    conflict resolved
+
+[33mcommit 404d4eec5a88cd1743387b589eff875b1e5c57da[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Thu Feb 15 21:52:58 2024 +0200
+
+    before merge
+
+[33mcommit ffb2741dd3396cad3a9c215fa9cbae6b486d9b5f[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Thu Feb 15 21:48:54 2024 +0200
+
+    before merge candlestick
+
+[33mcommit edc627f596607df2f3aa6325dca93928a42b9fc2[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Thu Feb 15 00:42:12 2024 +0200
+
+    working candlestick
+
+[33mcommit 6295e636a4c828e301172aac8083ae1029e8bf4f[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Tue Feb 13 22:10:12 2024 +0200
+
+    before merge move_funcs to master
+
+[33mcommit 22e737516b892d81378fc3459ba3b52e39d904c2[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Tue Feb 13 00:59:37 2024 +0200
+
+    files management moved to separate files, added functions, script more organized
+
+[33mcommit acfe12797dd8ef2ea228cd95895289d505718ddf[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Mon Feb 12 23:47:23 2024 +0200
+
+    script with working datarange
+
+[33mcommit a4c0c2cca526c14b4d1a1c7534a9c19ede49b463[m
+Merge: 1dd3e82 05a36a9
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Sat Feb 10 12:34:40 2024 +0200
+
+    Merge branch 'master' of https://github.com/Soho36/GU_GT_recognition
+
+[33mcommit 1dd3e82a0ffd927501632f5e8fd3edb07d929b0b[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Sat Feb 10 12:33:37 2024 +0200
+
+    runtime and requirements add
+
+[33mcommit 05a36a9ac8a0f7b4856670e23e992e01df357176[m
+Author: Soho36 <152660893+Soho36@users.noreply.github.com>
+Date:   Sat Feb 10 12:17:59 2024 +0200
+
+    Create README.md
+
+[33mcommit a0a5529f23807597c1261bf6070003cd55cb6405[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Fri Feb 9 01:12:32 2024 +0200
+
+    before silla
+
+[33mcommit 8d565ba310ccfbf99029122d3825ccfeece93402[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Fri Feb 9 00:22:09 2024 +0200
+
+    working m5 series
+
+[33mcommit 3fe92bbff7fddba7371965810135ef282e9f6248[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Thu Feb 8 00:57:03 2024 +0200
+
+    corrected
+
+[33mcommit d055831d7c8bf72cf56982d480556e84b72b8aa7[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Thu Feb 8 00:53:28 2024 +0200
+
+    funcs added
+
+[33mcommit a8ec6296c32bbd8f2727e63cda8d4832f05fd5e4[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Tue Feb 6 00:39:04 2024 +0200
+
+    working ver
+
+[33mcommit 4ac2763f64a5a29a4acd9ed0d59d7b44cf40686b[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Mon Feb 5 00:55:37 2024 +0200
+
+    working, moved to folders
+
+[33mcommit bf790b63984a591b3d5cad526f98778e6342d999[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Sun Feb 4 19:29:11 2024 +0200
+
+    filename add to chart
+
+[33mcommit 873d0cba09c337eeea7926692b0527b80e247ed1[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Sun Feb 4 16:57:38 2024 +0200
+
+    just uncomment file_path variable
+
+[33mcommit a25695f85c77b338076496f1dfbc62e1b3d12ce6[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Sun Feb 4 16:29:08 2024 +0200
+
+    before new branch
+
+[33mcommit b5f65cb241edb4ecb89d9f309c90803031519d0b[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Sat Feb 3 17:53:57 2024 +0200
+
+    starter
+
+[33mcommit 8ce4c9abc7bcaa4b9370cdfebe59fcc02ad5b2cc[m
+Author: Soho36 <vladimir.sehirev@gmail.com>
+Date:   Sat Feb 3 13:04:53 2024 +0200
+
+    'starter'

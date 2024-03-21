@@ -17,18 +17,18 @@ void OnTick()
       if(Old_Time!=New_Time[0]) // if old time isn't equal to new bar time
         {
          IsNewBar=true;   // if it isn't a first call, the new bar has appeared
-
+ 
          // Print OHLC of the new bar
          double open = iOpen(_Symbol, _Period, 1); // Open price of the previous bar
          double high = iHigh(_Symbol, _Period, 1); // High price of the previous bar
          double low = iLow(_Symbol, _Period, 1); // Low price of the previous bar
          double close = iClose(_Symbol, _Period, 1); // Close price of the previous bar
-         double volume = iVolume(_Symbol, _Period, 1); // Volume of the previous bar
+         long volume = iVolume(_Symbol, _Period, 1); // Volume of the previous bar
          Print(open,";", high,";", low,";", close,";", volume);
-
+         
          // Save OHLCV data to file
          SaveOHLCVToFile(open, high, low, close, volume);
-
+         
          Old_Time=New_Time[0];            // saving bar time
         }
      }
@@ -45,23 +45,23 @@ void OnTick()
       return;
      }
   }
-
+  
   // Function to save OHLCV data to a file
 void SaveOHLCVToFile(double open, double high, double low, double close, double volume)
 {
     // Get the current ticker symbol and timeframe
     string ticker = _Symbol;
     ENUM_TIMEFRAMES timeframe = _Period;
-
+    
     // Open the file in append mode
-    int file_handle = FileOpen("OHLCVData.csv", FILE_WRITE | FILE_CSV | FILE_END, ";");
+    int file_handle = FileOpen("259_OHLCVData.csv", FILE_WRITE | FILE_CSV | FILE_END, ";");
     if (file_handle != INVALID_HANDLE)
     {
-
+        
         FileSeek(file_handle, 0, SEEK_END);
         // Write OHLCV data to the file
         // FileWrite(file_handle, TimeToString(TimeCurrent(), TIME_DATE | TIME_MINUTES), open, high, low, close, volume);
-        FileWrite(file_handle, ticker, EnumToString(timeframe), TimeToString(TimeCurrent(), TIME_DATE | TIME_MINUTES),
+        FileWrite(file_handle, ticker, EnumToString(timeframe), TimeToString(TimeCurrent(), TIME_DATE | TIME_MINUTES), 
         DoubleToString(open, _Digits), DoubleToString(high, _Digits), DoubleToString(low, _Digits), DoubleToString(close, _Digits), DoubleToString(volume, _Digits));
 
         // Close the file
