@@ -6,13 +6,16 @@ import winsound
 
 current_time = time.strftime('%H:%M:%S')
 # The path to MT5 directory containing log file:
-mt5_logging_file_path = ('C:/Users/Liikurserv/AppData/Roaming/MetaQuotes/Terminal/09FF355D73768D9CE6BDD4EE575EAB09/'
-                         'MQL5/Files/259_OHLCVData.csv')
+mt5_logging_file_path = (
+    'C:/Users/Vova deduskin lap/AppData/Roaming/MetaQuotes/Terminal/010E047102812FC0C18890992854220E/MQL5/Files/'
+    '259_OHLCVData.csv'
+)
+
 
 autoit_script_path = 'AU3/MT5_GUI_167.au3'
 buy_sell_signals_for_mt5_filepath = 'buy_sell_signals_for_mt5.txt'
 
-order_send_ea_or_au3 = False         # True for EA, False for AU3
+order_send_ea_or_au3 = True         # True for AU3, False for EA
 #  ********************************************************************************************************************
 log_file_reading_interval = 2       # File reading interval (sec)
 number_of_pattern = 15
@@ -38,8 +41,6 @@ new_line_sleep = f'Local $sleep = {sleep} ;replaceable line' + '\n'
 try:
     buy_signal_discovered = False                   # MUST BE FALSE BEFORE ENTERING MAIN LOOP
     sell_signal_discovered = False                  # MUST BE FALSE BEFORE ENTERING MAIN LOOP
-    print('Before entering loop buy: ', buy_signal_discovered)
-    print('Before entering loop sell: ', sell_signal_discovered)
 
     while True:                                     # Creating a loop for refreshing intervals
 
@@ -88,24 +89,28 @@ try:
             pattern_function = getattr(talib, pattern_code)
             pattern_signal = pattern_function(log_dataframe['Open'], log_dataframe['High'],
                                               log_dataframe['Low'], log_dataframe['Close'])
-            pattern_signal = [0, 0, 0, 0, 0, 100]
-            # print(f'Pattern signals (last 10): {list(pattern_signal)[-10:]}')
+            pattern_signal_list = [0, 0, 0, 0, 0, 100]
+            pattern_signal = pd.Series(pattern_signal_list)     # hardcoded a series for debugging
+
+            print(f'Pattern signals (last 10): {list(pattern_signal)[-10:]}')
 
             # +------------------------------------------------------------------+
             # BUY ORDER LOGIC
             # +------------------------------------------------------------------+
+            # +------------------------------------------------------------------+
+            # Replacing lines in AU3 file. Manual order entry simulation
+            # +------------------------------------------------------------------+
+
             if order_send_ea_or_au3:
-                if pattern_signal[-1] == 100 and not buy_signal:
-                # print('Right before IF buy: ', buy_signal, 'Pattern signal: ', pattern_signal.iloc[-1])
 
-                # if pattern_signal.iloc[-1] == 0:    # Set Flags to False after signal has been discovered
-                #     buy_signal, sell_signal = False, False
+                if pattern_signal.iloc[-1] == 0:    # Set Flags to False after signal has been discovered
+                    buy_signal, sell_signal = False, False
 
-                # if pattern_signal.iloc[-1] == 100 and not buy_signal:
+                if pattern_signal.iloc[-1] == 100 and not buy_signal:
                     winsound.PlaySound('chord.wav', winsound.SND_FILENAME)
                     print()
                     print('▲ ▲ ▲ Buy signal discovered! ▲ ▲ ▲'.upper())
-                    buy_or_sell_flag = True            # True for "BUY", False for "SELL"
+                    buy_or_sell_flag = True            # bool for AU3 file. True for "BUY", False for "SELL"
 
                     # ORDER PARAMETERS
                     stop_loss_price = last_candle_low - stop_loss_offset
@@ -116,10 +121,8 @@ try:
                                                       f'True for BUY, False for Sell') + '\n'
                     new_line_stop = f'Local $stop_loss = {stop_loss_price} ;replaceable line' + '\n'
                     new_line_take = f'Local $take_profit = {take_profit_price} ;replaceable line' + '\n'
-                    # Line with order parameters to write to MT5 file for trade placement EA
-                    line_order_parameters = f'{ticker},Buy,{stop_loss_price},{take_profit_price}'
 
-                    with open(autoit_script_path, 'r') as file:                         # Reading current au3.file
+                    with open(autoit_script_path, 'r') as file:                        # Reading current au3.file
                         lines = file.readlines()
                     lines[line_number_volume - 1] = new_line_volume
                     lines[line_number_stop - 1] = new_line_stop
@@ -127,11 +130,8 @@ try:
                     lines[line_number_direction_buy_or_sell - 1] = new_line_direction_buy_or_sell
                     lines[line_number_sleep - 1] = new_line_sleep
 
-                    with open(autoit_script_path, 'w') as file:                         # Writing au3.file with new lines
+                    with open(autoit_script_path, 'w') as file:                        # Writing au3.file with new lines
                         file.writelines(lines)
-
-                    with open(buy_sell_signals_for_mt5_filepath, 'w', encoding='utf-8') as file:
-                        file.writelines(line_order_parameters)
 
                     try:
                         subprocess.run(['start', autoit_script_path], shell=True)
@@ -140,18 +140,20 @@ try:
                         print(f'Error executing AutoIt script BUY: {e}')
 
                     buy_signal = True   # Setting flag back to TRUE
+
+            # +------------------------------------------------------------------+
+            # Creating file for MT5 to read
+            # +------------------------------------------------------------------+
+
             else:
-                if pattern_signal[-1] == 100 and not buy_signal:
-                    # print('Right before IF buy: ', buy_signal, 'Pattern signal: ', pattern_signal.iloc[-1])
 
-                    # if pattern_signal.iloc[-1] == 0:    # Set Flags to False after signal has been discovered
-                    #     buy_signal, sell_signal = False, False
+                if pattern_signal.iloc[-1] == 0:    # Set Flags to False after signal has been discovered
+                    buy_signal, sell_signal = False, False
 
-                    # if pattern_signal.iloc[-1] == 100 and not buy_signal:
+                if pattern_signal.iloc[-1] == 100 and not buy_signal:
                     winsound.PlaySound('chord.wav', winsound.SND_FILENAME)
                     print()
                     print('▲ ▲ ▲ Buy signal discovered! ▲ ▲ ▲'.upper())
-                    buy_or_sell_flag = True  # True for "BUY", False for "SELL"
 
                     # ORDER PARAMETERS
                     stop_loss_price = last_candle_low - stop_loss_offset
@@ -168,19 +170,20 @@ try:
             # +------------------------------------------------------------------+
             # SELL ORDER LOGIC
             # +------------------------------------------------------------------+
+            # +------------------------------------------------------------------+
+            # Replacing lines in AU3 file. Manual order entry simulation
+            # +------------------------------------------------------------------+
             if order_send_ea_or_au3:
-                # if pattern_signal[-1] == -100 and not sell_signal:
 
-                    #print('Right before IF Sell: ', sell_signal, 'Pattern signal: ', pattern_signal.iloc[-1])
+                if pattern_signal.iloc[-1] == 0:    # Set Flags to False after signal has been discovered
+                    buy_signal, sell_signal = False, False
 
+                if pattern_signal.iloc[-1] == -100 and not sell_signal:
 
-                if pattern_signal[-1] == -100 and not sell_signal:
-                #if pattern_signal.iloc[-1] == -100 and not sell_signal:
-                    print('Right inside IF sell: ', sell_signal)
                     winsound.PlaySound('chord.wav', winsound.SND_FILENAME)
                     print()
                     print('▼ ▼ ▼ Sell signal discovered! ▼ ▼ ▼'.upper())
-                    buy_or_sell_flag = False            # True for "BUY", False for "SELL"
+                    buy_or_sell_flag = False            # Bool for AU3 file. True for "BUY", False for "SELL"
                     stop_loss_price = last_candle_high + stop_loss_offset
                     take_profit_price = round((last_candle_close - ((stop_loss_price - last_candle_close) *
                                                                     risk_reward)), 3)
@@ -189,7 +192,6 @@ try:
                                                       f'True for BUY, False for Sell') + '\n'
                     new_line_stop = f'Local $stop_loss = {stop_loss_price} ;replaceable line' + '\n'
                     new_line_take = f'Local $take_profit = {take_profit_price} ;replaceable line' + '\n'
-                    line_order_parameters = f'{ticker},Buy,{stop_loss_price},{take_profit_price}'
 
                     with open(autoit_script_path, 'r') as file:                         # Reading current au3.file
                         lines = file.readlines()
@@ -200,24 +202,40 @@ try:
                     lines[line_number_direction_buy_or_sell - 1] = new_line_direction_buy_or_sell
                     lines[line_number_sleep - 1] = new_line_sleep
 
-                    with open(autoit_script_path, 'w') as file:                         # Writing au3.file with new lines
+                    with open(autoit_script_path, 'w') as file:                        # Writing au3.file with new lines
                         file.writelines(lines)
-
-                    with open(buy_sell_signals_for_mt5_filepath, 'w', encoding='utf-8') as file:
-                        file.writelines(line_order_parameters)
 
                     try:
                         subprocess.run(['start', autoit_script_path], shell=True)
                         print('AutoIt script executed successfully SELL')
                     except subprocess.CalledProcessError as e:
                         print(f'Error executing AutoIt script SELL: {e}')
-                    print('Line 155: ', sell_signal)
+
                     sell_signal = True  # Setting flag back to TRUE
-                    print('Line 157: ', sell_signal)
 
-                return buy_signal, sell_signal
+            else:
 
+                if pattern_signal.iloc[-1] == 0:  # Set Flags to False after signal has been discovered
+                    buy_signal, sell_signal = False, False
 
+                if pattern_signal.iloc[-1] == -100 and not sell_signal:
+                    winsound.PlaySound('chord.wav', winsound.SND_FILENAME)
+                    print()
+                    print('▼ ▼ ▼ Sell signal discovered! ▼ ▼ ▼'.upper())
+
+                    # ORDER PARAMETERS
+                    stop_loss_price = last_candle_high + stop_loss_offset
+                    take_profit_price = round((last_candle_close - ((stop_loss_price - last_candle_close) *
+                                                                    risk_reward)), 3)
+
+                    line_order_parameters = f'{ticker},Sell,{stop_loss_price},{take_profit_price}'
+
+                    with open(buy_sell_signals_for_mt5_filepath, 'w', encoding='utf-8') as file:
+                        file.writelines(line_order_parameters)
+
+                    sell_signal = True  # Setting flag back to TRUE
+
+            return buy_signal, sell_signal
         try:
             buy_signal_discovered, sell_signal_discovered = (
                 pattern_recognition(patterns_dataframe, number_of_pattern, dataframe_from_log,
