@@ -15,7 +15,7 @@ mt5_logging_file_path = (
 autoit_script_path = 'AU3/MT5_GUI_167.au3'
 buy_sell_signals_for_mt5_filepath = 'buy_sell_signals_for_mt5.txt'
 
-order_send_ea_or_au3 = True         # True for AU3, False for EA
+order_send_ea_or_au3 = False         # True for AU3, False for EA
 #  ********************************************************************************************************************
 log_file_reading_interval = 2       # File reading interval (sec)
 number_of_pattern = 15
@@ -42,8 +42,11 @@ try:
     buy_signal_discovered = False                   # MUST BE FALSE BEFORE ENTERING MAIN LOOP
     sell_signal_discovered = False                  # MUST BE FALSE BEFORE ENTERING MAIN LOOP
 
-    while True:                                     # Creating a loop for refreshing intervals
+    while True:                                     # Main loop beginning
 
+        # +------------------------------------------------------------------+
+        # DATAFRAME CREATION
+        # +------------------------------------------------------------------+
         def get_dataframe_from_file():
             log_df = pd.read_csv(mt5_logging_file_path, sep=';', encoding='utf-16', engine='python')
             return log_df
@@ -68,15 +71,11 @@ try:
         except IndexError:
             print("Must be at least two rows in the source file")
 
-        # print('Last Open', last_candle_open)
-        # print('Last High', last_candle_high)
-        # print('Last Low', last_candle_low)
-        # print('Last Close', last_candle_close)
-        # print(Working dataframe:)
-        # print(dataframe_from_log)   # Printing the DataFrame to see whether it looks like as supposed to
-
         patterns_dataframe = pd.read_csv('Ta-lib patterns.csv')
 
+        # +------------------------------------------------------------------+
+        # PATTERN RECOGNITION
+        # +------------------------------------------------------------------+
 
         def pattern_recognition(patterns_df, pattern_number, log_dataframe, buy_signal, sell_signal):
             pattern_code = patterns_df['PatternCode'].iloc[pattern_number]
@@ -112,8 +111,8 @@ try:
                     print('▲ ▲ ▲ Buy signal discovered! ▲ ▲ ▲'.upper())
                     buy_or_sell_flag = True            # bool for AU3 file. True for "BUY", False for "SELL"
 
-                    # ORDER PARAMETERS
-                    stop_loss_price = last_candle_low - stop_loss_offset
+                    # ****************************   ORDER PARAMETERS   ****************************
+                    stop_loss_price = round(last_candle_low - stop_loss_offset, 3)
                     take_profit_price = round((((last_candle_close - stop_loss_price) * risk_reward) +
                                                last_candle_close), 3)
                     new_line_direction_buy_or_sell = (f'Local $trade_direction_buy_or_sell = '
@@ -121,6 +120,10 @@ try:
                                                       f'True for BUY, False for Sell') + '\n'
                     new_line_stop = f'Local $stop_loss = {stop_loss_price} ;replaceable line' + '\n'
                     new_line_take = f'Local $take_profit = {take_profit_price} ;replaceable line' + '\n'
+
+                    # +------------------------------------------------------------------+
+                    # AU3 READING/WRITING FOR LONGS
+                    # +------------------------------------------------------------------+
 
                     with open(autoit_script_path, 'r') as file:                        # Reading current au3.file
                         lines = file.readlines()
@@ -156,7 +159,7 @@ try:
                     print('▲ ▲ ▲ Buy signal discovered! ▲ ▲ ▲'.upper())
 
                     # ORDER PARAMETERS
-                    stop_loss_price = last_candle_low - stop_loss_offset
+                    stop_loss_price = round(last_candle_low - stop_loss_offset, 3)
                     take_profit_price = round((((last_candle_close - stop_loss_price) * risk_reward) +
                                                last_candle_close), 3)
 
@@ -184,7 +187,9 @@ try:
                     print()
                     print('▼ ▼ ▼ Sell signal discovered! ▼ ▼ ▼'.upper())
                     buy_or_sell_flag = False            # Bool for AU3 file. True for "BUY", False for "SELL"
-                    stop_loss_price = last_candle_high + stop_loss_offset
+
+                    # ****************************   ORDER PARAMETERS   ****************************
+                    stop_loss_price = round(last_candle_high + stop_loss_offset, 3)
                     take_profit_price = round((last_candle_close - ((stop_loss_price - last_candle_close) *
                                                                     risk_reward)), 3)
                     new_line_direction_buy_or_sell = (f'Local $trade_direction_buy_or_sell = '
@@ -192,6 +197,10 @@ try:
                                                       f'True for BUY, False for Sell') + '\n'
                     new_line_stop = f'Local $stop_loss = {stop_loss_price} ;replaceable line' + '\n'
                     new_line_take = f'Local $take_profit = {take_profit_price} ;replaceable line' + '\n'
+
+                    # +------------------------------------------------------------------+
+                    # AU3 READING/WRITING FOR SHORTS
+                    # +------------------------------------------------------------------+
 
                     with open(autoit_script_path, 'r') as file:                         # Reading current au3.file
                         lines = file.readlines()
@@ -224,7 +233,7 @@ try:
                     print('▼ ▼ ▼ Sell signal discovered! ▼ ▼ ▼'.upper())
 
                     # ORDER PARAMETERS
-                    stop_loss_price = last_candle_high + stop_loss_offset
+                    stop_loss_price = round(last_candle_high + stop_loss_offset)
                     take_profit_price = round((last_candle_close - ((stop_loss_price - last_candle_close) *
                                                                     risk_reward)), 3)
 
