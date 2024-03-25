@@ -2,7 +2,7 @@ import pandas as pd
 
 
 # READING FILE
-df = pd.read_csv('../TXT/tsla_m5.csv', parse_dates=[0])
+df = pd.read_csv('../TXT/STOCKS/tsla_m5.csv', parse_dates=[0])
 print(df.head())
 
 df['Datetime'] = pd.to_datetime(df['Date'] + ' ' + df['Time'])

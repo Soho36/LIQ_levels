@@ -1,5 +1,5 @@
 
-from Pattern_rec_SIM import date_range_func
+from Pattern_rec_BACKTEST import date_range_func
 
 dataframe_source_api_or_csv = True    # True for API or response file, False for CSV
 start_date = '2021-09-30'     # Choose the start date to begin from
