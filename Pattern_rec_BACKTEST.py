@@ -32,6 +32,8 @@ file_path = 'TXT/MT5/BTCUSD_M5.csv'
 # file_path = 'TXT/MT5/BTCUSD_H1.csv'
 # file_path = 'TXT/MT5/BTCUSD_D1.csv'
 # file_path = 'TXT/MT5/BTCUSD_H4.csv'
+# file_path = 'TXT/MT5/BTCUSD_H4.csv'
+# file_path = 'TXT/MT5/BTCUSD_M5_today.csv'
 # ------------------------------------------
 # pd.set_option('display.max_columns', 10)  # Uncomment to display all columns
 
@@ -39,11 +41,11 @@ file_path = 'TXT/MT5/BTCUSD_M5.csv'
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2024-03-01'     # Choose the start date to begin from
+start_date = '2020-01-01'     # Choose the start date to begin from
 end_date = '2024-03-26'     # Choose the end date
 
 # ENTRY CONDITIONS
-number_of_pattern = 24  # Choose the index of pattern (from Ta-lib patterns.csv)
+number_of_pattern = 22  # Choose the index of pattern (from Ta-lib patterns.csv)
 use_pattern_recognition = True
 use_piercing_signal = False
 
@@ -59,7 +61,7 @@ start_simulation = True
 show_trade_analysis = True
 
 # CHARTS
-show_candlestick_chart = True
+show_candlestick_chart = False
 show_line_chart = False
 show_signal_line_chart = False
 show_profits_losses_line_chart = False  # Only when Simulation is True
