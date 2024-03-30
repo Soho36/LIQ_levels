@@ -10,30 +10,33 @@ from API_or_Json import dataframe_from_api
 
 # ------------------------------------------
 # The list of paths to datafiles:
-# file_path = 'TXT/merged_data.csv'
-# file_path = 'TXT/exel.csv'
-# file_path = 'TXT/spr.csv'
-# file_path = 'TXT/zim.csv'
-# file_path = 'TXT/extr.csv'
-# file_path = 'TXT/aehr.csv'
-# file_path = 'TXT/tsla_D1.csv'
-# file_path = 'TXT/neog_D1.csv'
-# file_path = 'TXT/meta_D1.csv'
-# file_path = 'TXT/tsla_m5.csv'
-# file_path = 'TXT/tsla_m1.csv'
-# file_path = 'TXT/MT4/BTCUSD_D1.csv'
-# file_path = 'TXT/MT4/BTCUSD_m60.csv'
-# file_path = 'TXT/MT4/BTCUSD_m5.csv'
-# file_path = 'TXT/MT4/BTCUSD1.csv'
-# file_path = 'TXT/MT4/BTCUSD5.csv'
-# file_path = 'TXT/MT5/BTCUSD_M1.csv'
-file_path = 'TXT/MT5/BTCUSD_M5.csv'
-# file_path = 'TXT/MT5/BTCUSD_M30.csv'
-# file_path = 'TXT/MT5/BTCUSD_H1.csv'
-# file_path = 'TXT/MT5/BTCUSD_D1.csv'
-# file_path = 'TXT/MT5/BTCUSD_H4.csv'
-# file_path = 'TXT/MT5/BTCUSD_H4.csv'
-# file_path = 'TXT/MT5/BTCUSD_M5_today.csv'
+# file_path = 'History_data/merged_data.csv'
+# file_path = 'History_data/exel.csv'
+# file_path = 'History_data/spr.csv'
+# file_path = 'History_data/zim.csv'
+# file_path = 'History_data/extr.csv'
+# file_path = 'History_data/aehr.csv'
+# file_path = 'History_data/tsla_D1.csv'
+# file_path = 'History_data/neog_D1.csv'
+# file_path = 'History_data/meta_D1.csv'
+# file_path = 'History_data/tsla_m5.csv'
+# file_path = 'History_data/tsla_m1.csv'
+# file_path = 'History_data/MT4/BTCUSD_D1.csv'
+# file_path = 'History_data/MT4/BTCUSD_m60.csv'
+# file_path = 'History_data/MT4/BTCUSD_m5.csv'
+# file_path = 'History_data/MT4/BTCUSD1.csv'
+
+file_path = 'History_data/MT5/BTCUSD_M5.csv'
+# file_path = 'History_data/MT5/BTCUSD_M1.csv'
+# file_path = 'History_data/MT5/BTCUSD_M30.csv'
+# file_path = 'History_data/MT5/BTCUSD_H1.csv'
+# file_path = 'History_data/MT5/BTCUSD_D1.csv'
+# file_path = 'History_data/MT5/BTCUSD_H4.csv'
+# file_path = 'History_data/MT5/BTCUSD_H4.csv'
+# file_path = 'History_data/MT5/BTCUSD_M15.csv'
+# file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
+# file_path = 'History_data/MT5/BTCUSD_M30_today.csv'
+# file_path = 'History_data/MT5/BTCUSD_M15_today.csv'
 # ------------------------------------------
 # pd.set_option('display.max_columns', 10)  # Uncomment to display all columns
 
@@ -41,20 +44,22 @@ file_path = 'TXT/MT5/BTCUSD_M5.csv'
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2020-01-01'     # Choose the start date to begin from
-end_date = '2024-03-26'     # Choose the end date
+start_date = '2024-02-28'     # Choose the start date to begin from
+end_date = '2024-03-28'     # Choose the end date
 
 # ENTRY CONDITIONS
-number_of_pattern = 22  # Choose the index of pattern (from Ta-lib patterns.csv)
+number_of_pattern = 24  # Choose the index of pattern (from Ta-lib patterns.csv)
 use_pattern_recognition = True
 use_piercing_signal = False
 
 # RISK MANAGEMENT
+
+spread = 10
 risk_reward_ratio = 3   # Chose risk/reward ratio (aiming to win compared to lose)
 stop_loss_as_candle_min_max = True  # Must be True if next condition is false
 stop_loss_as_plus_candle = False    # Must be True if previous condition is false
 stop_loss_offset_multiplier = 15    # 1 places stop one candle away from H/L (only when stop_loss_as_plus_candle = True
-stop_loss_offset = 15               # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
+stop_loss_offset = 0               # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
 
 # SIMULATION
 start_simulation = True
@@ -258,11 +263,11 @@ pierce_signals_series_outside = level_peirce_recognition()
 #  TRADES SIMULATION
 #  ----------------------------------------------
 
-
 def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
 
     if start_simulation:
         trades_counter = 0
+        trade_result_both = []
         trade_result = []
         trade_result_longs = []
         trade_result_shorts = []
@@ -293,9 +298,9 @@ def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
                     stop_loss_price = None
                     take_profit_price = None
                     if stop_loss_as_candle_min_max:
-                        stop_loss_price = signal_candle_low - stop_loss_offset    # STOP
-                        take_profit_price = (((signal_candle_close_entry - stop_loss_price) * risk_reward) +    # TAKE
-                                             signal_candle_close_entry)
+                        stop_loss_price = (signal_candle_low - stop_loss_offset)    # STOP
+                        take_profit_price = ((((signal_candle_close_entry - stop_loss_price) * risk_reward) +
+                                             signal_candle_close_entry) + stop_loss_offset)
 
                     elif stop_loss_as_plus_candle:
                         stop_loss_price = (signal_candle_low - ((signal_candle_close_entry - signal_candle_low)
@@ -330,42 +335,48 @@ def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
                               'C', current_candle_close)
 
                         if current_candle_open > stop_loss_price:
-                            if current_candle_high >= take_profit_price:
-                                trade_result.append(take_profit_price - signal_candle_close_entry)
-                                trade_result_longs.append(take_profit_price - signal_candle_close_entry)
-                                profit_loss_long_short.append('LongProfit')
-                                print(f'○ ○ ○ Take profit hit ○ ○ ○ at {current_candle_date}')
-                                print()
-                                print(f'Trade Trade Close Price: {round(take_profit_price, 3)}')
-                                print(f'P/L: ${round(take_profit_price - signal_candle_close_entry, 3)}')
-                                print(
-                                    '---------------------------------------------'
-                                    '---------------------------------------------'
-                                )
-                                break
+
+                            if current_candle_low <= stop_loss_price and current_candle_high >= take_profit_price:
+                                trade_result_both.append(1)
+
                             elif current_candle_low <= stop_loss_price:
-                                trade_result.append(stop_loss_price - signal_candle_close_entry)
-                                trade_result_longs.append(stop_loss_price - signal_candle_close_entry)
+                                trade_result.append((stop_loss_price - spread) - (signal_candle_close_entry + spread))
+                                trade_result_longs.append((stop_loss_price - spread) - (signal_candle_close_entry + spread))
                                 profit_loss_long_short.append('LongLoss')
                                 print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date}')
                                 print()
                                 print(f'Trade Close Price: {round(stop_loss_price, 3)}')
-                                print(f'P/L: ${round(stop_loss_price - signal_candle_close_entry, 3)}')
+                                print(f'P/L: ${round((stop_loss_price - spread) - (signal_candle_close_entry + spread), 3)}')
                                 print(
                                     '---------------------------------------------'
                                     '---------------------------------------------'
                                 )
                                 break
+
+                            elif current_candle_high >= take_profit_price:
+                                trade_result.append(take_profit_price - (signal_candle_close_entry + spread))
+                                trade_result_longs.append(take_profit_price - (signal_candle_close_entry + spread))
+                                profit_loss_long_short.append('LongProfit')
+                                print(f'○ ○ ○ Take profit hit ○ ○ ○ at {current_candle_date}')
+                                print()
+                                print(f'Trade Trade Close Price: {round(take_profit_price, 3)}')
+                                print(f'P/L: ${round(take_profit_price - (signal_candle_close_entry + spread), 3)}')
+                                print(
+                                    '---------------------------------------------'
+                                    '---------------------------------------------'
+                                )
+                                break
+
                             else:
                                 pass
                         else:       # IN CASE OF GAP DOWN, WHEN NEXT CANDLE OPENS LOWER THAN PREV. CANDLE STOP
-                            trade_result.append(stop_loss_price - signal_candle_close_entry)
-                            trade_result_longs.append(stop_loss_price - signal_candle_close_entry)
+                            trade_result.append((stop_loss_price - spread) - (signal_candle_close_entry + spread))
+                            trade_result_longs.append((stop_loss_price - spread) - (signal_candle_close_entry + spread))
                             profit_loss_long_short.append('LongLoss')
                             print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date}')
                             print()
                             print(f'Trade Close Price: {round(stop_loss_price, 3)}')
-                            print(f'P/L: ${round(stop_loss_price - signal_candle_close_entry, 3)}')
+                            print(f'P/L: ${round((stop_loss_price - spread) - (signal_candle_close_entry + spread), 3)}')
                             print(
                                 '---------------------------------------------'
                                 '---------------------------------------------'
@@ -385,15 +396,17 @@ def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
 
                     stop_loss_price = None
                     take_profit_price = None
+
                     if stop_loss_as_candle_min_max:
                         stop_loss_price = signal_candle_high + stop_loss_offset
-                        take_profit_price = (signal_candle_close_entry -
-                                             ((stop_loss_price - signal_candle_close_entry) * risk_reward))
+                        take_profit_price = ((signal_candle_close_entry - ((stop_loss_price - signal_candle_close_entry)
+                                                                           * risk_reward))) - stop_loss_offset
 
                     elif stop_loss_as_plus_candle:
-                        # Basically adding size of the signal candle to the stop
+                        # Adding size of the signal candle to the stop
                         stop_loss_price = (signal_candle_high +
-                                           ((signal_candle_high - signal_candle_close_entry) * sl_offset_multiplier))
+                                           ((signal_candle_high - signal_candle_close_entry)
+                                            * sl_offset_multiplier))
                         take_profit_price = (signal_candle_close_entry -
                                              ((stop_loss_price - signal_candle_close_entry) * risk_reward))
                     else:
@@ -421,62 +434,67 @@ def trades_simulation(filtered_df, risk_reward, sl_offset_multiplier):
                               'L', current_candle_low,
                               'C', current_candle_close)
                         if current_candle_open < stop_loss_price:
-                            if current_candle_low <= take_profit_price:
-                                trade_result.append(signal_candle_close_entry - take_profit_price)
-                                trade_result_shorts.append(signal_candle_close_entry - take_profit_price)
+                            if current_candle_high >= stop_loss_price and current_candle_low <= take_profit_price:
+                                trade_result_both.append(1)
+
+                            elif current_candle_high >= stop_loss_price:
+                                trade_result.append((signal_candle_close_entry - spread) - (stop_loss_price + spread))
+                                trade_result_shorts.append((signal_candle_close_entry - spread) - (stop_loss_price + spread))
+                                profit_loss_long_short.append('ShortLoss')
+                                print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date}')
+                                print()
+                                print(f'Trade Close Price: {round(stop_loss_price, 3)}')
+                                print(f'P/L: ${round((signal_candle_close_entry - spread) - (stop_loss_price + spread), 3)}')
+                                print(
+                                    '---------------------------------------------'
+                                    '---------------------------------------------'
+                                )
+                                break
+
+                            elif current_candle_low <= take_profit_price:
+                                trade_result.append((signal_candle_close_entry - spread) - take_profit_price)
+                                trade_result_shorts.append((signal_candle_close_entry - spread) - take_profit_price)
                                 profit_loss_long_short.append('ShortProfit')
                                 print(f'○ ○ ○ Take profit hit ○ ○ ○ at {current_candle_date}')
                                 print()
                                 print(f'Trade Close Price: {round(take_profit_price, 3)}')
-                                print(f'P/L: ${round(signal_candle_close_entry - take_profit_price, 3)}')
+                                print(f'P/L: ${round((signal_candle_close_entry - spread) - take_profit_price, 3)}')
                                 print(
                                     '---------------------------------------------'
                                     '---------------------------------------------'
                                 )
 
                                 break
-                            elif current_candle_high >= stop_loss_price:
-                                trade_result.append(signal_candle_close_entry - stop_loss_price)
-                                trade_result_shorts.append(signal_candle_close_entry - stop_loss_price)
-                                profit_loss_long_short.append('ShortLoss')
-                                print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date}')
-                                print()
-                                print(f'Trade Close Price: {round(stop_loss_price, 3)}')
-                                print(f'P/L: ${round(signal_candle_close_entry - stop_loss_price, 3)}')
-                                print(
-                                    '---------------------------------------------'
-                                    '---------------------------------------------'
-                                )
-                                break
+
                             else:
                                 pass
                         else:   # IN CASE OF GAP UP, WHEN NEXT CANDLE OPENS HIGHER THAN PREV. CANDLE STOP
-                            trade_result.append(signal_candle_close_entry - stop_loss_price)
-                            trade_result_shorts.append(signal_candle_close_entry - stop_loss_price)
+                            trade_result.append((signal_candle_close_entry - spread) - (stop_loss_price + spread))
+                            trade_result_shorts.append((signal_candle_close_entry - spread) - (stop_loss_price + spread))
                             profit_loss_long_short.append('ShortLoss')
                             print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date}')
                             print()
                             print(f'Trade Close Price: {round(stop_loss_price, 3)}')
-                            print(f'P/L: ${round(signal_candle_close_entry - stop_loss_price, 3)}')
+                            print(f'P/L: ${round((signal_candle_close_entry - spread) - (stop_loss_price + spread), 3)}')
                             print(
                                 '---------------------------------------------'
                                 '---------------------------------------------'
                             )
                             break
 
-            return (trade_result, trades_counter, trade_direction, profit_loss_long_short, trade_result_longs,
+            return (trade_result_both, trade_result, trades_counter, trade_direction, profit_loss_long_short, trade_result_longs,
                     trade_result_shorts)
     else:
         print('Trade simulation is OFF')
         return None, None, None, None, None, None   # Return Nones in order to avoid error when function is OFF
 
 
-(trade_results_to_trade_analysis, trades_counter_to_trade_analysis, trade_direction_to_trade_analysis,
+(trade_result_both_to_trade_analysis, trade_results_to_trade_analysis, trades_counter_to_trade_analysis, trade_direction_to_trade_analysis,
  profit_loss_long_short_to_trade_analysis, trade_result_longs_to_trade_analysis, trade_result_shorts_to_trade_analysis)\
     = trades_simulation(filtered_by_date_dataframe, risk_reward_ratio, stop_loss_offset_multiplier)
 
 
-def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_long_short, trade_result_longs,
+def trades_analysis(trade_result_both, trade_result, trades_counter, trade_direction, profit_loss_long_short, trade_result_longs,
                     trade_result_short, df_csv, df_api):
 
     if show_trade_analysis and start_simulation and (use_piercing_signal or use_pattern_recognition):
@@ -503,7 +521,7 @@ def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_l
         rounded_trades_list = 0
         try:
             rounded_trades_list = [round(num, 3) for num in trade_result]   # List of all trades in dollar amount
-            print(f"Trades List: {rounded_trades_list}")
+            # print(f"Trades List: {rounded_trades_list}")
         except TypeError:
             print(f'Trades List: {rounded_trades_list}')
 
@@ -520,8 +538,8 @@ def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_l
                 else:
                     outcomes_string.append('loss')
                     outcomes_negative.append(num)
-            print(f'Profitable trades list: {outcomes_positive}')
-            print(f'Losing trades list: {outcomes_negative}')
+            # print(f'Profitable trades list: {outcomes_positive}')
+            # print(f'Losing trades list: {outcomes_negative}')
         except TypeError:
             print('Profitable trades list: No trades')
             print('Losing trades list: No trades')
@@ -578,8 +596,9 @@ def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_l
 
         # print(f'{profit_loss_long_short}')
         # print(f'List {trade_direction}')
-        print(f'Balance change over time list: {rounded_results_as_balance_change}')
+        # print(f'Balance change over time list: {rounded_results_as_balance_change}')
         print()
+        print(f'Spread: ${spread}')
         print(f'Total candles in range: {candles_number_analyzed}'.title())
         if days_per_trade > 0:
             print(f'Trades per candle: {trades_per_candle} or 1 trade every {days_per_trade} candles'.title())
@@ -591,6 +610,7 @@ def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_l
         print(f'risk_reward_ratio: {risk_reward_ratio}')
         print(f'Pattern: {active_pattern_list}')
         print()
+        print(f'Both trades for long signals: {sum(trade_result_both)}')
         print(f'Profitable trades: {profitable_trades_count} ({round(win_percent, 2)}%)'.title())
         print(f'Losing trades: {loss_trades_count} ({round(loss_percent, 2)}%)'.title())
         print()
@@ -623,8 +643,26 @@ def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_l
             print(f'Average losing trade: No losing trades')
 
         print()
-        print(f'Dollar per Share profit/loss: ${round(sum(trade_result), 2)}'.title())
+        # Calculating mathematical expectation
 
+        prob_per_trade = 1 / trades_count
+        math_expectation = round(sum([outcome * prob_per_trade for outcome in trade_result]), 2)
+
+        print(f'Expectation: ${math_expectation}')
+        print()
+
+        spread_loss = -1 * ((loss_trades_count * (spread * 2)) + (profitable_trades_count * spread))
+        pending_order_spread_loss = -1 * (loss_trades_count * spread)
+
+        print(f'Spread loss: ${spread_loss}'.title())
+        print(f'If Pending Order spread loss : ${pending_order_spread_loss}'.title())
+        print()
+
+        p_n_l = round(sum(trade_result), 2)
+
+        print(f'If not spread profit/loss: ${round(p_n_l - spread_loss, 2)}'.title())
+        print(f'If pending order entry dollar per share profit/loss: ${p_n_l - pending_order_spread_loss}'.title())
+        print(f'Dollar per Share profit/loss: ${p_n_l}'.title())
         print('***************************************************************************************')
 
         return rounded_trades_list, rounded_results_as_balance_change
@@ -635,7 +673,7 @@ def trades_analysis(trade_result, trades_counter, trade_direction, profit_loss_l
         return None, None    # Return Nones in order to avoid error when function is OFF
 
 
-rounded_trades_list_to_chart_profits_losses, rounded_results_as_balance_change_to_chart_profits = trades_analysis(
+rounded_trades_list_to_chart_profits_losses, rounded_results_as_balance_change_to_chart_profits = trades_analysis(trade_result_both_to_trade_analysis,
     trade_results_to_trade_analysis, trades_counter_to_trade_analysis,
     trade_direction_to_trade_analysis, profit_loss_long_short_to_trade_analysis,
     trade_result_longs_to_trade_analysis, trade_result_shorts_to_trade_analysis, dataframe_from_csv, dataframe_from_api)
