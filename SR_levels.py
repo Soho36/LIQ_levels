@@ -45,6 +45,7 @@ def find_levels(dataframe):
 
     # Support levels
     for i in range(2, len(dataframe) - 2):
+        signals_list.append(None)
         if (dataframe['Low'][i] < dataframe['Low'][i-1]) and \
            (dataframe['Low'][i] < dataframe['Low'][i+1]) and \
            (dataframe['Low'][i+1] < dataframe['Low'][i+2]) and \
@@ -59,15 +60,12 @@ def find_levels(dataframe):
                 levels_endpoints.append((datetime_2, price_level_2))
                 support_levels.append((datetime_1, price_level_1))
                 signals_list.append(100)
-        else:
-            signals_list.append(None)
 
     # Resistance levels
-    for i in range(2, len(dataframe) - 2):
-        if (dataframe['High'][i] > dataframe['High'][i-1]) and \
-           (dataframe['High'][i] > dataframe['High'][i+1]) and \
-           (dataframe['High'][i+1] > dataframe['High'][i+2]) and \
-           (dataframe['High'][i-1] > dataframe['High'][i-2]):
+        elif ((dataframe['High'][i] > dataframe['High'][i-1]) and
+              (dataframe['High'][i] > dataframe['High'][i+1]) and
+              (dataframe['High'][i+1] > dataframe['High'][i+2]) and
+              (dataframe['High'][i-1] > dataframe['High'][i-2])):
             datetime_1 = dataframe.index[i]
             price_level_1 = dataframe['High'][i]
             datetime_2 = dataframe.index[-1]
@@ -78,10 +76,8 @@ def find_levels(dataframe):
                 levels_endpoints.append((datetime_2, price_level_2))
                 resistance_levels.append((datetime_1, price_level_1))
                 signals_list.append(-100)
-        else:
-            signals_list.append(None)
 
-    level_reject_signals_series = pd.Series(signals_list)
+    level_reject_signals_series = pd.Series(signals_list)[:-1]
 
     return (levels_startpoints, levels_endpoints, support_levels, resistance_levels,
             signals_list, level_reject_signals_series)
