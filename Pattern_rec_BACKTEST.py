@@ -45,11 +45,11 @@ file_path = 'History_data/MT5/BTCUSD_M1_4_years.csv'
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2024-01-01'       # Choose the start date to begin from
+start_date = '2023-02-01'       # Choose the start date to begin from
 end_date = '2024-03-01'         # Choose the end date
 
 # ENTRY CONDITIONS
-number_of_pattern = 1          # Choose the index of pattern (from Ta-lib patterns.csv)
+number_of_pattern = 4          # Choose the index of pattern (from Ta-lib patterns.csv)
 use_pattern_recognition = True
 use_piercing_signal = False
 longs_allowed = True            # Allow or disallow trade direction

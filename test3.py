@@ -2,7 +2,7 @@ import pandas as pd
 import yfinance as yf
 import numpy as np
 import mplfinance as mpf
-# import matplotlib.dates as mpl_dates
+import matplotlib.dates as mpl_dates
 
 
 use_csv_or_yf = False                # True for CSV false for YF
@@ -47,17 +47,24 @@ def find_levels(dataframe):
            (dataframe['Low'][i] < dataframe['Low'][i+1]) and \
            (dataframe['Low'][i+1] < dataframe['Low'][i+2]) and \
            (dataframe['Low'][i-1] < dataframe['Low'][i-2]):
-            price = dataframe['Low'][i]
-            if not is_near_level(price, levels, dataframe):
-                levels.append((i, price))
+            date_1 = dataframe.index[i]
+            price_1 = dataframe['Low'][i]
+            date_2 = dataframe.index[-1]
+            price_2 = dataframe['Low'][i]
+            if not is_near_level(price_1, levels, dataframe):
+                levels.append((date_1, price_1, date_2, price_2))
         # Resistance level
         elif (dataframe['High'][i] > dataframe['High'][i-1]) and \
              (dataframe['High'][i] > dataframe['High'][i+1]) and \
              (dataframe['High'][i+1] > dataframe['High'][i+2]) and \
              (dataframe['High'][i-1] > dataframe['High'][i-2]):
-            price = dataframe['High'][i]
-            if not is_near_level(price, levels, dataframe):
-                levels.append((i, price))
+            date_1 = dataframe.index[i]
+            price_1 = dataframe['High'][i]
+            date_2 = dataframe.index[-1]
+            price_2 = dataframe['Low'][i]
+
+            if not is_near_level(price_1, levels, dataframe):
+                levels.append((date_1, price_1, date_2, price_2))
 
     return levels
 
@@ -70,16 +77,32 @@ def is_near_level(value, levels, df):
 levels_to_chart = find_levels(dataframe)
 
 
+
+
 if plot_candlestick_chart:
     def plot_chart(levels, df):
         fig, ax = mpf.plot(df, figsize=(12, 6), type='candle', style='yahoo', returnfig=True)
 
-        for index, level_value in levels:
-            x_coord = index
+        for timestamp, level_value in levels:
+            x_coord = timestamp
             ax[0].axhline(y=level_value, xmin=x_coord / len(dataframe.index), xmax=1, color='blue', linestyle='--')
 
+            # ax[0].axhline(y=level_value, xmin=df['Datetime'][level[0]], xmax=max(df['Date']), color='blue', linestyle='--')
         mpf.show()
 
 
-    print('Levels to chart: ', levels_to_chart)
+    # def plot_all():
+    #     fig, ax = plt.subplots()
+    #     candlestick_ohlc(ax, df.values, width=0.6, \
+    #                      colorup='green', colordown='red', alpha=0.8)
+    #     date_format = mpl_dates.DateFormatter('%d %b %Y')
+    #     ax.xaxis.set_major_formatter(date_format)
+    #     fig.autofmt_xdate()
+    #     fig.tight_layout()
+    #     for level in levels:
+    #         plt.hlines(level[1], xmin=df['Date'][level[0]], \
+    #                    xmax=max(df['Date']), colors='blue')
+    #     fig.show()
+
+    print('Timestamps and Levels to chart: ', levels_to_chart)
     plot_chart(levels_to_chart, dataframe)
