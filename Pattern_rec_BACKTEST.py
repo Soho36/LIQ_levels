@@ -28,14 +28,14 @@ from API_or_Json import dataframe_from_api
 
 # file_path = 'History_data/MT5/BTCUSD_M5.csv'
 # file_path = 'History_data/MT5/BTCUSD_M1.csv'
-file_path = 'History_data/MT5/BTCUSD_M1_4_years.csv'
+# file_path = 'History_data/MT5/BTCUSD_M1_4_years.csv'
 # file_path = 'History_data/MT5/BTCUSD_M30.csv'
 # file_path = 'History_data/MT5/BTCUSD_H1.csv'
 # file_path = 'History_data/MT5/BTCUSD_D1.csv'
 # file_path = 'History_data/MT5/BTCUSD_H4.csv'
 # file_path = 'History_data/MT5/BTCUSD_H4.csv'
 # file_path = 'History_data/MT5/BTCUSD_M15.csv'
-# file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
+file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
 # file_path = 'History_data/MT5/BTCUSD_M30_today.csv'
 # file_path = 'History_data/MT5/BTCUSD_M15_today.csv'
 # ------------------------------------------
@@ -45,20 +45,20 @@ file_path = 'History_data/MT5/BTCUSD_M1_4_years.csv'
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2023-02-01'       # Choose the start date to begin from
-end_date = '2024-03-01'         # Choose the end date
+start_date = '2024-03-28'       # Choose the start date to begin from
+end_date = '2024-03-28'         # Choose the end date
 
 # ENTRY CONDITIONS
 number_of_pattern = 4          # Choose the index of pattern (from Ta-lib patterns.csv)
-use_pattern_recognition = True
-use_piercing_signal = False
+use_pattern_recognition = False
+use_piercing_signal = True
 longs_allowed = True            # Allow or disallow trade direction
 shorts_allowed = True          # Allow or disallow trade direction
 
 # RISK MANAGEMENT
 
 spread = 0
-risk_reward_ratio = 1   # Chose risk/reward ratio (aiming to win compared to lose)
+risk_reward_ratio = 5   # Chose risk/reward ratio (aiming to win compared to lose)
 stop_loss_as_candle_min_max = False  # Must be True if next condition is false
 stop_loss_offset = 0                # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
 
@@ -73,7 +73,7 @@ start_simulation = True
 show_trade_analysis = True
 
 # CHARTS
-show_candlestick_chart = False
+show_candlestick_chart = True
 show_line_chart = False
 show_signal_line_chart = False
 show_profits_losses_line_chart = False  # Only when Simulation is True
@@ -81,8 +81,8 @@ show_balance_change_line_chart = True   # Only when Simulation is True
 
 
 # SIGNALS
-sr_levels_timeframe = 10
-show_swing_highs_lows = False
+sr_levels_timeframe = 30
+show_swing_highs_lows = True
 
 # ******************************************************************************
 
