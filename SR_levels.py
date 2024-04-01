@@ -2,12 +2,10 @@ import pandas as pd
 import yfinance as yf
 import numpy as np
 import mplfinance as mpf
-# import matplotlib.dates as mpl_dates
 
 
-use_csv_or_yf = False                # True for CSV false for YF
+use_csv_or_yf = True                # True for CSV false for YF
 plot_candlestick_chart = True       # Plot Chart
-show_levels = True                 # Plot price levels
 
 symbol = 'NVDA'
 history_file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
@@ -15,7 +13,7 @@ history_file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
 
 def get_stock_price(sym):
     if not use_csv_or_yf:
-        df = yf.download(sym, start='2024-03-26', end='2024-03-27', interval='5m', progress=False)
+        df = yf.download(sym, start='2024-03-20', end='2024-03-27', interval='15m', progress=False)
         df.index = pd.to_datetime(df.index)
         print(df)
         return df
@@ -39,7 +37,8 @@ dataframe = get_stock_price(symbol)
 
 
 def find_levels(dataframe):
-    levels = []
+    levels_startpoints = []
+    levels_endpoints = []
 
     for i in range(2, len(dataframe) - 2):
         # Support level
@@ -47,19 +46,26 @@ def find_levels(dataframe):
            (dataframe['Low'][i] < dataframe['Low'][i+1]) and \
            (dataframe['Low'][i+1] < dataframe['Low'][i+2]) and \
            (dataframe['Low'][i-1] < dataframe['Low'][i-2]):
-            price = dataframe['Low'][i]
-            if not is_near_level(price, levels, dataframe):
-                levels.append((i, price))
+            date_1 = dataframe.index[i]
+            price_1 = dataframe['Low'][i]
+            date_2 = dataframe.index[-1]
+            price_2 = dataframe['Low'][i]
+            if not is_near_level(price_1, levels_startpoints, dataframe):
+                levels_startpoints.append((date_1, price_1))
+                levels_endpoints.append((date_2, price_2))
         # Resistance level
         elif (dataframe['High'][i] > dataframe['High'][i-1]) and \
              (dataframe['High'][i] > dataframe['High'][i+1]) and \
              (dataframe['High'][i+1] > dataframe['High'][i+2]) and \
              (dataframe['High'][i-1] > dataframe['High'][i-2]):
-            price = dataframe['High'][i]
-            if not is_near_level(price, levels, dataframe):
-                levels.append((i, price))
-
-    return levels
+            date_1 = dataframe.index[i]
+            price_1 = dataframe['High'][i]
+            date_2 = dataframe.index[-1]
+            price_2 = dataframe['High'][i]
+            if not is_near_level(price_1, levels_startpoints, dataframe):
+                levels_startpoints.append((date_1, price_1))
+                levels_endpoints.append((date_2, price_2))
+    return levels_startpoints, levels_endpoints
 
 
 def is_near_level(value, levels, df):
@@ -67,19 +73,15 @@ def is_near_level(value, levels, df):
     return any(abs(value - level) < average for _, level in levels)
 
 
-levels_to_chart = find_levels(dataframe)
+levels_startpoints_to_chart, levels_endpoints_to_chart = find_levels(dataframe)
+
+levels_points = [[a, b] for a, b in zip(levels_startpoints_to_chart, levels_endpoints_to_chart)]
 
 
 if plot_candlestick_chart:
     def plot_chart(levels, df):
-        fig, ax = mpf.plot(df, figsize=(12, 6), type='candle', style='yahoo', returnfig=True)
-
-        for index, level_value in levels:
-            x_coord = index
-            ax[0].axhline(y=level_value, xmin=x_coord / len(dataframe.index), xmax=1, color='blue', linestyle='--')
-
-        mpf.show()
+        mpf.plot(df, type='candle', figsize=(12, 6),
+                 alines=dict(alines=levels_points, linewidths=2, alpha=0.4), style='yahoo')
 
 
-    print('Levels to chart: ', levels_to_chart)
-    plot_chart(levels_to_chart, dataframe)
+    plot_chart(levels_startpoints_to_chart, dataframe)
