@@ -86,7 +86,6 @@ def find_levels(df):
             signals_list.append(None)
 
     signals_list.extend([None, None])   # Appending two elements to the end, to match Dataframe length
-    # print(signals_list)
     print('Signals list length: ', len(signals_list))
     level_reject_signals_series = pd.Series(signals_list)
 
@@ -103,8 +102,35 @@ def is_near_level(value, levels, df):
  level_reject_signals_series_to) = find_levels(dataframe)
 
 print('Signals series length: ', len(level_reject_signals_series_to))
+print('Signal series: \n', level_reject_signals_series_to)
+print(levels_startpoints_to_chart)
 
 levels_points = [[a, b] for a, b in zip(levels_startpoints_to_chart, levels_endpoints_to_chart)]
+
+
+def trade_simulation(df, support_levels, resistance_levels):
+
+    resistance_prices = [round(price, 2) for (timestamp, price) in resistance_levels]
+    support_prices = [round(price, 2) for (timestamp, price) in support_levels]
+
+    print('Resistance prices: ', resistance_prices)  # Get list of resistance prices
+    print('Support prices: ', support_prices)           # Get list of support prices
+
+    # Support perk finding loop
+    for i in range(2, len(df) - 2):
+        for e in support_prices:
+            if df['Low'][i] < e:
+                if df['Close'][i] > e:
+                    print('Match found for support', i)
+
+    for i in range(2, len(df) - 2):
+        for e in resistance_prices:
+            if df['High'][i] > e:
+                if df['Close'][i] < e:
+                    print('Match found resistance', i)
+
+
+trade_simulation(dataframe, support_levels_to, resistance_levels_to)
 
 
 # Print Candlestick Chart
