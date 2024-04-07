@@ -5,7 +5,7 @@ import mplfinance as mpf
 
 
 use_csv_or_yf = False                # True for CSV false for YF
-plot_candlestick_chart = False       # Plot Chart
+plot_candlestick_chart = True       # Plot Chart
 
 symbol = 'TSLA'
 history_file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
@@ -13,7 +13,7 @@ history_file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
 
 def get_stock_price(sym):
     if not use_csv_or_yf:
-        df = yf.download(sym, start='2024-03-01', end='2024-03-02', interval='60m', progress=False)
+        df = yf.download(sym, start='2024-03-05', end='2024-03-06', interval='5m', progress=False)
         df.index = pd.to_datetime(df.index)
         print('Dataframe: \n', df)
         return df
@@ -126,9 +126,9 @@ def is_near_level(value, levels, df):
 # ii = print('Sup', list(enumerate(support_level_signal_running_out)))
 # ee = print('Res', list(enumerate(resistance_level_signal_running_out)))
 
-print(level_discovery_signal_to_chart_out)
-print(support_level_signal_running_out)
-print(resistance_level_signal_running_out)
+print('Level discovery signal: ', level_discovery_signal_to_chart_out)
+print('Support level: ', support_level_signal_running_out)
+print('Resistance level: ', resistance_level_signal_running_out)
 
 
 levels_points = [[a, b] for a, b in zip(levels_startpoints_to_chart, levels_endpoints_to_chart)]
@@ -143,8 +143,8 @@ def trade_simulation(df, support_levels_running, resistance_levels_running):
 
     # Initialize the list with two None values
     level_rejection_signals_list = []
-    # level_rejection_signals_list.insert(0, None)
-    # level_rejection_signals_list.insert(1, None)
+    level_rejection_signals_list.insert(0, None)
+    level_rejection_signals_list.insert(1, None)
 
     # Support rejection finding loop
     # Iterate through each candlestick
@@ -158,27 +158,24 @@ def trade_simulation(df, support_levels_running, resistance_levels_running):
                 if df['Low'][index] < ss_level:
                     if df['Close'][index] > ss_level:
                         level_rejection_signals_list.append(100)  # Append support signal
-                        # print('Match found for support', index)
                         support_pierced = True
                         break  # Exit the loop once a match is found
-            # level_rejection_signals_list.append(None)
-            # break
+
         # Check for resistance matches if no support match is found
         for rr_level in resistance_levels_running:
             if rr_level is not None:
                 if df['High'][index] > rr_level:
                     if df['Close'][index] < rr_level:
                         level_rejection_signals_list.append(-100)  # Append resistance signal
-                        # print('Match found for resistance', index)
+
                         resistance_pierced = True
                         break  # Exit the loop once a match is found
-            # level_rejection_signals_list.append(None)
-            # break
+
         # If neither support nor resistance match is found, append None
         if not support_pierced and not resistance_pierced:
             level_rejection_signals_list.append(None)
 
-    # level_rejection_signals_list.extend([None, None])
+    level_rejection_signals_list.extend([None, None])
 
     level_rejection_signals_series = pd.Series(level_rejection_signals_list)
 
@@ -187,6 +184,7 @@ def trade_simulation(df, support_levels_running, resistance_levels_running):
 
 level_rejection_signals_series_from_trade_simulation = trade_simulation(dataframe, support_level_signal_running_out,
                                                                         resistance_level_signal_running_out)
+print('Level rejection series: \n', level_rejection_signals_series_from_trade_simulation)
 
 
 # PRINT CANDLESTICK CHART WITH LEVELS AND SIGNALS AS ADDITIONAL PLOT
