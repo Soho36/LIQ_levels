@@ -13,7 +13,7 @@ history_file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
 
 def get_stock_price(sym):
     if not use_csv_or_yf:
-        df = yf.download(sym, start='2024-03-05', end='2024-03-06', interval='5m', progress=False)
+        df = yf.download(sym, start='2024-02-20', end='2024-02-22', interval='15m', progress=False)
         df.index = pd.to_datetime(df.index)
         print('Dataframe: \n', df)
         return df
@@ -45,13 +45,9 @@ def find_levels(df):
     level_discovery_signal_to_chart.insert(0, None)
     level_discovery_signal_to_chart.insert(1, None)
 
-    support_levels_running_state = []
-    support_levels_running_state.insert(0, None)
-    support_levels_running_state.insert(1, None)
-
-    resistance_levels_running_state = []
-    resistance_levels_running_state.insert(0, None)
-    resistance_levels_running_state.insert(1, None)
+    sr_levels = []
+    support_levels = []
+    resistance_levels = []
 
     # Support levels
     for i in range(2, len(df) - 2):
@@ -68,12 +64,10 @@ def find_levels(df):
                 levels_startpoints_tuples.append((datetime_1, price_level_1))
                 levels_endpoints_tuples.append((datetime_2, price_level_2))
 
-                support_levels_running_state.append(price_level_1)
+                sr_levels.append(price_level_1)  # SR levels
+                support_levels.append(price_level_1)
                 level_discovery_signal_to_chart.append(100)
-                resistance_levels_running_state.append(None)
             else:
-                support_levels_running_state.append(None)
-                resistance_levels_running_state.append(None)
                 level_discovery_signal_to_chart.append(None)
 
     # Resistance levels
@@ -90,27 +84,21 @@ def find_levels(df):
                 levels_startpoints_tuples.append((datetime_1, price_level_1))
                 levels_endpoints_tuples.append((datetime_2, price_level_2))
 
-                resistance_levels_running_state.append(price_level_1)
+                sr_levels.append(price_level_1)  # SR levels
+                resistance_levels.append(price_level_1)
                 level_discovery_signal_to_chart.append(-100)
-                support_levels_running_state.append(None)
             else:
-                resistance_levels_running_state.append(None)
-                support_levels_running_state.append(None)
                 level_discovery_signal_to_chart.append(None)
 
         else:
             level_discovery_signal_to_chart.append(None)
-            support_levels_running_state.append(None)
-            resistance_levels_running_state.append(None)
 
-    level_discovery_signal_to_chart.extend([None, None])   # Appending two elements to the end, to match Dataframe length
-    support_levels_running_state.extend([None, None])
-    resistance_levels_running_state.extend([None, None])
+    level_discovery_signal_to_chart.extend([None, None])  # Appending two elements to the end, to match Dataframe length
 
     level_discovery_signals_series = pd.Series(level_discovery_signal_to_chart)
 
-    return (levels_startpoints_tuples, levels_endpoints_tuples, support_levels_running_state,
-            resistance_levels_running_state, level_discovery_signals_series, level_discovery_signal_to_chart)
+    return (levels_startpoints_tuples, levels_endpoints_tuples, support_levels,
+            resistance_levels, level_discovery_signals_series, sr_levels)
 
 
 def is_near_level(value, levels, df):
@@ -119,91 +107,83 @@ def is_near_level(value, levels, df):
 
 
 (levels_startpoints_to_chart, levels_endpoints_to_chart, support_level_signal_running_out,
- resistance_level_signal_running_out, level_discovery_signals_series_out, level_discovery_signal_to_chart_out) = (
-    find_levels(dataframe))
+ resistance_level_signal_running_out, level_discovery_signals_series_out,
+ sr_levels_out) = find_levels(dataframe)
 
-# ww = print('Sig', list(enumerate(level_discovery_signal_to_chart_out)))
-# ii = print('Sup', list(enumerate(support_level_signal_running_out)))
-# ee = print('Res', list(enumerate(resistance_level_signal_running_out)))
 
-print('Level discovery signal: ', level_discovery_signal_to_chart_out)
 print('Support level: ', support_level_signal_running_out)
 print('Resistance level: ', resistance_level_signal_running_out)
+print('SR levels: ', sr_levels_out)
+print('Level_discovery_signals_series: \n', level_discovery_signals_series_out)
 
 
 levels_points = [[a, b] for a, b in zip(levels_startpoints_to_chart, levels_endpoints_to_chart)]
 
 
+# *********************************************************************************************************************
 # THIS PART SEARCHING FOR LEVEL REJECTION
-def trade_simulation(df, support_levels_running, resistance_levels_running):
-
-    # resistance_levels = [round(price, 2) for (timestamp, price) in resistance_levels]
-    # support_levels = [round(price, 2) for (timestamp, price) in support_levels]
-    print()
-
-    # Initialize the list with two None values
-    level_rejection_signals_list = []
-    level_rejection_signals_list.insert(0, None)
-    level_rejection_signals_list.insert(1, None)
-
-    # Support rejection finding loop
-    # Iterate through each candlestick
-    for index in range(2, len(df) - 2):
-        support_pierced = False
-        resistance_pierced = False
-
-        # Check for support rejection
-        for ss_level in support_levels_running:
-            if ss_level is not None:
-                if df['Low'][index] < ss_level:
-                    if df['Close'][index] > ss_level:
-                        level_rejection_signals_list.append(100)  # Append support signal
-                        support_pierced = True
-                        break  # Exit the loop once a match is found
-
-        # Check for resistance matches if no support match is found
-        for rr_level in resistance_levels_running:
-            if rr_level is not None:
-                if df['High'][index] > rr_level:
-                    if df['Close'][index] < rr_level:
-                        level_rejection_signals_list.append(-100)  # Append resistance signal
-
-                        resistance_pierced = True
-                        break  # Exit the loop once a match is found
-
-        # If neither support nor resistance match is found, append None
-        if not support_pierced and not resistance_pierced:
-            level_rejection_signals_list.append(None)
-
-    level_rejection_signals_list.extend([None, None])
-
-    level_rejection_signals_series = pd.Series(level_rejection_signals_list)
-
-    return level_rejection_signals_series
 
 
-level_rejection_signals_series_from_trade_simulation = trade_simulation(dataframe, support_level_signal_running_out,
-                                                                        resistance_level_signal_running_out)
-print('Level rejection series: \n', level_rejection_signals_series_from_trade_simulation)
+def trade_simulation(df, sr_levels, level_discovery_signals_series):
+
+    crossing_signals = []
+    df.reset_index(inplace=True)
+    for index, row in df.iterrows():
+        previous_close = df.iloc[index - 1]['Close']
+        current_price = row['Close']
+        current_index = index
+
+        signal = None
+
+        for level1 in sr_levels:
+
+            if current_price > level1:
+                # Price has crossed above resistance level
+                # Check if the previous close was below the support level
+                if previous_close < level1:
+                    # print("Signal: Price crossed above support level")
+                    signal = 100
+                    break
+
+        for level2 in sr_levels:
+            if current_price < level2:
+                # Price has crossed below support level
+                # Check if the previous close was above the resistance level
+                if previous_close > level2:
+                    # print("Signal: Price crossed below resistance level")
+                    signal = -100
+                    break
+        crossing_signals.append(signal)
+
+    print('Crossing_signals: ', crossing_signals)
+    crossing_signals_series = pd.Series(crossing_signals)
+    return crossing_signals_series
 
 
+crossing_signals_series_outside = trade_simulation(dataframe, sr_levels_out, level_discovery_signals_series_out)
+print('Crossing_signals_series: \n', crossing_signals_series_outside)
+print('Level_discovery_signals: \n', level_discovery_signals_series_out)
+
+# ******************************************************************************************************
 # PRINT CANDLESTICK CHART WITH LEVELS AND SIGNALS AS ADDITIONAL PLOT
 if plot_candlestick_chart:
 
-    def plot_chart(df, level_discovery_signals_series, level_rejection_signals_list_series):
+    def plot_chart(df, level_discovery_signals_series, crossing_signals_series):
+
+        df.set_index('Datetime', inplace=True)
         plots_list = []
 
         for i, s in enumerate(level_discovery_signals_series):
             if s != 'NaN':
                 plots_list.append(mpf.make_addplot(level_discovery_signals_series, type='scatter', color='black',
                                                    markersize=250, marker='*', panel=1))
-        for i, s in enumerate(level_rejection_signals_list_series):
+        for i, s in enumerate(crossing_signals_series):
             if s != 'NaN':
-                plots_list.append(mpf.make_addplot(level_rejection_signals_list_series, type='scatter', color='black',
+                plots_list.append(mpf.make_addplot(crossing_signals_series, type='scatter', color='black',
                                                    markersize=250, marker='+', panel=1))
 
         mpf.plot(df, type='candle', figsize=(12, 6),
                  alines=dict(alines=levels_points, linewidths=2, alpha=0.4), style='yahoo', addplot=plots_list)
 
 
-    plot_chart(dataframe, level_discovery_signals_series_out, level_rejection_signals_series_from_trade_simulation)
+    plot_chart(dataframe, level_discovery_signals_series_out, crossing_signals_series_outside)
