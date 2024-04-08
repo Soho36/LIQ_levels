@@ -13,7 +13,7 @@ history_file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
 
 def get_stock_price(sym):
     if not use_csv_or_yf:
-        df = yf.download(sym, start='2024-02-20', end='2024-02-22', interval='15m', progress=False)
+        df = yf.download(sym, start='2024-03-21', end='2024-03-22', interval='5m', progress=False)
         df.index = pd.to_datetime(df.index)
         print('Dataframe: \n', df)
         return df
@@ -96,6 +96,7 @@ def find_levels(df):
     level_discovery_signal_to_chart.extend([None, None])  # Appending two elements to the end, to match Dataframe length
 
     level_discovery_signals_series = pd.Series(level_discovery_signal_to_chart)
+    # level_discovery_signals_series.index = df['Date']
 
     return (levels_startpoints_tuples, levels_endpoints_tuples, support_levels,
             resistance_levels, level_discovery_signals_series, sr_levels)
@@ -114,7 +115,6 @@ def is_near_level(value, levels, df):
 print('Support level: ', support_level_signal_running_out)
 print('Resistance level: ', resistance_level_signal_running_out)
 print('SR levels: ', sr_levels_out)
-print('Level_discovery_signals_series: \n', level_discovery_signals_series_out)
 
 
 levels_points = [[a, b] for a, b in zip(levels_startpoints_to_chart, levels_endpoints_to_chart)]
@@ -128,32 +128,37 @@ def trade_simulation(df, sr_levels, level_discovery_signals_series):
 
     crossing_signals = []
     df.reset_index(inplace=True)
+    discovered = False                              # Flag to track if a level was discovered
     for index, row in df.iterrows():
-        previous_close = df.iloc[index - 1]['Close']
-        current_price = row['Close']
-        current_index = index
+        if pd.notna(level_discovery_signals_series[index]):
+            discovered = True                       # Set the flag if level was discovered
+        if discovered:
+            previous_close = df.iloc[index - 1]['Close']
+            current_price = row['Close']
 
-        signal = None
+            signal = None
 
-        for level1 in sr_levels:
+            for level1 in sr_levels:
 
-            if current_price > level1:
-                # Price has crossed above resistance level
-                # Check if the previous close was below the support level
-                if previous_close < level1:
-                    # print("Signal: Price crossed above support level")
-                    signal = 100
-                    break
+                if current_price > level1:
+                    # Price has crossed above resistance level
+                    # Check if the previous close was below the support level
+                    if previous_close < level1:
+                        # print("Signal: Price crossed above support level")
+                        signal = 100
+                        break
 
-        for level2 in sr_levels:
-            if current_price < level2:
-                # Price has crossed below support level
-                # Check if the previous close was above the resistance level
-                if previous_close > level2:
-                    # print("Signal: Price crossed below resistance level")
-                    signal = -100
-                    break
-        crossing_signals.append(signal)
+                elif current_price < level1:
+                    # Price has crossed below support level
+                    # Check if the previous close was above the resistance level
+                    if previous_close > level1:
+                        # print("Signal: Price crossed below resistance level")
+                        signal = -100
+                        break
+            crossing_signals.append(signal)
+
+        else:
+            crossing_signals.append(None)   # Append None for indices before discovery
 
     print('Crossing_signals: ', crossing_signals)
     crossing_signals_series = pd.Series(crossing_signals)
