@@ -13,7 +13,7 @@ history_file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
 
 def get_stock_price(sym):
     if not use_csv_or_yf:
-        df = yf.download(sym, start='2024-03-21', end='2024-03-22', interval='5m', progress=False)
+        df = yf.download(sym, start='2024-03-19', end='2024-03-20', interval='5m', progress=False)
         df.index = pd.to_datetime(df.index)
         print('Dataframe: \n', df)
         return df
@@ -41,9 +41,9 @@ def find_levels(df):
     levels_startpoints_tuples = []
     levels_endpoints_tuples = []
 
-    level_discovery_signal_to_chart = []
-    level_discovery_signal_to_chart.insert(0, None)
-    level_discovery_signal_to_chart.insert(1, None)
+    level_discovery_signal = []
+    level_discovery_signal.insert(0, None)
+    level_discovery_signal.insert(1, None)
 
     sr_levels = []
     support_levels = []
@@ -66,9 +66,9 @@ def find_levels(df):
 
                 sr_levels.append(price_level_1)  # SR levels
                 support_levels.append(price_level_1)
-                level_discovery_signal_to_chart.append(100)
+                level_discovery_signal.append(0)
             else:
-                level_discovery_signal_to_chart.append(None)
+                level_discovery_signal.append(None)
 
     # Resistance levels
         elif ((df['High'][i] > df['High'][i - 1]) and
@@ -86,16 +86,17 @@ def find_levels(df):
 
                 sr_levels.append(price_level_1)  # SR levels
                 resistance_levels.append(price_level_1)
-                level_discovery_signal_to_chart.append(-100)
+                level_discovery_signal.append(0)
             else:
-                level_discovery_signal_to_chart.append(None)
+                level_discovery_signal.append(None)
 
         else:
-            level_discovery_signal_to_chart.append(None)
+            level_discovery_signal.append(None)
 
-    level_discovery_signal_to_chart.extend([None, None])  # Appending two elements to the end, to match Dataframe length
+    level_discovery_signal.extend([None, None])  # Appending two elements to the end, to match Dataframe length
 
-    level_discovery_signals_series = pd.Series(level_discovery_signal_to_chart)
+    print('level_discovery_signal: \n', level_discovery_signal)
+    level_discovery_signals_series = pd.Series(level_discovery_signal)
     # level_discovery_signals_series.index = df['Date']
 
     return (levels_startpoints_tuples, levels_endpoints_tuples, support_levels,
@@ -112,9 +113,9 @@ def is_near_level(value, levels, df):
  sr_levels_out) = find_levels(dataframe)
 
 
-print('Support level: ', support_level_signal_running_out)
-print('Resistance level: ', resistance_level_signal_running_out)
-print('SR levels: ', sr_levels_out)
+print('Support level: \n', support_level_signal_running_out)
+print('Resistance level: \n', resistance_level_signal_running_out)
+print('SR levels: \n', sr_levels_out)
 
 
 levels_points = [[a, b] for a, b in zip(levels_startpoints_to_chart, levels_endpoints_to_chart)]
@@ -134,27 +135,25 @@ def trade_simulation(df, sr_levels, level_discovery_signals_series):
             discovered = True                       # Set the flag if level was discovered
         if discovered:
             previous_close = df.iloc[index - 1]['Close']
-            current_price = row['Close']
+            current_candle_close = row['Close']
+            current_candle_high = row['High']
+            current_candle_low = row['Low']
 
             signal = None
 
-            for level1 in sr_levels:
+            for level in sr_levels:
 
-                if current_price > level1:
-                    # Price has crossed above resistance level
-                    # Check if the previous close was below the support level
-                    if previous_close < level1:
-                        # print("Signal: Price crossed above support level")
-                        signal = 100
-                        break
+                if previous_close < level:      # Check if the previous close was below the resistance level
+                    if current_candle_high > level:     # Price has crossed above resistance level
+                        if current_candle_close < level:    # but closed below
+                            signal = -100
+                            break
 
-                elif current_price < level1:
-                    # Price has crossed below support level
-                    # Check if the previous close was above the resistance level
-                    if previous_close > level1:
-                        # print("Signal: Price crossed below resistance level")
-                        signal = -100
-                        break
+                elif previous_close > level:    # Check if the previous close was above the support level
+                    if current_candle_low < level:      # Price has crossed below support level
+                        if current_candle_close > level:    # but closed above
+                            signal = 100
+                            break
             crossing_signals.append(signal)
 
         else:

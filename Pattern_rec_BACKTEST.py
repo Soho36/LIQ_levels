@@ -50,8 +50,8 @@ end_date = '2024-03-28'         # Choose the end date
 
 # ENTRY CONDITIONS
 number_of_pattern = 4          # Choose the index of pattern (from Ta-lib patterns.csv)
-use_pattern_recognition = False
-use_piercing_signal = True
+use_pattern_recognition = True
+use_piercing_signal = False
 longs_allowed = True            # Allow or disallow trade direction
 shorts_allowed = True          # Allow or disallow trade direction
 
@@ -82,7 +82,7 @@ show_balance_change_line_chart = True   # Only when Simulation is True
 
 # SIGNALS
 sr_levels_timeframe = 30
-show_swing_highs_lows = True
+show_swing_highs_lows = False
 
 # ******************************************************************************
 
