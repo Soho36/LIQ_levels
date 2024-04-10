@@ -4,7 +4,7 @@ import numpy as np
 import mplfinance as mpf
 
 
-use_csv_or_yf = False                # True for CSV false for YF
+use_csv_or_yf = True                # True for CSV false for YF
 plot_candlestick_chart = True       # Plot Chart
 
 symbol = 'TSLA'
@@ -13,7 +13,7 @@ history_file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
 
 def get_stock_price(sym):
     if not use_csv_or_yf:
-        df = yf.download(sym, start='2024-03-19', end='2024-03-20', interval='5m', progress=False)
+        df = yf.download(sym, start='2024-03-28', end='2024-03-28', interval='5m', progress=False)
         df.index = pd.to_datetime(df.index)
         print('Dataframe: \n', df)
         return df
@@ -119,13 +119,13 @@ print('SR levels: \n', sr_levels_out)
 
 
 levels_points = [[a, b] for a, b in zip(levels_startpoints_to_chart, levels_endpoints_to_chart)]
-
+print('levels_points', levels_points)
 
 # *********************************************************************************************************************
 # THIS PART SEARCHING FOR LEVEL REJECTION
 
 
-def trade_simulation(df, sr_levels, level_discovery_signals_series):
+def level_rejection_signals(df, sr_levels, level_discovery_signals_series):
 
     crossing_signals = []
     df.reset_index(inplace=True)
@@ -164,7 +164,7 @@ def trade_simulation(df, sr_levels, level_discovery_signals_series):
     return crossing_signals_series
 
 
-crossing_signals_series_outside = trade_simulation(dataframe, sr_levels_out, level_discovery_signals_series_out)
+crossing_signals_series_outside = level_rejection_signals(dataframe, sr_levels_out, level_discovery_signals_series_out)
 print('Crossing_signals_series: \n', crossing_signals_series_outside)
 print('Level_discovery_signals: \n', level_discovery_signals_series_out)
 

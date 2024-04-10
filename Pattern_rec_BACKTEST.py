@@ -1,6 +1,5 @@
 import talib
 import pandas as pd
-# import os
 import matplotlib.pyplot as plt
 import mplfinance as mpf
 import numpy as np
@@ -50,7 +49,8 @@ end_date = '2024-03-28'         # Choose the end date
 
 # ENTRY CONDITIONS
 number_of_pattern = 4          # Choose the index of pattern (from Ta-lib patterns.csv)
-use_pattern_recognition = True
+use_find_levels = True
+use_pattern_recognition = False
 use_piercing_signal = False
 longs_allowed = True            # Allow or disallow trade direction
 shorts_allowed = True          # Allow or disallow trade direction
@@ -69,15 +69,17 @@ stop_loss_price_as_dollar_amount = True     # STOP as distance from entry price
 rr_dollar_amount = 100                       # Value for stop as distance
 
 # SIMULATION
-start_simulation = True
-show_trade_analysis = True
+start_simulation = False
+show_trade_analysis = False
 
 # CHARTS
 show_candlestick_chart = True
+find_level_rejection_signals = True
+show_level_rejection_signals = True
 show_line_chart = False
 show_signal_line_chart = False
 show_profits_losses_line_chart = False  # Only when Simulation is True
-show_balance_change_line_chart = True   # Only when Simulation is True
+show_balance_change_line_chart = False   # Only when Simulation is True
 
 
 # SIGNALS
@@ -184,9 +186,152 @@ print(f'Dataframe filtered by date:\n {filtered_by_date_dataframe}')
 print()
 print('************************************ TRADES SIMULATION ************************************')
 
-#  ----------------------------------------------
+#  ----------------------------------------------------------------------------------------------
+#  LEVELS SEARCHING
+#  ----------------------------------------------------------------------------------------------
+
+filtered_by_date_dataframe = (filtered_by_date_dataframe.assign(
+    Datetime=(filtered_by_date_dataframe['Date'] + pd.to_timedelta(filtered_by_date_dataframe['Time']))))
+filtered_by_date_dataframe.set_index('Datetime', inplace=True)
+filtered_by_date_dataframe = filtered_by_date_dataframe.loc[:, ['Open', 'High', 'Low', 'Close']]
+
+if use_find_levels:
+    def find_levels(filtered_df):
+        levels_startpoints_tuples = []
+        levels_endpoints_tuples = []
+
+        level_discovery_signal = []
+        level_discovery_signal.insert(0, None)
+        level_discovery_signal.insert(1, None)
+
+        sr_levels = []
+        support_levels = []
+        resistance_levels = []
+
+        # Support levels
+        for i in range(2, len(filtered_df) - 2):
+            if (filtered_df['Low'][i] < filtered_df['Low'][i - 1]) and \
+               (filtered_df['Low'][i] < filtered_df['Low'][i + 1]) and \
+               (filtered_df['Low'][i + 1] < filtered_df['Low'][i + 2]) and \
+               (filtered_df['Low'][i - 1] < filtered_df['Low'][i - 2]):
+                datetime_1 = filtered_df.index[i]
+                price_level_1 = filtered_df['Low'][i]
+                datetime_2 = filtered_df.index[-1]
+                price_level_2 = filtered_df['Low'][i]
+
+                if not is_near_level(price_level_1, levels_startpoints_tuples, filtered_df):
+                    levels_startpoints_tuples.append((datetime_1, price_level_1))
+                    levels_endpoints_tuples.append((datetime_2, price_level_2))
+
+                    sr_levels.append(price_level_1)  # SR levels
+                    support_levels.append(price_level_1)
+                    level_discovery_signal.append(0)
+                else:
+                    level_discovery_signal.append(None)
+
+            # Resistance levels
+            elif ((filtered_df['High'][i] > filtered_df['High'][i - 1]) and
+                  (filtered_df['High'][i] > filtered_df['High'][i + 1]) and
+                  (filtered_df['High'][i + 1] > filtered_df['High'][i + 2]) and
+                  (filtered_df['High'][i - 1] > filtered_df['High'][i - 2])):
+                datetime_1 = filtered_df.index[i]
+                price_level_1 = filtered_df['High'][i]
+                datetime_2 = filtered_df.index[-1]
+                price_level_2 = filtered_df['High'][i]
+
+                if not is_near_level(price_level_1, levels_startpoints_tuples, filtered_df):
+                    levels_startpoints_tuples.append((datetime_1, price_level_1))
+                    levels_endpoints_tuples.append((datetime_2, price_level_2))
+
+                    sr_levels.append(price_level_1)  # SR levels
+                    resistance_levels.append(price_level_1)
+                    level_discovery_signal.append(0)
+                else:
+                    level_discovery_signal.append(None)
+
+            else:
+                level_discovery_signal.append(None)
+
+        level_discovery_signal.extend([None, None])  # Appending two elements to the end, to match Dataframe length
+
+        # print('level_discovery_signal: \n', level_discovery_signal)
+        level_discovery_signals_series = pd.Series(level_discovery_signal)
+        # level_discovery_signals_series.index = df['Date']
+
+        return (levels_startpoints_tuples, levels_endpoints_tuples, support_levels,
+                resistance_levels, level_discovery_signals_series, sr_levels)
+
+
+    def is_near_level(value, levels, df):
+        average = np.mean(df['High'] - df['Low'])
+        return any(abs(value - level) < average for _, level in levels)
+
+
+    (levels_startpoints_to_chart, levels_endpoints_to_chart, support_level_signal_running_out,
+     resistance_level_signal_running_out, level_discovery_signals_series_out,
+     sr_levels_out) = find_levels(filtered_by_date_dataframe)
+
+    # print('Support level: \n', support_level_signal_running_out)
+    # print('Resistance level: \n', resistance_level_signal_running_out)
+    print('SR levels: \n', sr_levels_out)
+
+    levels_points = [[a, b] for a, b in zip(levels_startpoints_to_chart, levels_endpoints_to_chart)]
+    # print('levels_points', levels_points)
+
+
+#  ----------------------------------------------------------------------------------------------
+#  LEVEL REJECTION SIGNALS
+#  ----------------------------------------------------------------------------------------------
+
+
+def level_rejection_signals(df, sr_levels, level_discovery_signals_series):
+    crossing_signals = []
+    df.reset_index(inplace=True)
+    discovered = False                              # Flag to track if a level was discovered
+    for index, row in df.iterrows():
+        if pd.notna(level_discovery_signals_series[index]):
+            discovered = True                       # Set the flag if level was discovered
+        if discovered:
+            previous_close = df.iloc[index - 1]['Close']
+            current_candle_close = row['Close']
+            current_candle_high = row['High']
+            current_candle_low = row['Low']
+
+            signal = None
+
+            for level in sr_levels:
+
+                if previous_close < level:      # Check if the previous close was below the resistance level
+                    if current_candle_high > level:     # Price has crossed above resistance level
+                        if current_candle_close < level:    # but closed below
+                            signal = -100
+                            break
+
+                elif previous_close > level:    # Check if the previous close was above the support level
+                    if current_candle_low < level:      # Price has crossed below support level
+                        if current_candle_close > level:    # but closed above
+                            signal = 100
+                            break
+            crossing_signals.append(signal)
+
+        else:
+            crossing_signals.append(None)   # Append None for indices before discovery
+
+    print('Crossing_signals: ', crossing_signals)
+    crossing_signals_series = pd.Series(crossing_signals)
+    return crossing_signals_series
+
+
+crossing_signals_series_outside = level_rejection_signals(filtered_by_date_dataframe,
+                                                          sr_levels_out, level_discovery_signals_series_out)
+print('Crossing_signals_series: \n', crossing_signals_series_outside)
+print('Level_discovery_signals: \n', level_discovery_signals_series_out)
+
+filtered_by_date_dataframe.set_index('Datetime', inplace=True)      # Set index back to Datetime
+
+#  ----------------------------------------------------------------------------------------------
 #  PATTERN RECOGNITION
-#  ----------------------------------------------
+#  ----------------------------------------------------------------------------------------------
 
 patterns_dataframe = pd.read_csv('Ta-lib patterns.csv')
 
@@ -700,11 +845,6 @@ rounded_trades_list_to_chart_profits_losses, rounded_results_as_balance_change_t
 #  PLOT CHART
 #  ----------------------------------------------
 
-#  Adding datetime column to dataframe for chart plotting
-
-filtered_by_date_dataframe = (filtered_by_date_dataframe.assign(
-    Datetime=(filtered_by_date_dataframe['Date'] + pd.to_timedelta(filtered_by_date_dataframe['Time']))))
-
 
 def plot_line_chart(df):
 
@@ -790,20 +930,29 @@ highlight_signal_on_line_chart(filtered_by_date_dataframe)
 
 
 #  CANDLESTICK CHART
-def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series, sr_timeframe):
+def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series,
+                           sr_timeframe, level_discovery_signals_series, crossing_signals_series):
 
     if show_candlestick_chart:
 
         try:
             pattern_signals_series.reset_index(drop=True, inplace=True)
-            # print(df)
+
         except AttributeError:
             pass
-        # print('pattern\n', pattern_signals_series)
-        # print('pierce\n', pierce_signals_series)
-        df.set_index('Datetime', inplace=True)
+
+        # df.set_index('Datetime', inplace=True)
         plots_list = []
-        # print('Dataframe in candlestick chart: ', df)
+
+        if show_level_rejection_signals:
+            for i, s in enumerate(level_discovery_signals_series):
+                if s != 'NaN':
+                    plots_list.append(mpf.make_addplot(level_discovery_signals_series, type='scatter', color='black',
+                                                       markersize=250, marker='*', panel=1))
+            for i, s in enumerate(crossing_signals_series):
+                if s != 'NaN':
+                    plots_list.append(mpf.make_addplot(crossing_signals_series, type='scatter', color='black',
+                                                       markersize=250, marker='+', panel=1))
 
         # Printing Swing Highs/Lows on chart
         if show_swing_highs_lows:
@@ -824,10 +973,6 @@ def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series, sr
 
         except AttributeError:
             pass
-        # print(pattern_signals_with_nan)
-        # print(pierce_signals_with_nan)
-        # print('Pattern Signals with nan:', pattern_signals_with_nan)
-        # print('Pierce Signals with nan:', pierce_signals_with_nan)
 
         # Iterate over signals and add non-zero signals to add_plots
         # Need to check it to avoid empty array error
@@ -864,15 +1009,21 @@ def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series, sr
         # print('Print plots_list after pierce append: \n', plots_list)
 
         print()
-        mpf.plot(df, type='candle', figsize=(10, 6), title=f'{ticker_name}'.upper(), ylabel='Price', addplot=plots_list,
-                 warn_too_much_data=5000)
 
+        mpf.plot(df, type='candle', figsize=(12, 6),
+                 alines=dict(alines=levels_points, linewidths=2, alpha=0.4),
+                 style='yahoo', title=f'{ticker_name}'.upper(), addplot=plots_list)
 
 try:
-    plot_candlestick_chart(filtered_by_date_dataframe, pattern_signal_series_outside,
-                           pierce_signals_series_outside, sr_levels_timeframe)
+    plot_candlestick_chart(filtered_by_date_dataframe,
+                           pattern_signal_series_outside, pierce_signals_series_outside, sr_levels_timeframe,
+                           level_discovery_signals_series_out, crossing_signals_series_outside)
+
 except KeyboardInterrupt:
     print('Program stopped manually')
 
 
-plt.show()
+
+
+
+
