@@ -28,13 +28,13 @@ from API_or_Json import dataframe_from_api
 # file_path = 'History_data/MT5/BTCUSD_M5.csv'
 # file_path = 'History_data/MT5/BTCUSD_M1.csv'
 # file_path = 'History_data/MT5/BTCUSD_M1_4_years.csv'
-# file_path = 'History_data/MT5/BTCUSD_M30.csv'
+file_path = 'History_data/MT5/BTCUSD_M30.csv'
 # file_path = 'History_data/MT5/BTCUSD_H1.csv'
 # file_path = 'History_data/MT5/BTCUSD_D1.csv'
 # file_path = 'History_data/MT5/BTCUSD_H4.csv'
 # file_path = 'History_data/MT5/BTCUSD_H4.csv'
 # file_path = 'History_data/MT5/BTCUSD_M15.csv'
-file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
+# file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
 # file_path = 'History_data/MT5/BTCUSD_M30_today.csv'
 # file_path = 'History_data/MT5/BTCUSD_M15_today.csv'
 # ------------------------------------------
@@ -44,8 +44,8 @@ file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2024-03-28'       # Choose the start date to begin from
-end_date = '2024-03-28'         # Choose the end date
+start_date = '2024-03-23'       # Choose the start date to begin from
+end_date = '2024-03-24'         # Choose the end date
 
 # ENTRY CONDITIONS
 number_of_pattern = 4          # Choose the index of pattern (from Ta-lib patterns.csv)
@@ -195,8 +195,13 @@ filtered_by_date_dataframe = (filtered_by_date_dataframe.assign(
 filtered_by_date_dataframe.set_index('Datetime', inplace=True)
 filtered_by_date_dataframe = filtered_by_date_dataframe.loc[:, ['Open', 'High', 'Low', 'Close']]
 
+
+# sr_levels_out = None
+# level_discovery_signals_series_out = None
+
 if use_find_levels:
     def find_levels(filtered_df):
+
         levels_startpoints_tuples = []
         levels_endpoints_tuples = []
 
@@ -278,6 +283,9 @@ if use_find_levels:
     levels_points = [[a, b] for a, b in zip(levels_startpoints_to_chart, levels_endpoints_to_chart)]
     # print('levels_points', levels_points)
 
+else:
+    sr_levels_out = []                          # Initialize sr_levels_out with an empty list to avoid warning
+    level_discovery_signals_series_out = []     # Initialize sr_levels_out with an empty list to avoid warning
 
 #  ----------------------------------------------------------------------------------------------
 #  LEVEL REJECTION SIGNALS
@@ -497,13 +505,17 @@ def trades_simulation(filtered_df_simulation, risk_reward_simulation, sl_offset_
                                 trade_result_both.append(1)
 
                             elif current_candle_low <= stop_loss_price:
-                                trade_result.append((stop_loss_price - spread) - (signal_candle_close_entry + spread))
-                                trade_result_longs.append((stop_loss_price - spread) - (signal_candle_close_entry + spread))
+                                trade_result.append((stop_loss_price - spread) -
+                                                    (signal_candle_close_entry + spread))
+                                trade_result_longs.append((stop_loss_price - spread) -
+                                                          (signal_candle_close_entry + spread))
                                 profit_loss_long_short.append('LongLoss')
                                 print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date}')
                                 print()
                                 print(f'Trade Close Price: {round(stop_loss_price, 3)}')
-                                print(f'P/L: ${round((stop_loss_price - spread) - (signal_candle_close_entry + spread), 3)}')
+                                print(
+                                  f'P/L: ${round((stop_loss_price - spread) - (signal_candle_close_entry + spread), 3)}'
+                                )
                                 print(
                                     '---------------------------------------------'
                                     '---------------------------------------------'
@@ -533,7 +545,9 @@ def trades_simulation(filtered_df_simulation, risk_reward_simulation, sl_offset_
                             print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date}')
                             print()
                             print(f'Trade Close Price: {round(stop_loss_price, 3)}')
-                            print(f'P/L: ${round((stop_loss_price - spread) - (signal_candle_close_entry + spread), 3)}')
+                            print(
+                                f'P/L: ${round((stop_loss_price - spread) - (signal_candle_close_entry + spread), 3)}'
+                            )
                             print(
                                 '---------------------------------------------'
                                 '---------------------------------------------'
@@ -601,12 +615,15 @@ def trades_simulation(filtered_df_simulation, risk_reward_simulation, sl_offset_
 
                             elif current_candle_high >= stop_loss_price:
                                 trade_result.append((signal_candle_close_entry - spread) - (stop_loss_price + spread))
-                                trade_result_shorts.append((signal_candle_close_entry - spread) - (stop_loss_price + spread))
+                                trade_result_shorts.append((signal_candle_close_entry - spread) -
+                                                           (stop_loss_price + spread))
                                 profit_loss_long_short.append('ShortLoss')
                                 print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date}')
                                 print()
                                 print(f'Trade Close Price: {round(stop_loss_price, 3)}')
-                                print(f'P/L: ${round((signal_candle_close_entry - spread) - (stop_loss_price + spread), 3)}')
+                                print(
+                                  f'P/L: ${round((signal_candle_close_entry - spread) - (stop_loss_price + spread), 3)}'
+                                )
                                 print(
                                     '---------------------------------------------'
                                     '---------------------------------------------'
@@ -632,20 +649,23 @@ def trades_simulation(filtered_df_simulation, risk_reward_simulation, sl_offset_
                                 pass
                         else:   # IN CASE OF GAP UP, WHEN NEXT CANDLE OPENS HIGHER THAN PREV. CANDLE STOP
                             trade_result.append((signal_candle_close_entry - spread) - (stop_loss_price + spread))
-                            trade_result_shorts.append((signal_candle_close_entry - spread) - (stop_loss_price + spread))
+                            trade_result_shorts.append((signal_candle_close_entry - spread) -
+                                                       (stop_loss_price + spread))
                             profit_loss_long_short.append('ShortLoss')
                             print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date}')
                             print()
                             print(f'Trade Close Price: {round(stop_loss_price, 3)}')
-                            print(f'P/L: ${round((signal_candle_close_entry - spread) - (stop_loss_price + spread), 3)}')
+                            print(
+                                f'P/L: ${round((signal_candle_close_entry - spread) - (stop_loss_price + spread), 3)}'
+                            )
                             print(
                                 '---------------------------------------------'
                                 '---------------------------------------------'
                             )
                             break
 
-            return (trade_result_both, trade_result, trades_counter, trade_direction, profit_loss_long_short, trade_result_longs,
-                    trade_result_shorts)
+            return (trade_result_both, trade_result, trades_counter, trade_direction, profit_loss_long_short,
+                    trade_result_longs, trade_result_shorts)
     else:
         print('Trade simulation is OFF')
         return None, None, None, None, None, None, None   # Return Nones in order to avoid error when function is OFF
@@ -836,10 +856,11 @@ def trades_analysis(trade_result_both, trade_result, trades_counter, trade_direc
         return None, None    # Return Nones in order to avoid error when function is OFF
 
 
-rounded_trades_list_to_chart_profits_losses, rounded_results_as_balance_change_to_chart_profits = trades_analysis(trade_result_both_to_trade_analysis,
-    trade_results_to_trade_analysis, trades_counter_to_trade_analysis,
-    trade_direction_to_trade_analysis, profit_loss_long_short_to_trade_analysis,
-    trade_result_longs_to_trade_analysis, trade_result_shorts_to_trade_analysis, dataframe_from_csv, dataframe_from_api)
+rounded_trades_list_to_chart_profits_losses, rounded_results_as_balance_change_to_chart_profits = (
+    trades_analysis(trade_result_both_to_trade_analysis, trade_results_to_trade_analysis,
+                    trades_counter_to_trade_analysis, trade_direction_to_trade_analysis,
+                    profit_loss_long_short_to_trade_analysis, trade_result_longs_to_trade_analysis,
+                    trade_result_shorts_to_trade_analysis, dataframe_from_csv, dataframe_from_api))
 
 #  ----------------------------------------------
 #  PLOT CHART
@@ -1014,6 +1035,7 @@ def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series,
                  alines=dict(alines=levels_points, linewidths=2, alpha=0.4),
                  style='yahoo', title=f'{ticker_name}'.upper(), addplot=plots_list)
 
+
 try:
     plot_candlestick_chart(filtered_by_date_dataframe,
                            pattern_signal_series_outside, pierce_signals_series_outside, sr_levels_timeframe,
@@ -1021,9 +1043,3 @@ try:
 
 except KeyboardInterrupt:
     print('Program stopped manually')
-
-
-
-
-
-
