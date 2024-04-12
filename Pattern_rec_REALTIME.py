@@ -14,7 +14,7 @@ number_of_pattern = 22
 
 volume_value = 0.01                 # 1000 MAX for stocks. Used only in AU3 (MT5 assigns volume itself)
 risk_reward = 1                     # Risk/Reward ratio
-sleep = 200                         # Pause between switching fields in MT5 order submit window
+sleep = 200                         # Pause between switching fields in MT5 order submit window (AutoIt)
 stop_loss_offset = 15               # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
 
 # ***************************************************************************************************************
@@ -36,7 +36,7 @@ new_line_sleep = f'Local $sleep = {sleep} ;replaceable line' + '/n'
 
 order_send_by_ea_or_au3 = False         # True for AU3, False for EA
 
-mt5_account_number = 258    # LAST 3 DIGITS OF MT5 ACCOUNT. MUST BE CHANGED BEFORE EXE BUILD
+mt5_account_number = 258    # LAST 3 DIGITS OF MT5 ACCOUNT. MUST BE CHANGED BEFORE BUILDING EXE
 
 # MT5 directory with OHLC log file (logging on active timeframe):
 mt5_logging_file_path = (

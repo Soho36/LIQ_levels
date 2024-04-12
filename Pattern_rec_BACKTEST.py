@@ -44,8 +44,8 @@ file_path = 'History_data/MT5/BTCUSD_M30.csv'
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2024-03-05'       # Choose the start date to begin from
-end_date = '2024-03-06'         # Choose the end date
+start_date = '2024-03-18'       # Choose the start date to begin from
+end_date = '2024-03-18'         # Choose the end date
 
 # SIMULATION
 start_simulation = True
@@ -64,8 +64,8 @@ shorts_allowed = True          # Allow or disallow trade direction
 
 # RISK MANAGEMENT
 
-spread = 10
-risk_reward_ratio = 3   # Chose risk/reward ratio (aiming to win compared to lose)
+spread = 0
+risk_reward_ratio = 1   # Chose risk/reward ratio (aiming to win compared to lose)
 stop_loss_as_candle_min_max = True  # Must be True if next condition is false
 stop_loss_offset = 0                 # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
 
@@ -209,6 +209,7 @@ filtered_by_date_dataframe = filtered_by_date_dataframe.loc[:, ['Open', 'High', 
 
 if use_find_levels:
     def find_levels(filtered_df):
+        print('!!!!!', filtered_df)
 
         levels_startpoints_tuples = []
         levels_endpoints_tuples = []
@@ -304,7 +305,7 @@ if use_find_levels and use_level_rejection:
     def level_rejection_signals(df, sr_levels, level_discovery_signals_series):
         rejection_signals = []
         df.reset_index(inplace=True)
-        discovered = False                              # Flag to track if a level was discovered
+        discovered = False                              # Flag to track if level was discovered
         for index, row in df.iterrows():
             if pd.notna(level_discovery_signals_series[index]):
                 discovered = True                       # Set the flag if level was discovered
@@ -435,7 +436,7 @@ pierce_signals_series_outside = level_peirce_recognition()
 #  ----------------------------------------------
 
 def trades_simulation(filtered_df_original, risk_reward_simulation, sl_offset_multiplier):
-    print('!!!!', filtered_df_original)
+    # print('!!!!', filtered_df_original)
     if start_simulation:
         trades_counter = 0
         trade_result_both = []
