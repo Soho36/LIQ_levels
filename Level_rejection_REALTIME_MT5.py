@@ -11,8 +11,8 @@ log_file_reading_interval = 1       # File reading interval (sec)
 # ************************************** ORDER PARAMETERS *******************************************************
 
 volume_value = 0.01                 # 1000 MAX for stocks. Used only in AU3 (MT5 assigns volume itself)
-risk_reward = 1                     # Risk/Reward ratio
-stop_loss_offset = 0               # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
+risk_reward = 2                     # Risk/Reward ratio
+stop_loss_offset = 10               # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
 
 # **************************************************************************************************************
 
@@ -37,8 +37,8 @@ buy_sell_signals_for_mt5_filepath = (
      )
 
 try:
-    buy_signal_discovered = False                   # MUST BE FALSE BEFORE ENTERING MAIN LOOP
-    sell_signal_discovered = False                  # MUST BE FALSE BEFORE ENTERING MAIN LOOP
+    buy_signal_discovered = True                   # MUST BE TRUE BEFORE ENTERING MAIN LOOP
+    sell_signal_discovered = True                  # MUST BE TRUE BEFORE ENTERING MAIN LOOP
 
     while True:                                     # Main loop beginning
 
@@ -150,12 +150,7 @@ try:
 
         level_discovery_signals_series_out, sr_levels_out = find_levels(dataframe_from_log)
         print('---------------------------------------------------------------')
-        print('SR Levels: \n', sr_levels_out)
-
-        # pattern_signal_list = [0, 0, 0, 0, 0, -100]
-        # pattern_signal = pd.Series(pattern_signal_list)     # hardcoded a series for debugging
-
-        # print(f'Pattern signals (last 10): {list(pattern_signal)[-10:]}')
+        print('SR Levels: \n', sr_levels_out[-10:])
 
         #  ----------------------------------------------------------------------------------------------
         #  LEVEL REJECTION SIGNALS
@@ -203,18 +198,22 @@ try:
         rejection_signals_list_outside = (
             level_rejection_signals(dataframe_from_log, sr_levels_out, level_discovery_signals_series_out)
         )
-        print(f'Rejection_signals_list: \n', rejection_signals_list_outside[-10:])
+        # print(f'Rejection_signals_list: \n', rejection_signals_list_outside[-10:])
         print('---------------------------------------------------------------')
         # print('Level_discovery_signals: \n', level_discovery_signals_series_out)
 
+        # rejection_signals_list_outside = [None, None, None, None, 100, -100]
+        print(f'Rejection_signals_list: \n', rejection_signals_list_outside[-10:])
         # +------------------------------------------------------------------+
         # BUY ORDER LOGIC
         # +------------------------------------------------------------------+
-        def send_buy_sell_orders(buy_signal, sell_signal):
-            if rejection_signals_list_outside[-1] == 0:
-                buy_signal, sell_signal = False, False      # Set Flags to False after signal has been discovered
 
-            if rejection_signals_list_outside[-1] == 100 and not buy_signal:
+        def send_buy_sell_orders(buy_signal, sell_signal):
+            if rejection_signals_list_outside[-1] is None:
+
+                buy_signal, sell_signal = True, True      # set Flags to True to open way to new orders
+            # If there is signal and flag is False:
+            if rejection_signals_list_outside[-1] == 100 and buy_signal:
                 winsound.PlaySound('chord.wav', winsound.SND_FILENAME)
                 print()
                 print('▲ ▲ ▲ Buy signal discovered! ▲ ▲ ▲'.upper())
@@ -229,7 +228,7 @@ try:
                 with open(buy_sell_signals_for_mt5_filepath, 'w', encoding='utf-8') as file:
                     file.writelines(line_order_parameters)
 
-                buy_signal = True  # Setting flag back to TRUE
+                buy_signal = False  # Set flag to TRUE to prevent new order sending on each loop iteration
             # +------------------------------------------------------------------+
             # SELL ORDER LOGIC
             # +------------------------------------------------------------------+
@@ -238,10 +237,11 @@ try:
             # Creating file for MT5 to read
             # +------------------------------------------------------------------+
 
-            if rejection_signals_list_outside[-1] == 0:  # Set Flags to False after signal has been discovered
-                buy_signal, sell_signal = False, False
+            if ((rejection_signals_list_outside[-1] is None) or
+                    (rejection_signals_list_outside[-1] == -100 and rejection_signals_list_outside[-2] == -100)):
+                buy_signal, sell_signal = True, True      # set Flags to True
 
-            if rejection_signals_list_outside[-1] == -100 and not sell_signal:
+            if rejection_signals_list_outside[-1] == -100 and sell_signal:  # If there is signal and flag is True:
                 winsound.PlaySound('chord.wav', winsound.SND_FILENAME)
                 print()
                 print('▼ ▼ ▼ Sell signal discovered! ▼ ▼ ▼'.upper())
@@ -256,7 +256,7 @@ try:
                 with open(buy_sell_signals_for_mt5_filepath, 'w', encoding='utf-8') as file:
                     file.writelines(line_order_parameters)
 
-                sell_signal = True  # Setting flag back to TRUE
+                sell_signal = False  # Set flag to False to prevent new order sending on each loop iteration
 
             return buy_signal, sell_signal
 
