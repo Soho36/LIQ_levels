@@ -12,7 +12,7 @@ log_file_reading_interval = 1       # File reading interval (sec)
 
 volume_value = 0.01                 # 1000 MAX for stocks. Used only in AU3 (MT5 assigns volume itself)
 risk_reward = 1                     # Risk/Reward ratio
-stop_loss_offset = 15               # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
+stop_loss_offset = 0               # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
 
 # **************************************************************************************************************
 
@@ -33,7 +33,7 @@ mt5_logging_file_path = (
 buy_sell_signals_for_mt5_filepath = (
      f'C:/Users/Liikurserv/AppData/Roaming/MetaQuotes/Terminal/'
      f'30B7687250B3662E635CFEBC979C306C/MQL5/Files/'    # HASH FOLDER MUST BE CHANGED BEFORE EXE BUILD
-     f'buy_sell_signals_from_python.txt'
+     f'buy_sell_signals_from_python_level.txt'
      )
 
 try:
@@ -54,10 +54,10 @@ try:
         # Assigning columns names
         new_column_names = ['Ticker', 'Timeframe', 'Datetime', 'Open', 'High', 'Low', 'Close', 'Volume']
         dataframe_from_log.columns = new_column_names
-        print('Original dataframe: \n', dataframe_from_log)
+        # print('Original dataframe: \n', dataframe_from_log)
 
         dataframe_from_log.set_index('Datetime', inplace=True)
-        dataframe_from_log = dataframe_from_log.loc[:, ['Open', 'High', 'Low', 'Close']]
+        dataframe_from_log = dataframe_from_log.loc[:, ['Ticker', 'Open', 'High', 'Low', 'Close']]
         # print(dataframe_from_log.info())
         # print(dataframe_from_log)
 
@@ -77,7 +77,7 @@ try:
 
 
         def find_levels(filtered_df):
-            print('Incoming dataframe: \n', filtered_df)
+            # print('Incoming dataframe: \n', filtered_df)
 
             levels_startpoints_tuples = []
             levels_endpoints_tuples = []
@@ -136,7 +136,7 @@ try:
 
             level_discovery_signal.extend([None, None])  # Appending two elements to the end, to match Dataframe length
 
-            print('level_discovery_signal: \n', level_discovery_signal)
+            # print('level_discovery_signal: \n', level_discovery_signal)
             level_discovery_signals_series = pd.Series(level_discovery_signal)
             # level_discovery_signals_series.index = df['Date']
 
@@ -149,13 +149,13 @@ try:
 
 
         level_discovery_signals_series_out, sr_levels_out = find_levels(dataframe_from_log)
+        print('---------------------------------------------------------------')
         print('SR Levels: \n', sr_levels_out)
 
+        # pattern_signal_list = [0, 0, 0, 0, 0, -100]
+        # pattern_signal = pd.Series(pattern_signal_list)     # hardcoded a series for debugging
 
-            # pattern_signal_list = [0, 0, 0, 0, 0, -100]
-            # pattern_signal = pd.Series(pattern_signal_list)     # hardcoded a series for debugging
-
-            # print(f'Pattern signals (last 10): {list(pattern_signal)[-10:]}')
+        # print(f'Pattern signals (last 10): {list(pattern_signal)[-10:]}')
 
         #  ----------------------------------------------------------------------------------------------
         #  LEVEL REJECTION SIGNALS
@@ -195,7 +195,7 @@ try:
                 else:
                     rejection_signals.append(None)  # Append None for indices before discovery
 
-            print('Rejection_signals_list: \n', rejection_signals)
+            # print('Rejection_signals_list: \n', rejection_signals)
             # rejection_signals_series = pd.Series(rejection_signals)
             return rejection_signals
 
@@ -203,69 +203,66 @@ try:
         rejection_signals_list_outside = (
             level_rejection_signals(dataframe_from_log, sr_levels_out, level_discovery_signals_series_out)
         )
-        print('Rejection_signals_series: \n', rejection_signals_list_outside)
+        print(f'Rejection_signals_list: \n', rejection_signals_list_outside[-10:])
+        print('---------------------------------------------------------------')
         # print('Level_discovery_signals: \n', level_discovery_signals_series_out)
 
         # +------------------------------------------------------------------+
         # BUY ORDER LOGIC
         # +------------------------------------------------------------------+
+        def send_buy_sell_orders(buy_signal, sell_signal):
+            if rejection_signals_list_outside[-1] == 0:
+                buy_signal, sell_signal = False, False      # Set Flags to False after signal has been discovered
 
-        if rejection_signals_list_outside[-1] == 0:    # Set Flags to False after signal has been discovered
-            buy_signal, sell_signal = False, False
+            if rejection_signals_list_outside[-1] == 100 and not buy_signal:
+                winsound.PlaySound('chord.wav', winsound.SND_FILENAME)
+                print()
+                print('▲ ▲ ▲ Buy signal discovered! ▲ ▲ ▲'.upper())
 
-        if rejection_signals_list_outside[-1] == 100 and not buy_signal:
-            winsound.PlaySound('chord.wav', winsound.SND_FILENAME)
-            print()
-            print('▲ ▲ ▲ Buy signal discovered! ▲ ▲ ▲'.upper())
+                # ORDER PARAMETERS
+                stop_loss_price = round(last_candle_low - stop_loss_offset, 3)
+                take_profit_price = round((((last_candle_close - stop_loss_price)
+                                            * risk_reward) + last_candle_close) + stop_loss_offset, 3)
 
-            # ORDER PARAMETERS
-            stop_loss_price = round(last_candle_low - stop_loss_offset, 3)
-            take_profit_price = round((((last_candle_close - stop_loss_price)
-                                        * risk_reward) + last_candle_close) + stop_loss_offset, 3)
+                line_order_parameters = f'{ticker},Buy,{stop_loss_price},{take_profit_price}'
 
-            line_order_parameters = f'{ticker},Buy,{stop_loss_price},{take_profit_price}'
+                with open(buy_sell_signals_for_mt5_filepath, 'w', encoding='utf-8') as file:
+                    file.writelines(line_order_parameters)
 
-            with open(buy_sell_signals_for_mt5_filepath, 'w', encoding='utf-8') as file:
-                file.writelines(line_order_parameters)
+                buy_signal = True  # Setting flag back to TRUE
+            # +------------------------------------------------------------------+
+            # SELL ORDER LOGIC
+            # +------------------------------------------------------------------+
 
-            buy_signal = True  # Setting flag back to TRUE
-        # +------------------------------------------------------------------+
-        # SELL ORDER LOGIC
-        # +------------------------------------------------------------------+
+            # +------------------------------------------------------------------+
+            # Creating file for MT5 to read
+            # +------------------------------------------------------------------+
 
-        # +------------------------------------------------------------------+
-        # Creating file for MT5 to read
-        # +------------------------------------------------------------------+
+            if rejection_signals_list_outside[-1] == 0:  # Set Flags to False after signal has been discovered
+                buy_signal, sell_signal = False, False
 
-        if rejection_signals_list_outside[-1] == 0:  # Set Flags to False after signal has been discovered
-            buy_signal, sell_signal = False, False
+            if rejection_signals_list_outside[-1] == -100 and not sell_signal:
+                winsound.PlaySound('chord.wav', winsound.SND_FILENAME)
+                print()
+                print('▼ ▼ ▼ Sell signal discovered! ▼ ▼ ▼'.upper())
 
-        if rejection_signals_list_outside[-1] == -100 and not sell_signal:
-            winsound.PlaySound('chord.wav', winsound.SND_FILENAME)
-            print()
-            print('▼ ▼ ▼ Sell signal discovered! ▼ ▼ ▼'.upper())
+                # ORDER PARAMETERS
+                stop_loss_price = round(last_candle_high + stop_loss_offset)
+                take_profit_price = round((last_candle_close - ((stop_loss_price - last_candle_close) *
+                                                                risk_reward)) + stop_loss_offset, 3)
 
-            # ORDER PARAMETERS
-            stop_loss_price = round(last_candle_high + stop_loss_offset)
-            take_profit_price = round((last_candle_close - ((stop_loss_price - last_candle_close) *
-                                                            risk_reward)) + stop_loss_offset, 3)
+                line_order_parameters = f'{ticker},Sell,{stop_loss_price},{take_profit_price}'
 
-            line_order_parameters = f'{ticker},Sell,{stop_loss_price},{take_profit_price}'
+                with open(buy_sell_signals_for_mt5_filepath, 'w', encoding='utf-8') as file:
+                    file.writelines(line_order_parameters)
 
-            with open(buy_sell_signals_for_mt5_filepath, 'w', encoding='utf-8') as file:
-                file.writelines(line_order_parameters)
+                sell_signal = True  # Setting flag back to TRUE
 
-            sell_signal = True  # Setting flag back to TRUE
+            return buy_signal, sell_signal
 
-            # return buy_signal, sell_signal
 
-        try:
-            buy_signal_discovered, sell_signal_discovered = (
-                pattern_recognition(patterns_dataframe, number_of_pattern, dataframe_from_log,
-                                    buy_signal_discovered, sell_signal_discovered)
-            )
-        except IndexError:
-            print('Must be at least two rows in the source file')
+        buy_signal_discovered, sell_signal_discovered = (
+            send_buy_sell_orders(buy_signal_discovered, sell_signal_discovered))
 
         time.sleep(log_file_reading_interval)   # Pause between reading
 
