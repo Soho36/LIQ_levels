@@ -237,8 +237,7 @@ try:
             # Creating file for MT5 to read
             # +------------------------------------------------------------------+
 
-            if ((rejection_signals_list_outside[-1] is None) or
-                    (rejection_signals_list_outside[-1] == -100 and rejection_signals_list_outside[-2] == -100)):
+            if rejection_signals_list_outside[-1] is None:
                 buy_signal, sell_signal = True, True      # set Flags to True
 
             if rejection_signals_list_outside[-1] == -100 and sell_signal:  # If there is signal and flag is True:
