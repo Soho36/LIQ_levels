@@ -1,8 +1,12 @@
-n = 1
+SR_levels_out = [
+    (6, 30152.96),
+    (12, 30081.96),
+    (23, 29883.05),
+    (27, 30237.96),
+    (56, 30502.46),
+    (65, 30327.79),
+    (113, 29989.64),
+    (207, 29659.48)
+]
 
-column_counters = {}
-
-while n < 5:
-    column_counters[n] = 0
-    n += 1
-print(column_counters)
+print(len(SR_levels_out))

@@ -28,8 +28,8 @@ from API_or_Json import dataframe_from_api
 # file_path = 'History_data/MT5/BTCUSD_M5.csv'
 # file_path = 'History_data/MT5/BTCUSD_M1.csv'
 # file_path = 'History_data/MT5/BTCUSD_M1_4_years.csv'
-file_path = 'History_data/MT5/BTCUSD_M30.csv'
-# file_path = 'History_data/MT5/BTCUSD_H1.csv'
+# file_path = 'History_data/MT5/BTCUSD_M30.csv'
+file_path = 'History_data/MT5/BTCUSD_H1.csv'
 # file_path = 'History_data/MT5/BTCUSD_D1.csv'
 # file_path = 'History_data/MT5/BTCUSD_H4.csv'
 # file_path = 'History_data/MT5/BTCUSD_H4.csv'
@@ -44,8 +44,8 @@ file_path = 'History_data/MT5/BTCUSD_M30.csv'
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2023-10-20'       # Choose the start date to begin from
-end_date = '2023-10-20'         # Choose the end date
+start_date = '2024-03-01'       # Choose the start date to begin from
+end_date = '2024-03-28'         # Choose the end date
 
 # SIMULATION
 start_simulation = True
@@ -64,8 +64,8 @@ shorts_allowed = True          # Allow or disallow trade direction
 
 # RISK MANAGEMENT
 
-spread = 0
-risk_reward_ratio = 2   # Chose risk/reward ratio (aiming to win compared to lose)
+spread = 10
+risk_reward_ratio = 1   # Chose risk/reward ratio (aiming to win compared to lose)
 stop_loss_as_candle_min_max = True  # Must be True if next condition is false
 stop_loss_offset = 0                 # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
 
@@ -206,7 +206,7 @@ filtered_by_date_dataframe = filtered_by_date_dataframe.loc[:, ['Open', 'High', 
 
 if use_find_levels:
     def find_levels(filtered_df):
-        print('!!!!!', filtered_df)
+        # print('!!!!!', filtered_df)
 
         levels_startpoints_tuples = []
         levels_endpoints_tuples = []
@@ -366,7 +366,7 @@ if use_find_levels and use_level_rejection:
 
             signal = None  # Reset signal for each row
 
-            for level_column in range(1, 5):
+            for level_column in range(1, len(sr_levels_out) + 1):
                 current_sr_level = row[level_column]
                 if current_sr_level is not None:
                     if previous_close < current_sr_level:   # Check if the previous close was below the resistance level
@@ -383,55 +383,16 @@ if use_find_levels and use_level_rejection:
 
             rejection_signals.append(signal)
 
-        print('Rejection_signals: ', rejection_signals)
+        # print('Rejection_signals: ', rejection_signals)
         rejection_signals_series = pd.Series(rejection_signals)
         return rejection_signals_series
 
 
     rejection_signals_series_outside = level_rejection_signals(filtered_by_date_dataframe)
 
-    # def level_rejection_signals(df, sr_levels, level_discovery_signals_series):
-    #     rejection_signals = []
-    #     df.reset_index(inplace=True)
-    #     discovered = False                              # Flag to track if level was discovered
-    #     for index, row in df.iterrows():
-    #         if pd.notna(level_discovery_signals_series[index]):
-    #             discovered = True                       # Set the flag if level was discovered
-    #         if discovered:
-    #             previous_close = df.iloc[index - 1]['Close']
-    #             current_candle_close = row['Close']
-    #             current_candle_high = row['High']
-    #             current_candle_low = row['Low']
-    #             current_sr_level = row[1]
-    #             signal = None
-    #
-    #             for level in sr_levels:
-    #
-    #                 if previous_close < level:      # Check if the previous close was below the resistance level
-    #                     if current_candle_high > level:     # Price has crossed above resistance level
-    #                         if current_candle_close < level:    # but closed below
-    #                             signal = -100
-    #                             break
-    #
-    #                 elif previous_close > level:    # Check if the previous close was above the support level
-    #                     if current_candle_low < level:      # Price has crossed below support level
-    #                         if current_candle_close > level:    # but closed above
-    #                             signal = 100
-    #                             break
-    #             rejection_signals.append(signal)
-    #
-    #         else:
-    #             rejection_signals.append(None)   # Append None for indices before discovery
-    #
-    #     print('Rejection_signals: ', rejection_signals)
-    #     rejection_signals_series = pd.Series(rejection_signals)
-    #     return rejection_signals_series
-    #
-    #
-    # rejection_signals_series_outside = level_rejection_signals(filtered_by_date_dataframe,
-    #                                                            sr_levels_out, level_discovery_signals_series_out)
-    print('Rejection_signals_series: \n', rejection_signals_series_outside)
-    print('Level_discovery_signals: \n', level_discovery_signals_series_out)
+
+    # print('Rejection_signals_series: \n', rejection_signals_series_outside)
+    # print('Level_discovery_signals: \n', level_discovery_signals_series_out)
     filtered_by_date_dataframe.set_index('Datetime', inplace=True)  # Set index back to Datetime
 else:
     rejection_signals_series_outside = None  # When function switched off

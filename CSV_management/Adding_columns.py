@@ -3,7 +3,7 @@ import os
 
 MT4_format = False  # False for MT5 format
 MT5_daily = False    # If MT5 csv is daily
-file_path = '../History_data/MT5/BTCUSD_M1_4_years.csv'
+file_path = '../History_data/MT5/BTCUSD_M30_today.csv'
 
 df = pd.read_csv(file_path, parse_dates=[0], delimiter='\t')  # Tab is default delimiter for MT5 files
 
