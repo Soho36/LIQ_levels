@@ -29,11 +29,11 @@ from API_or_Json import dataframe_from_api
 # file_path = 'History_data/MT5/BTCUSD_M1.csv'
 # file_path = 'History_data/MT5/BTCUSD_M1_4_years.csv'
 # file_path = 'History_data/MT5/BTCUSD_M30.csv'
-file_path = 'History_data/MT5/BTCUSD_H1.csv'
+# file_path = 'History_data/MT5/BTCUSD_H1.csv'
 # file_path = 'History_data/MT5/BTCUSD_D1.csv'
 # file_path = 'History_data/MT5/BTCUSD_H4.csv'
 # file_path = 'History_data/MT5/BTCUSD_H4.csv'
-# file_path = 'History_data/MT5/BTCUSD_M15.csv'
+file_path = 'History_data/MT5/BTCUSD_M15.csv'
 # file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
 # file_path = 'History_data/MT5/BTCUSD_M30_today.csv'
 # file_path = 'History_data/MT5/BTCUSD_M15_today.csv'
@@ -44,8 +44,8 @@ file_path = 'History_data/MT5/BTCUSD_H1.csv'
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2024-03-01'       # Choose the start date to begin from
-end_date = '2024-03-28'         # Choose the end date
+start_date = '2023-04-03'       # Choose the start date to begin from
+end_date = '2023-04-03'         # Choose the end date
 
 # SIMULATION
 start_simulation = True
@@ -54,6 +54,7 @@ show_trade_analysis = True
 # ENTRY CONDITIONS
 use_find_levels = True
 use_level_rejection = True
+use_level_rejection_entry = False
 #
 number_of_pattern = 4          # Choose the index of pattern (from Ta-lib patterns.csv)
 use_pattern_recognition = False
@@ -64,10 +65,10 @@ shorts_allowed = True          # Allow or disallow trade direction
 
 # RISK MANAGEMENT
 
-spread = 10
+spread = 0
 risk_reward_ratio = 1   # Chose risk/reward ratio (aiming to win compared to lose)
 stop_loss_as_candle_min_max = True  # Must be True if next condition is false
-stop_loss_offset = 0                 # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
+stop_loss_offset = 10                 # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
 
 stop_loss_as_plus_candle = False    # Must be True if previous condition is false
 stop_loss_offset_multiplier = 15    # 1 places stop one candle away from H/L (only when stop_loss_as_plus_candle = True
@@ -371,15 +372,19 @@ if use_find_levels and use_level_rejection:
                 if current_sr_level is not None:
                     if previous_close < current_sr_level:   # Check if the previous close was below the resistance level
                         if current_candle_high > current_sr_level:    # Price has crossed above resistance level
-                            if current_candle_close < current_sr_level:  # but closed below
-                                signal = -100
-                                break
+                            signal = -100
+                            break
+                            # if current_candle_close < current_sr_level:  # but closed below
+                            #     signal = -100
+                            #     break
 
                     elif previous_close > current_sr_level:   # Check if the previous close was above the support level
                         if current_candle_low < current_sr_level:    # Price has crossed below support level
-                            if current_candle_close > current_sr_level:  # but closed above
-                                signal = 100
-                                break
+                            signal = 100
+                            break
+                            # if current_candle_close > current_sr_level:  # but closed above
+                            #     signal = 100
+                            #     break
 
             rejection_signals.append(signal)
 
@@ -521,6 +526,7 @@ def trades_simulation(filtered_df_original, risk_reward_simulation, sl_offset_mu
                     signal_candle_low = round(filtered_df_original.iloc[signal_index]['Low'], 3)
                     signal_candle_close_entry = round(filtered_df_original.iloc[signal_index]['Close'], 3)   # ENTRY
 
+
                     stop_loss_price = None
                     take_profit_price = None
                     if stop_loss_as_candle_min_max:     # STOP as candle low
@@ -629,6 +635,7 @@ def trades_simulation(filtered_df_original, risk_reward_simulation, sl_offset_mu
                     signal_candle_high = round(filtered_df_original.iloc[signal_index]['High'], 3)
                     signal_candle_low = round(filtered_df_original.iloc[signal_index]['Low'], 3)
                     signal_candle_close_entry = round(filtered_df_original.iloc[signal_index]['Close'], 3)
+
 
                     stop_loss_price = None
                     take_profit_price = None
