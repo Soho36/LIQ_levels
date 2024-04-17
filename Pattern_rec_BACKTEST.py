@@ -30,10 +30,10 @@ from API_or_Json import dataframe_from_api
 # file_path = 'History_data/MT5/BTCUSD_M1_4_years.csv'
 # file_path = 'History_data/MT5/BTCUSD_M30.csv'
 # file_path = 'History_data/MT5/BTCUSD_H1.csv'
-# file_path = 'History_data/MT5/BTCUSD_D1.csv'
+file_path = 'History_data/MT5/BTCUSD_D1.csv'
 # file_path = 'History_data/MT5/BTCUSD_H4.csv'
 # file_path = 'History_data/MT5/BTCUSD_H4.csv'
-file_path = 'History_data/MT5/BTCUSD_M15.csv'
+# file_path = 'History_data/MT5/BTCUSD_M15.csv'
 # file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
 # file_path = 'History_data/MT5/BTCUSD_M30_today.csv'
 # file_path = 'History_data/MT5/BTCUSD_M15_today.csv'
@@ -44,26 +44,28 @@ file_path = 'History_data/MT5/BTCUSD_M15.csv'
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2023-04-01'       # Choose the start date to begin from
-end_date = '2023-04-01'         # Choose the end date
+start_date = '2023-01-01'       # Choose the start date to begin from
+end_date = '2023-02-01'         # Choose the end date
 
 # SIMULATION
 start_simulation = True
 show_trade_analysis = True
 
 # ENTRY CONDITIONS
-use_candle_close_as_entry = False
-use_level_as_entry = True
-use_find_levels = True
-use_level_rejection = True
+use_candle_close_as_entry = True
+use_level_price_as_entry = False
+confirmation_close = False      # Candle close above/below level as confirmation
+longs_allowed = True            # Allow or disallow trade direction
+shorts_allowed = False          # Allow or disallow trade direction
 
 #
 number_of_pattern = 4          # Choose the index of pattern (from Ta-lib patterns.csv)
 use_pattern_recognition = False
-#
 use_piercing_signal = False
-longs_allowed = True            # Allow or disallow trade direction
-shorts_allowed = True          # Allow or disallow trade direction
+use_level_rejection = True
+find_levels = True
+#
+
 
 # RISK MANAGEMENT
 
@@ -207,8 +209,8 @@ filtered_by_date_dataframe.set_index('Datetime', inplace=True)
 filtered_by_date_dataframe = filtered_by_date_dataframe.loc[:, ['Open', 'High', 'Low', 'Close']]
 
 
-if use_find_levels:
-    def find_levels(filtered_df):
+if find_levels:
+    def levels_discovery(filtered_df):
         # print('!!!!!', filtered_df)
 
         levels_startpoints_tuples = []
@@ -282,7 +284,7 @@ if use_find_levels:
 
     (levels_startpoints_to_chart, levels_endpoints_to_chart, support_level_signal_running_out,
      resistance_level_signal_running_out, level_discovery_signals_series_out,
-     sr_levels_out) = find_levels(filtered_by_date_dataframe)
+     sr_levels_out) = levels_discovery(filtered_by_date_dataframe)
 
     # print('Support level: \n', support_level_signal_running_out)
     # print('Resistance level: \n', resistance_level_signal_running_out)
@@ -354,7 +356,7 @@ print(filtered_by_date_dataframe)
 #  ----------------------------------------------------------------------------------------------
 
 
-if use_find_levels and use_level_rejection:
+if find_levels and use_level_rejection:
 
     def level_rejection_signals(df):
 
@@ -376,21 +378,25 @@ if use_find_levels and use_level_rejection:
                 if current_sr_level is not None:
                     if previous_close < current_sr_level:   # Check if the previous close was below the resistance level
                         if current_candle_high > current_sr_level:    # Price has crossed above resistance level
-                            signal = 100
-                            price_level = current_sr_level
-                            break
-                            # if current_candle_close < current_sr_level:  # but closed below
-                            #     signal = -100
-                            #     break
+                            if use_level_price_as_entry:
+                                signal = -100
+                                price_level = current_sr_level
+                                break
+                            elif use_candle_close_as_entry:
+                                if current_candle_close < current_sr_level:  # but closed below
+                                    signal = -100
+                                    break
 
                     elif previous_close > current_sr_level:   # Check if the previous close was above the support level
                         if current_candle_low < current_sr_level:    # Price has crossed below support level
-                            signal = -100
-                            price_level = current_sr_level
-                            break
-                            # if current_candle_close > current_sr_level:  # but closed above
-                            #     signal = 100
-                            #     break
+                            if use_level_price_as_entry:
+                                signal = 100
+                                price_level = current_sr_level
+                                break
+                            elif use_candle_close_as_entry:
+                                if current_candle_close > current_sr_level:  # but closed above
+                                    signal = 100
+                                    break
 
             rejection_signals_with_prices.append((signal, price_level))
             rejection_signals_for_chart.append(signal)
@@ -404,7 +410,6 @@ if use_find_levels and use_level_rejection:
     rejection_signals_series_outside, rejection_signals_series_for_chart_outside = (
         level_rejection_signals(filtered_by_date_dataframe)
     )
-
 
     print('Rejection_signals_series?????????: \n', rejection_signals_series_outside)
     # print('Level_discovery_signals: \n', level_discovery_signals_series_out)
@@ -537,7 +542,7 @@ def trades_simulation(filtered_df_original, risk_reward_simulation, sl_offset_mu
 
                     if use_candle_close_as_entry:
                         entry_price = round(filtered_df_original.iloc[signal_index]['Close'], 3)   # ENTRY
-                    elif use_level_as_entry:
+                    elif use_level_price_as_entry:
                         entry_price = price_level
                     else:
                         entry_price = None
@@ -656,7 +661,7 @@ def trades_simulation(filtered_df_original, risk_reward_simulation, sl_offset_mu
 
                     if use_candle_close_as_entry:
                         entry_price = round(filtered_df_original.iloc[signal_index]['Close'], 3)   # ENTRY
-                    elif use_level_as_entry:
+                    elif use_level_price_as_entry:
                         entry_price = price_level
                     else:
                         entry_price = None
@@ -1129,7 +1134,7 @@ def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series,
 
         print()
 
-        if use_find_levels:
+        if find_levels:
             mpf.plot(df, type='candle', figsize=(12, 6),
                      alines=dict(alines=levels_points_for_chart, linewidths=2, alpha=0.4),
                      style='yahoo', title=f'{ticker_name}'.upper(), addplot=plots_list)

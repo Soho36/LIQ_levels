@@ -176,15 +176,19 @@ try:
 
                         if previous_close < level:  # Check if the previous close was below the resistance level
                             if current_candle_high > level:  # Price has crossed above resistance level
-                                if current_candle_close < level:  # but closed below
-                                    signal = -100
-                                    break
+                                signal = 100
+                                break
+                                # if current_candle_close < level:  # but closed below
+                                #     signal = 100
+                                #     break
 
                         elif previous_close > level:  # Check if the previous close was above the support level
                             if current_candle_low < level:  # Price has crossed below support level
-                                if current_candle_close > level:  # but closed above
-                                    signal = 100
-                                    break
+                                signal = -100
+                                break
+                                # if current_candle_close > level:  # but closed above
+                                #     signal = -100
+                                #     break
                     rejection_signals.append(signal)
 
                 else:
