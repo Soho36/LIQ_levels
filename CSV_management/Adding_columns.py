@@ -3,7 +3,7 @@ import os
 
 MT4_format = False  # False for MT5 format
 MT5_daily = False    # If MT5 csv is daily
-file_path = '../History_data/MT5/BTCUSD_M30_today.csv'
+file_path = '../History_data/MT5/TSLA_M5.csv'
 
 df = pd.read_csv(file_path, parse_dates=[0], delimiter='\t')  # Tab is default delimiter for MT5 files
 
@@ -22,7 +22,7 @@ elif MT5_daily:
 
 else:   # Rename column names if MT5 format
     new_column_names = {'<DATE>': 'Date', '<TIME>': 'Time',
-                        '<OPEN>': 'Open', '<HIGH>': 'High', '<LOW>': 'Low', '<CLOSE>': 'Close', '<VOL>': 'Volume'}
+                        '<OPEN>': 'Open', '<HIGH>': 'High', '<LOW>': 'Low', '<CLOSE>': 'Close', '<TICKVOL>': 'Volume'}
     df = df.rename(columns=new_column_names)
     df['Time'] = pd.to_datetime(df['Time'], format='mixed')
     df['Time'] = df['Time'].dt.strftime('%H:%M:%S')

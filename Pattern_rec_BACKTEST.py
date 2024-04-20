@@ -30,13 +30,15 @@ from API_or_Json import dataframe_from_api
 # file_path = 'History_data/MT5/BTCUSD_M1_4_years.csv'
 # file_path = 'History_data/MT5/BTCUSD_M30.csv'
 # file_path = 'History_data/MT5/BTCUSD_H1.csv'
-file_path = 'History_data/MT5/BTCUSD_D1.csv'
+# file_path = 'History_data/MT5/BTCUSD_D1.csv'
 # file_path = 'History_data/MT5/BTCUSD_H4.csv'
 # file_path = 'History_data/MT5/BTCUSD_H4.csv'
 # file_path = 'History_data/MT5/BTCUSD_M15.csv'
 # file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
 # file_path = 'History_data/MT5/BTCUSD_M30_today.csv'
 # file_path = 'History_data/MT5/BTCUSD_M15_today.csv'
+# file_path = 'History_data/MT5/US500_M5.csv'
+file_path = 'History_data/MT5/TSLA_M5.csv'
 # ------------------------------------------
 # pd.set_option('display.max_columns', 10)  # Uncomment to display all columns
 
@@ -44,16 +46,16 @@ file_path = 'History_data/MT5/BTCUSD_D1.csv'
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2022-12-01'       # Choose the start date to begin from
-end_date = '2022-12-30'         # Choose the end date
+start_date = '2024-04-09'       # Choose the start date to begin from
+end_date = '2024-04-09'         # Choose the end date
 
 # SIMULATION
 start_simulation = True
 show_trade_analysis = True
 
 # ENTRY CONDITIONS
-use_candle_close_as_entry = False
-use_level_price_as_entry = True
+use_candle_close_as_entry = False   # Must be False if next condition is True
+use_level_price_as_entry = True     # Must be False if previous condition is True
 confirmation_close = False      # Candle close above/below level as confirmation
 longs_allowed = True            # Allow or disallow trade direction
 shorts_allowed = True          # Allow or disallow trade direction
@@ -69,13 +71,13 @@ find_levels = True
 
 # RISK MANAGEMENT
 
-spread = 10
+spread = 0
 risk_reward_ratio = 1   # Chose risk/reward ratio (aiming to win compared to lose)
-stop_loss_as_candle_min_max = False  # Must be True if next condition is false
-stop_loss_offset = 10                 # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
+stop_loss_as_candle_min_max = True  # Must be True if next condition is false
+stop_loss_offset = 1                 # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
 
-stop_loss_price_as_dollar_amount = True     # STOP as distance from entry price (previous must be false)
-rr_dollar_amount = 1000                       # Value for stop as distance
+stop_loss_price_as_dollar_amount = False     # STOP as distance from entry price (previous must be false)
+rr_dollar_amount = 10                       # Value for stop as distance
 
 stop_loss_as_plus_candle = False    # Must be True if previous condition is false
 stop_loss_offset_multiplier = 0    # 1 places stop one candle away from H/L (only when stop_loss_as_plus_candle = True
@@ -88,7 +90,7 @@ show_level_rejection_signals = True
 show_line_chart = False
 show_signal_line_chart = False
 show_profits_losses_line_chart = False  # Only when Simulation is True
-show_balance_change_line_chart = True   # Only when Simulation is True
+show_balance_change_line_chart = False   # Only when Simulation is True
 
 
 # SIGNALS
@@ -148,7 +150,7 @@ def getting_dataframe_from_file(path):
     # print()
     # print(f'Current file is: {path}')
 
-    columns_to_parse = ['Date', 'Time', 'Open', 'High', 'Low', 'Close', 'Filename']
+    columns_to_parse = ['Date', 'Time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Filename']
 
     #  for MT4 files set dayfirst=False
     csv_df = pd.read_csv(path, parse_dates=[0], dayfirst=False, usecols=columns_to_parse)
@@ -348,7 +350,7 @@ for column_index in range(1, len(column_counters_outside) + 1):
     fill_column_with_first_non_null_value(filtered_by_date_dataframe, column_index)
 
 filtered_by_date_dataframe.set_index('Datetime', inplace=True)
-print(filtered_by_date_dataframe)
+print('Dataframe level columns: \n', filtered_by_date_dataframe)
 
 # *******************************************************************************************************************
 #  ----------------------------------------------------------------------------------------------
@@ -401,7 +403,7 @@ if find_levels and use_level_rejection:
             rejection_signals_with_prices.append((signal, price_level))
             rejection_signals_for_chart.append(signal)
 
-        print('Rejection_signals!!!!!!!!!!!!!: ', rejection_signals_with_prices)
+        print('Rejection_signals: \n', rejection_signals_with_prices)
         rejection_signals_series_with_prices = pd.Series(rejection_signals_with_prices)
         rejection_signals_series_for_chart = pd.Series(rejection_signals_for_chart)
         return rejection_signals_series_with_prices, rejection_signals_series_for_chart
@@ -411,11 +413,41 @@ if find_levels and use_level_rejection:
         level_rejection_signals(filtered_by_date_dataframe)
     )
 
-    print('Rejection_signals_series?????????: \n', rejection_signals_series_outside)
+    print('Rejection_signals_series: \n', rejection_signals_series_outside)
     # print('Level_discovery_signals: \n', level_discovery_signals_series_out)
     filtered_by_date_dataframe.set_index('Datetime', inplace=True)  # Set index back to Datetime
 else:
     rejection_signals_series_outside = None  # When function switched off
+    rejection_signals_series_for_chart_outside = None
+
+
+def vwap_calculation(df):
+    vwap_points = []
+    df.reset_index(inplace=True)
+    for index, row in df.iterrows():
+        current_candle_close = row['Close']
+        current_candle_high = row['High']
+        current_candle_low = row['Low']
+        current_candle_volume = row['Volume']
+
+        # Calculate typical price
+        typical_price = (current_candle_high + current_candle_low + current_candle_close) / 3
+
+        # Calculate cumulative sum of (typical price * volume)
+        cumulative_tp_volume = np.cumsum(typical_price * current_candle_volume)
+        print('cumulative_tp_volume', cumulative_tp_volume)
+        # Calculate cumulative volume
+        cumulative_volume = np.cumsum(current_candle_volume)
+        print('cumulative_volume', cumulative_volume)
+        # Calculate VWAP
+        vwap = cumulative_tp_volume / cumulative_volume
+        print('vwap', vwap)
+        vwap_points.append((index, vwap))
+        print('VWap points: ', vwap_points)
+        return vwap_points
+
+
+vwap_calculation(filtered_by_date_dataframe_original)
 
 
 #  ----------------------------------------------------------------------------------------------
@@ -438,7 +470,6 @@ def pattern_recognition(patterns_df, pattern_number):  # Reading Pattern codes f
         print(f'Current Pattern is: {pattern_code}, {pattern_name}, {pattern_index}')
 
         pattern_function = getattr(talib, pattern_code)
-        # filtered_by_date_dataframe.reset_index(drop=True, inplace=True)
         pattern_signal = pattern_function(filtered_by_date_dataframe['Open'], filtered_by_date_dataframe['High'],
                                           filtered_by_date_dataframe['Low'], filtered_by_date_dataframe['Close'])
         print('Pattern signals searching is ON')
@@ -536,8 +567,6 @@ def trades_simulation(filtered_df_original, risk_reward_simulation, sl_offset_mu
                     trade_direction.append('Long')
                     signal_candle_date = (filtered_df_original.iloc[signal_index]['Date']).strftime('%Y-%m-%d')
                     signal_candle_time = filtered_df_original.iloc[signal_index]['Time']
-                    signal_candle_open = round(filtered_df_original.iloc[signal_index]['Open'], 3)
-                    signal_candle_high = round(filtered_df_original.iloc[signal_index]['High'], 3)
                     signal_candle_low = round(filtered_df_original.iloc[signal_index]['Low'], 3)
 
                     if use_level_price_as_entry:
@@ -656,9 +685,7 @@ def trades_simulation(filtered_df_original, risk_reward_simulation, sl_offset_mu
                     trade_direction.append('Short')
                     signal_candle_date = (filtered_df_original.iloc[signal_index]['Date']).strftime('%Y-%m-%d')
                     signal_candle_time = filtered_df_original.iloc[signal_index]['Time']
-                    signal_candle_open = round(filtered_df_original.iloc[signal_index]['Open'], 3)
                     signal_candle_high = round(filtered_df_original.iloc[signal_index]['High'], 3)
-                    signal_candle_low = round(filtered_df_original.iloc[signal_index]['Low'], 3)
 
                     if use_level_price_as_entry:
                         entry_price = price_level
@@ -904,7 +931,7 @@ def trades_analysis(trade_result_both, trade_result, trades_counter, trade_direc
         print('**************************')
         print(f'Pattern: {active_pattern_list}')
         print()
-        print(f'Both trades for long signals: {sum(trade_result_both)}')
+        print(f'Both trades: {sum(trade_result_both)}')
         print(f'Profitable trades: {profitable_trades_count} ({round(win_percent, 2)}%)'.title())
         print(f'Losing trades: {loss_trades_count} ({round(loss_percent, 2)}%)'.title())
         print()
