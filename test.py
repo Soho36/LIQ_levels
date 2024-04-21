@@ -1,22 +1,32 @@
+import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import mplfinance as mpf
+from Pattern_rec_BACKTEST import vw_points_series_outside
 
-# Sample price and volume data
-close_prices = np.array([10, 12, 11, 15, 14])
-high_prices = np.array([11, 13, 12, 16, 15])
-low_prices = np.array([9, 11, 10, 14, 13])
-volume = np.array([1000, 1500, 1200, 2000, 1800])
+# Sample DataFrame with OHLC data
+data = {
+    'Date': pd.date_range(start='2022-01-01', periods=100),
+    'Open': np.random.rand(100) * 100,
+    'High': np.random.rand(100) * 100,
+    'Low': np.random.rand(100) * 100,
+    'Close': np.random.rand(100) * 100,
+    'Volume': np.random.randint(1000, 10000, size=100)
+}
+df = pd.DataFrame(data)
+df.set_index('Date', inplace=True)
 
-# Calculate typical price
-typical_price = (high_prices + low_prices + close_prices) / 3
-print(typical_price)
+# Calculate moving average
+window = 20
+# moving_average = df['Close'].rolling(window=window).mean()
+moving_average = vw_points_series_outside
+print(moving_average)
 
-# Calculate cumulative sum of (typical price * volume)
-cumulative_tp_volume = np.cumsum(typical_price * volume)
+# Plot candlestick chart with moving average
+mpf.plot(df, type='candle', style='yahoo', title='Candlestick Chart with Moving Average',
+         ylabel='Price', ylabel_lower='Volume',
+         mav=(window,),  # Plot moving average
+         figsize=(12, 6))
 
-# Calculate cumulative volume
-cumulative_volume = np.cumsum(volume)
-
-# Calculate VWAP
-vwap = cumulative_tp_volume / cumulative_volume
-
-print(vwap)
+# Show the plot
+plt.show()

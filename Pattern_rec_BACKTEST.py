@@ -38,7 +38,7 @@ from API_or_Json import dataframe_from_api
 # file_path = 'History_data/MT5/BTCUSD_M30_today.csv'
 # file_path = 'History_data/MT5/BTCUSD_M15_today.csv'
 # file_path = 'History_data/MT5/US500_M5.csv'
-file_path = 'History_data/MT5/TSLA_M5.csv'
+file_path = 'History_data/MT5/TSLA_M15.csv'
 # ------------------------------------------
 # pd.set_option('display.max_columns', 10)  # Uncomment to display all columns
 
@@ -46,16 +46,16 @@ file_path = 'History_data/MT5/TSLA_M5.csv'
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2024-04-09'       # Choose the start date to begin from
-end_date = '2024-04-09'         # Choose the end date
+start_date = '2024-01-11'       # Choose the start date to begin from
+end_date = '2024-01-11'         # Choose the end date
 
 # SIMULATION
 start_simulation = True
 show_trade_analysis = True
 
 # ENTRY CONDITIONS
-use_candle_close_as_entry = False   # Must be False if next condition is True
-use_level_price_as_entry = True     # Must be False if previous condition is True
+use_candle_close_as_entry = True   # Must be False if next condition is True
+use_level_price_as_entry = False     # Must be False if previous condition is True
 confirmation_close = False      # Candle close above/below level as confirmation
 longs_allowed = True            # Allow or disallow trade direction
 shorts_allowed = True          # Allow or disallow trade direction
@@ -66,6 +66,7 @@ use_pattern_recognition = False
 use_piercing_signal = False
 use_level_rejection = True
 find_levels = True
+show_vwap = True
 #
 
 
@@ -422,32 +423,18 @@ else:
 
 
 def vwap_calculation(df):
-    vwap_points = []
-    df.reset_index(inplace=True)
-    for index, row in df.iterrows():
-        current_candle_close = row['Close']
-        current_candle_high = row['High']
-        current_candle_low = row['Low']
-        current_candle_volume = row['Volume']
+    typical_price = (df['High'] + df['Low'] + df['Close']) / 3
 
-        # Calculate typical price
-        typical_price = (current_candle_high + current_candle_low + current_candle_close) / 3
+    cumulative_tp_volume = typical_price * df['Volume']
 
-        # Calculate cumulative sum of (typical price * volume)
-        cumulative_tp_volume = np.cumsum(typical_price * current_candle_volume)
-        print('cumulative_tp_volume', cumulative_tp_volume)
-        # Calculate cumulative volume
-        cumulative_volume = np.cumsum(current_candle_volume)
-        print('cumulative_volume', cumulative_volume)
-        # Calculate VWAP
-        vwap = cumulative_tp_volume / cumulative_volume
-        print('vwap', vwap)
-        vwap_points.append((index, vwap))
-        print('VWap points: ', vwap_points)
-        return vwap_points
+    cumulative_volume = df['Volume']
+
+    vwap = cumulative_tp_volume.cumsum() / cumulative_volume.cumsum()
+    return vwap
 
 
-vwap_calculation(filtered_by_date_dataframe_original)
+vw_points_series_outside = vwap_calculation(filtered_by_date_dataframe_original)
+print('VWap points: ', vw_points_series_outside)
 
 
 #  ----------------------------------------------------------------------------------------------
@@ -1091,7 +1078,7 @@ highlight_signal_on_line_chart(filtered_by_date_dataframe)
 
 #  CANDLESTICK CHART
 def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series,
-                           sr_timeframe, level_discovery_signals_series, rejection_signals_series):
+                           sr_timeframe, level_discovery_signals_series, rejection_signals_series, vwap_series):
 
     if show_candlestick_chart:
 
@@ -1167,11 +1154,15 @@ def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series,
             print('Pierce showing is switched off')
 
         print()
+        if show_vwap:
+            plots_list.append(mpf.make_addplot(vwap_series, type='line', linewidths=0.2, alpha=0.7, color='yellow'))
 
         if find_levels:
             mpf.plot(df, type='candle', figsize=(12, 6),
                      alines=dict(alines=levels_points_for_chart, linewidths=2, alpha=0.4),
                      style='yahoo', title=f'{ticker_name}'.upper(), addplot=plots_list)
+
+
         else:
             mpf.plot(df, type='candle', figsize=(12, 6),
                      style='yahoo', title=f'{ticker_name}'.upper(), addplot=plots_list)
@@ -1180,7 +1171,8 @@ def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series,
 try:
     plot_candlestick_chart(filtered_by_date_dataframe,
                            pattern_signal_series_outside, pierce_signals_series_outside, sr_levels_timeframe,
-                           level_discovery_signals_series_out, rejection_signals_series_for_chart_outside)
+                           level_discovery_signals_series_out, rejection_signals_series_for_chart_outside,
+                           vw_points_series_outside)
 
 except KeyboardInterrupt:
     print('Program stopped manually')
