@@ -16,8 +16,8 @@ file_path = 'History_data/MT5/TSLA_M15.csv'
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2024-01-15'       # Choose the start date to begin from
-end_date = '2024-01-16'         # Choose the end date
+start_date = '2024-01-18'       # Choose the start date to begin from
+end_date = '2024-01-18'         # Choose the end date
 
 # SIMULATION
 start_simulation = False
@@ -33,9 +33,7 @@ shorts_allowed = False          # Allow or disallow trade direction
 #
 use_level_rejection = False
 find_levels = False
-show_vwap = True
 #
-
 
 # RISK MANAGEMENT
 
@@ -46,7 +44,8 @@ stop_loss_offset = 1                 # Is added to SL for Shorts and subtracted 
 
 # CHARTS
 show_candlestick_chart = True
-find_level_rejection_signals = False
+show_vwap = True
+show_inside_bar_signals = True
 show_level_rejection_signals = False
 show_balance_change_line_chart = False   # Only when Simulation is True
 # ******************************************************************************
@@ -322,7 +321,7 @@ if find_levels and use_level_rejection:
     )
 
     print('Rejection_signals_series: \n', rejection_signals_series_outside)
-    # print('Level_discovery_signals: \n', level_discovery_signals_series_out)
+
     filtered_by_date_dataframe.set_index('Datetime', inplace=True)  # Set index back to Datetime
 else:
     rejection_signals_series_outside = None  # When function switched off
@@ -341,6 +340,7 @@ def vwap_calculation(df):
 
 
 vw_points_series_outside = vwap_calculation(filtered_by_date_dataframe_original)
+print()
 print('VWap points: ', vw_points_series_outside)
 
 
@@ -348,19 +348,38 @@ print('VWap points: ', vw_points_series_outside)
 #  INSIDE BAR SEARCHING
 #  ----------------------------------------------
 
+#  L1 <= L AND H <= H1 AND H-L < H1-L1
 
 def inside_bar_recognition(df):
     inside_bar_signals = []
-    # df.reset_index()
-    print('inside bar', df)
-    first_candle_size = 0
-    for _, _ in df.iterrows():
-        first_candle_size = df.iloc[0]['High'] - df.iloc[0]['Low']
+    df.reset_index(inplace=True)
+    print()
+    print('inside bar DF: \n', df)
 
+    first_candle_size = df.iloc[0]['High'] - df.iloc[0]['Low']
+    for index, row in df.iterrows():
+        current_candle_low = row['Low']
+        current_candle_high = row['High']
+        previous_candle_low = df.iloc[index - 1]['Low']
+        previous_candle_high = df.iloc[index - 1]['High']
+
+        if (previous_candle_low <= current_candle_low and
+                current_candle_high <= previous_candle_high and
+                (current_candle_high - current_candle_low) < (previous_candle_high - previous_candle_low)):
+            inside_bar_signals.append(100)
+        else:
+            inside_bar_signals.append(None)
+
+    print()
     print('First_candle_size: ', first_candle_size)
+    print()
+    print('Inside bar signals: ', inside_bar_signals)
+    print()
+    inside_bar_signals_series = pd.Series(inside_bar_signals)
+    return inside_bar_signals_series
 
 
-inside_bar_recognition(filtered_by_date_dataframe)
+inside_bar_signals_series_outside = inside_bar_recognition(filtered_by_date_dataframe)
 
 
 #  ----------------------------------------------
@@ -829,9 +848,9 @@ plot_line_chart_balance_change(rounded_results_as_balance_change_to_chart_profit
 
 
 #  CANDLESTICK CHART
-def plot_candlestick_chart(df, level_discovery_signals_series,
-                           rejection_signals_series, vwap_series):
+def plot_candlestick_chart(df, level_discovery_signals_series, rejection_signals_series, vwap_series, inside_bar_series):
 
+    df.set_index('Datetime', inplace=True)
     if show_candlestick_chart:
 
         plots_list = []
@@ -844,6 +863,11 @@ def plot_candlestick_chart(df, level_discovery_signals_series,
             for i, s in enumerate(rejection_signals_series):
                 if s != 'NaN':
                     plots_list.append(mpf.make_addplot(rejection_signals_series, type='scatter', color='black',
+                                                       markersize=250, marker='+', panel=1))
+        if show_inside_bar_signals:
+            for i, s in enumerate(inside_bar_series):
+                if s != 'NaN':
+                    plots_list.append(mpf.make_addplot(inside_bar_series, type='scatter', color='black',
                                                        markersize=250, marker='+', panel=1))
 
         else:
@@ -865,7 +889,8 @@ def plot_candlestick_chart(df, level_discovery_signals_series,
 
 try:
     plot_candlestick_chart(filtered_by_date_dataframe, level_discovery_signals_series_out,
-                           rejection_signals_series_for_chart_outside, vw_points_series_outside)
+                           rejection_signals_series_for_chart_outside, vw_points_series_outside,
+                           inside_bar_signals_series_outside)
 
 except KeyboardInterrupt:
     print('Program stopped manually')
