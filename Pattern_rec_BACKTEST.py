@@ -46,26 +46,26 @@ file_path = 'History_data/MT5/TSLA_M15.csv'
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2024-01-11'       # Choose the start date to begin from
-end_date = '2024-01-11'         # Choose the end date
+start_date = '2024-01-15'       # Choose the start date to begin from
+end_date = '2024-01-16'         # Choose the end date
 
 # SIMULATION
-start_simulation = True
-show_trade_analysis = True
+start_simulation = False
+show_trade_analysis = False
 
 # ENTRY CONDITIONS
-use_candle_close_as_entry = True   # Must be False if next condition is True
+use_candle_close_as_entry = False   # Must be False if next condition is True
 use_level_price_as_entry = False     # Must be False if previous condition is True
 confirmation_close = False      # Candle close above/below level as confirmation
-longs_allowed = True            # Allow or disallow trade direction
-shorts_allowed = True          # Allow or disallow trade direction
+longs_allowed = False            # Allow or disallow trade direction
+shorts_allowed = False          # Allow or disallow trade direction
 
 #
 number_of_pattern = 4          # Choose the index of pattern (from Ta-lib patterns.csv)
 use_pattern_recognition = False
 use_piercing_signal = False
-use_level_rejection = True
-find_levels = True
+use_level_rejection = False
+find_levels = False
 show_vwap = True
 #
 
@@ -86,8 +86,8 @@ stop_loss_offset_multiplier = 0    # 1 places stop one candle away from H/L (onl
 
 # CHARTS
 show_candlestick_chart = True
-find_level_rejection_signals = True
-show_level_rejection_signals = True
+find_level_rejection_signals = False
+show_level_rejection_signals = False
 show_line_chart = False
 show_signal_line_chart = False
 show_profits_losses_line_chart = False  # Only when Simulation is True
@@ -186,8 +186,9 @@ def date_range_func(df_csv, df_api, start, end):
     df_filtered_by_date = df[dates_in_range]
 
     if df_filtered_by_date.empty:
-        # print('NB! Dataframe is empty, check the date range!')
-        raise ValueError('NB! Dataframe is empty, check the date range!')
+        print('NB! Dataframe is empty, check the date range!')
+        exit()
+
     else:
         return ticker, df_filtered_by_date
 
@@ -196,6 +197,7 @@ ticker_name, filtered_by_date_dataframe = date_range_func(dataframe_from_csv, da
 
 # Make a copy of the original DataFrame
 filtered_by_date_dataframe_original = filtered_by_date_dataframe.copy()
+
 
 print()
 print(f'Dataframe filtered by date:\n {filtered_by_date_dataframe}')
@@ -517,10 +519,29 @@ def level_peirce_recognition():
 
 pierce_signals_series_outside = level_peirce_recognition()
 
+#  ----------------------------------------------
+#  INSIDE BAR SEARCHING
+#  ----------------------------------------------
+
+
+def inside_bar_recognition(df):
+    inside_bar_signals = []
+    # df.reset_index()
+    print('inside bar', df)
+    first_candle_size = 0
+    for _, _ in df.iterrows():
+        first_candle_size = df.iloc[0]['High'] - df.iloc[0]['Low']
+
+    print('First_candle_size: ', first_candle_size)
+
+
+inside_bar_recognition(filtered_by_date_dataframe)
+
 
 #  ----------------------------------------------
 #  TRADES SIMULATION
 #  ----------------------------------------------
+
 
 def trades_simulation(filtered_df_original, risk_reward_simulation, sl_offset_multiplier):
     # print('!!!!', filtered_df_original)
