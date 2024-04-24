@@ -50,8 +50,8 @@ start_date = '2024-01-15'       # Choose the start date to begin from
 end_date = '2024-01-16'         # Choose the end date
 
 # SIMULATION
-start_simulation = False
-show_trade_analysis = False
+start_simulation = True
+show_trade_analysis = True
 
 # ENTRY CONDITIONS
 use_candle_close_as_entry = False   # Must be False if next condition is True
@@ -62,7 +62,7 @@ shorts_allowed = False          # Allow or disallow trade direction
 
 #
 number_of_pattern = 4          # Choose the index of pattern (from Ta-lib patterns.csv)
-use_pattern_recognition = False
+use_pattern_recognition = True
 use_piercing_signal = False
 use_level_rejection = False
 find_levels = False

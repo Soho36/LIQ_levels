@@ -1,32 +1,21 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import mplfinance as mpf
-from Pattern_rec_BACKTEST import vw_points_series_outside
+trade_is_open = False
+for j in range(signal_index + 1, len(filtered_df_original)):
+    ...
 
-# Sample DataFrame with OHLC data
-data = {
-    'Date': pd.date_range(start='2022-01-01', periods=100),
-    'Open': np.random.rand(100) * 100,
-    'High': np.random.rand(100) * 100,
-    'Low': np.random.rand(100) * 100,
-    'Close': np.random.rand(100) * 100,
-    'Volume': np.random.randint(1000, 10000, size=100)
-}
-df = pd.DataFrame(data)
-df.set_index('Date', inplace=True)
+    if current_candle_high >= entry_price and trade_is_open is False:
+        ...
 
-# Calculate moving average
-window = 20
-# moving_average = df['Close'].rolling(window=window).mean()
-moving_average = vw_points_series_outside
-print(moving_average)
+        trade_is_open = True
 
-# Plot candlestick chart with moving average
-mpf.plot(df, type='candle', style='yahoo', title='Candlestick Chart with Moving Average',
-         ylabel='Price', ylabel_lower='Volume',
-         mav=(window,),  # Plot moving average
-         figsize=(12, 6))
+    elif current_candle_low <= stop_loss_price and trade_is_open is True:
+        ...
 
-# Show the plot
-plt.show()
+        break
+
+    elif current_candle_high >= take_profit_price and trade_is_open is True:
+        ...
+
+        break
+
+    else:
+        trade_is_open = False
