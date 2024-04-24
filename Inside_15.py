@@ -343,8 +343,8 @@ def trades_simulation(filtered_df_original, risk_reward_simulation):
             # LONG TRADES LOGIC
             if signal == 100 and longs_allowed:
 
-                signal_candle_date = (filtered_df_original.iloc[signal_index]['Date']).strftime('%Y-%m-%d')
-                signal_candle_time = filtered_df_original.iloc[signal_index]['Time']
+                # signal_candle_date = (filtered_df_original.iloc[signal_index]['Date']).strftime('%Y-%m-%d')
+                # signal_candle_time = filtered_df_original.iloc[signal_index]['Time']
                 signal_candle_low = round(filtered_df_original.iloc[signal_index]['Low'], 3)
                 entry_price = None
 
@@ -374,10 +374,10 @@ def trades_simulation(filtered_df_original, risk_reward_simulation):
                 for j in range(signal_index + 1, len(filtered_df_original)):
                     current_candle_date = (filtered_df_original.iloc[j]['Date']).strftime('%Y-%m-%d')
                     current_candle_time = (filtered_df_original.iloc[j]['Time'])
-                    current_candle_open = filtered_df_original.iloc[j]['Open']
+                    # current_candle_open = filtered_df_original.iloc[j]['Open']
                     current_candle_high = filtered_df_original.iloc[j]['High']
                     current_candle_low = filtered_df_original.iloc[j]['Low']
-                    current_candle_close = filtered_df_original.iloc[j]['Close']
+                    # current_candle_close = filtered_df_original.iloc[j]['Close']
 
                     if current_candle_high >= entry_price and trade_is_open is False:
                         print(
@@ -393,8 +393,6 @@ def trades_simulation(filtered_df_original, risk_reward_simulation):
 
                         trade_is_open = True
 
-                    # if current_candle_low <= stop_loss_price and current_candle_high >= take_profit_price and trade_is_open is True:
-                    #     trade_result_both.append(1)
                     if trade_is_open:
                         if current_candle_low <= stop_loss_price:
                             trade_result.append((stop_loss_price - spread) -
@@ -440,18 +438,16 @@ def trades_simulation(filtered_df_original, risk_reward_simulation):
                     pass
                     # print('No trades STILL opened')
 
-
             # SHORT TRADES LOGIC
-            elif signal == -100 and shorts_allowed:
-                counter += 1
-                trade_direction.append('Short')
-                signal_candle_date = (filtered_df_original.iloc[signal_index]['Date']).strftime('%Y-%m-%d')
-                signal_candle_time = filtered_df_original.iloc[signal_index]['Time']
+            if signal == -100 and shorts_allowed:
+
+                # signal_candle_date = (filtered_df_original.iloc[signal_index]['Date']).strftime('%Y-%m-%d')
+                # signal_candle_time = filtered_df_original.iloc[signal_index]['Time']
                 signal_candle_high = round(filtered_df_original.iloc[signal_index]['High'], 3)
                 entry_price = None
 
                 if use_candle_close_as_entry:
-                    entry_price = round(filtered_df_original.iloc[signal_index]['Close'], 3)   # ENTRY
+                    entry_price = round(filtered_df_original.iloc[signal_index]['Close'], 3)  # ENTRY
 
                 elif use_candle_high_or_low_as_entry:
                     entry_price = round(filtered_df_original.iloc[signal_index]['Low'], 3)
@@ -462,44 +458,40 @@ def trades_simulation(filtered_df_original, risk_reward_simulation):
                 stop_loss_price = None
                 take_profit_price = None
 
-                if stop_loss_as_candle_high_low:
+                if stop_loss_as_candle_high_low:  # STOP as candle low
                     stop_loss_price = signal_candle_high + stop_loss_offset
                     take_profit_price = ((entry_price -
                                           ((stop_loss_price - entry_price)
                                            * risk_reward_simulation))) - stop_loss_offset
-
                 else:
                     print('Stop loss condition is not properly defined')
 
-                print('------------------------------------------------------------------------------------------')
-                print(f'▼ ▼ ▼ OPEN SHORT TRADE: ▼ ▼ ▼ {signal_candle_date} {signal_candle_time}')
-                print(f'Entry price: {entry_price}')
-                print(f'Stop: {stop_loss_price}')
-                print(f'Take: {round(take_profit_price, 3)} ({risk_reward_simulation}RR)')
-                print()
-                # print(f'Current (signal) candle OHLC | O {signal_candle_open}, H {signal_candle_high}, '
-                #       f'L {signal_candle_low}, C {entry_price}')
+                trade_is_open = False
 
-                for j in range(signal_index, len(filtered_df_original)):
+                for j in range(signal_index + 1, len(filtered_df_original)):
                     current_candle_date = (filtered_df_original.iloc[j]['Date']).strftime('%Y-%m-%d')
                     current_candle_time = (filtered_df_original.iloc[j]['Time'])
-                    current_candle_open = filtered_df_original.iloc[j]['Open']
+                    # current_candle_open = filtered_df_original.iloc[j]['Open']
                     current_candle_high = filtered_df_original.iloc[j]['High']
                     current_candle_low = filtered_df_original.iloc[j]['Low']
-                    current_candle_close = filtered_df_original.iloc[j]['Close']
+                    # current_candle_close = filtered_df_original.iloc[j]['Close']
 
-                    print('Next candle: ', current_candle_date, current_candle_time, '|',
-                          'O', current_candle_open,
-                          'H', current_candle_high,
-                          'L', current_candle_low,
-                          'C', current_candle_close)
+                    if current_candle_low <= entry_price and trade_is_open is False:
+                        print(
+                            '------------------------------------------------------------------------------------------'
+                        )
+                        print(f'▼ ▼ ▼ OPEN SHORT TRADE: ▼ ▼ ▼ {current_candle_date} {current_candle_time}')
+                        print(f'Entry price: {entry_price}')
+                        print(f'Take: {round(take_profit_price, 3)} ({risk_reward_simulation}RR)')
+                        print(f'Stop: {stop_loss_price}')
+                        print()
+                        counter += 1
+                        trade_direction.append('Short')
 
-                    if current_candle_open < stop_loss_price and current_candle_high < stop_loss_price:
+                        trade_is_open = True
 
-                        if current_candle_high >= stop_loss_price and current_candle_low <= take_profit_price:
-                            trade_result_both.append(1)
-
-                        elif current_candle_high >= stop_loss_price:
+                    if trade_is_open:
+                        if current_candle_high >= stop_loss_price:
                             trade_result.append((entry_price - spread) -
                                                 (stop_loss_price + spread))
                             trade_result_shorts.append((entry_price - spread) -
@@ -509,12 +501,13 @@ def trades_simulation(filtered_df_original, risk_reward_simulation):
                             print()
                             print(f'Trade Close Price: {round(stop_loss_price, 3)}')
                             print(
-                              f'P/L: ${round((entry_price - spread) - (stop_loss_price + spread), 3)}'
+                                f'P/L: ${round((entry_price - spread) - (stop_loss_price + spread), 3)}'
                             )
                             print(
                                 '---------------------------------------------'
                                 '---------------------------------------------'
                             )
+                            trade_is_open = False
                             break
 
                         elif current_candle_low <= take_profit_price:
@@ -529,28 +522,18 @@ def trades_simulation(filtered_df_original, risk_reward_simulation):
                                 '---------------------------------------------'
                                 '---------------------------------------------'
                             )
-
+                            trade_is_open = False
                             break
 
-                        else:
-                            pass
-                    else:   # IN CASE OF GAP UP, WHEN NEXT CANDLE OPENS HIGHER THAN PREV. CANDLE STOP
-                        trade_result.append((entry_price - spread) - (stop_loss_price + spread))
-                        trade_result_shorts.append((entry_price - spread) -
-                                                   (stop_loss_price + spread))
-                        profit_loss_long_short.append('ShortLoss')
-                        print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date} {current_candle_time}')
-                        print()
-                        print(f'Trade Close Price: {round(stop_loss_price, 3)}')
-                        print(
-                            f'P/L: ${round((entry_price - spread) - (stop_loss_price + spread), 3)}'
-                        )
-                        print(
-                            '---------------------------------------------'
-                            '---------------------------------------------'
-                        )
+                    else:
+                        trade_is_open = False
 
-                        break
+                if trade_is_open:  # If trade is still opened in the end of the day - close at market
+                    print('Close at market in the end of the day')
+
+                else:
+                    pass
+                    # print('No trades STILL opened')
 
         signal_series = small_inside_bar_signals_series_outside
 
