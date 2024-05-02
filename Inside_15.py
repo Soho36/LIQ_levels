@@ -9,16 +9,18 @@ from API_or_Json import dataframe_from_api
 # ------------------------------------------
 # The list of paths to datafiles:
 
-file_path = 'History_data/MT5/TSLA_M15.csv'
+# file_path = 'History_data/MT5/TSLA_M15.csv'
+file_path = ('History_data/TC2000/etd.csv')
 # ------------------------------------------
 # pd.set_option('display.max_columns', 10)  # Uncomment to display all columns
 
 # **************************************** SETTINGS **************************************
 # symbol = 'TSLA'
 dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2024-01-09'       # Choose the start date to begin from
-end_date = '2024-01-09'         # Choose the end date
+start_date = '2024-04-25'       # Choose the start date to begin from
+end_date = '2024-04-25'         # Choose the end date
 
+gap_direction = -100    # 100 for Long, -100 for Short
 # SIMULATION AND ANALYSIS
 start_simulation = True
 
@@ -27,7 +29,7 @@ use_candle_high_or_low_as_entry = True
 use_candle_close_as_entry = False
 longs_allowed = True            # Allow or disallow trade direction
 shorts_allowed = True          # Allow or disallow trade direction
-inside_bar_ratio = 3
+inside_bar_ratio = 2
 
 # RISK MANAGEMENT
 spread = 0
@@ -298,10 +300,10 @@ def inside_bar_recognition(df):
         if (previous_candle_low <= current_candle_low and
                 current_candle_high <= previous_candle_high and
                 (current_candle_high - current_candle_low) < (previous_candle_high - previous_candle_low)):
-            all_inside_bar_signals.append(100)
+            all_inside_bar_signals.append(gap_direction)
 
             if first_candle_size / (current_candle_high - current_candle_low) >= inside_bar_ratio:
-                small_inside_bar_signals.append(100)
+                small_inside_bar_signals.append(gap_direction)
             else:
                 small_inside_bar_signals.append(None)
         else:
@@ -377,7 +379,7 @@ def trades_simulation(filtered_df_original, risk_reward_simulation):
                     # current_candle_open = filtered_df_original.iloc[j]['Open']
                     current_candle_high = filtered_df_original.iloc[j]['High']
                     current_candle_low = filtered_df_original.iloc[j]['Low']
-                    # current_candle_close = filtered_df_original.iloc[j]['Close']
+                    current_candle_close = filtered_df_original.iloc[j]['Close']
 
                     if current_candle_high >= entry_price and trade_is_open is False:
                         print(
@@ -433,7 +435,34 @@ def trades_simulation(filtered_df_original, risk_reward_simulation):
 
                 if trade_is_open:   # If trade is still opened in the end of the day - close at market
                     print('Close at market in the end of the day')
-
+                    if current_candle_close - entry_price < 0:
+                        trade_result.append((current_candle_close - spread) -
+                                            (entry_price + spread))
+                        trade_result_longs.append((current_candle_close - spread) -
+                                                  (entry_price + spread))
+                        profit_loss_long_short.append('LongLoss')
+                        print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date} {current_candle_time}')
+                        print()
+                        print(f'Trade Close Price: {round(current_candle_close, 3)}')
+                        print(
+                            f'P/L: ${round((current_candle_close - spread) - (entry_price + spread), 3)}'
+                        )
+                        print(
+                            '---------------------------------------------'
+                            '---------------------------------------------'
+                        )
+                    else:
+                        trade_result.append(current_candle_close - (entry_price + spread))
+                        trade_result_longs.append(current_candle_close - (entry_price + spread))
+                        profit_loss_long_short.append('LongProfit')
+                        print(f'○ ○ ○ Take profit hit ○ ○ ○ at {current_candle_date} {current_candle_time}')
+                        print()
+                        print(f'Trade Trade Close Price: {round(current_candle_close, 3)}')
+                        print(f'P/L: ${round(current_candle_close - (entry_price + spread), 3)}')
+                        print(
+                            '---------------------------------------------'
+                            '---------------------------------------------'
+                        )
                 else:
                     pass
                     # print('No trades STILL opened')
@@ -529,8 +558,38 @@ def trades_simulation(filtered_df_original, risk_reward_simulation):
                         trade_is_open = False
 
                 if trade_is_open:  # If trade is still opened in the end of the day - close at market
-                    print('Close at market in the end of the day')
+                    print('!!!! Close at market in the end of the day !!!!')
+                    if current_candle_close - entry_price > 0:
+                        trade_result.append((entry_price - spread) -
+                                            (current_candle_close + spread))
+                        trade_result_shorts.append((entry_price - spread) -
+                                                   (current_candle_close + spread))
+                        profit_loss_long_short.append('ShortLoss')
+                        print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date} {current_candle_time}')
+                        print()
+                        print(f'Trade Close Price: {round(current_candle_close, 3)}')
+                        print(
+                            f'P/L: ${round((entry_price - spread) - (current_candle_close + spread), 3)}'
+                        )
+                        print(
+                            '---------------------------------------------'
+                            '---------------------------------------------'
+                        )
 
+
+                    else:
+                        trade_result.append((entry_price - spread) - current_candle_close)
+                        trade_result_shorts.append((entry_price - spread) - current_candle_close)
+                        profit_loss_long_short.append('ShortProfit')
+                        print(
+                            f'○ ○ ○ Close at market in the end of the day ○ ○ ○ at {current_candle_date} {current_candle_time}')
+                        print()
+                        print(f'Trade Close Price: {round(current_candle_close, 3)}')
+                        print(f'P/L: ${round((entry_price - spread) - current_candle_close, 3)}')
+                        print(
+                            '---------------------------------------------'
+                            '---------------------------------------------'
+                        )
                 else:
                     pass
                     # print('No trades STILL opened')
