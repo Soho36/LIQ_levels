@@ -5,15 +5,23 @@ import numpy as np
 import statistics
 import os
 
-file_path = 'E:\\YandexDisk\\Desktop_Zal\\MESU24.csv'
-
+# file_path = 'Bars/MESU24_M1_w.csv'
+# file_path = 'Bars/MESU24_M2_w.csv'
+# file_path = 'Bars/MESU24_M3_w.csv'
+# file_path = 'Bars/MESU24_M5_w.csv'
+file_path = 'Bars/MESU24_M15_w.csv'
+# file_path = 'Bars/MESU24_M30_w.csv'
+# file_path = 'Bars/MESU24_H1_w.csv'
+# file_path = 'Bars/MESU24_H2_w.csv'
+# file_path = 'Bars/MESU24_H3_w.csv'
+# file_path = 'Bars/MESU24_H4_w.csv'
 # pd.set_option('display.max_columns', 10)  # Uncomment to display all columns
 
 
 # **************************************** SETTINGS **************************************
 
-start_date = '2024-06-18'       # Choose the start date to begin from
-end_date = '2024-06-18'         # Choose the end date
+start_date = '2024-06-21'       # Choose the start date to begin from
+end_date = '2024-06-30'         # Choose the end date
 
 # SIMULATION
 start_simulation = True
@@ -35,12 +43,12 @@ find_levels = True
 # RISK MANAGEMENT
 
 spread = 0
-risk_reward_ratio = 1   # Chose risk/reward ratio (aiming to win compared to lose)
+risk_reward_ratio = 3   # Chose risk/reward ratio (aiming to win compared to lose)
 stop_loss_as_candle_min_max = True  # Must be True if next condition is false
-stop_loss_offset = 0                 # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
+stop_loss_offset = 1                 # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
 
-stop_loss_price_as_dollar_amount = False     # STOP as distance from entry price (previous must be false)
-rr_dollar_amount = 10                       # Value for stop as distance
+stop_loss_price_as_dollar_amount = True     # STOP as distance from entry price (previous must be false)
+rr_dollar_amount = 5                       # Value for stop as distance
 
 stop_loss_as_plus_candle = True
 stop_loss_offset_multiplier = 0    # 1 places stop one candle away from H/L (only when stop_loss_as_plus_candle = True
@@ -197,7 +205,7 @@ else:
 
 # ********************************************************************************************************************
 filtered_by_date_dataframe.reset_index(inplace=True)
-print('SR_levels_out: \n', sr_levels_out)
+# print('SR_levels_out: \n', sr_levels_out)
 
 
 def add_levels_columns_to_dataframe(df):
@@ -245,7 +253,7 @@ for column_index in range(1, len(column_counters_outside) + 1):
     fill_column_with_first_non_null_value(filtered_by_date_dataframe, column_index)
 
 filtered_by_date_dataframe.set_index('Datetime', inplace=True)
-print('Dataframe level columns: \n', filtered_by_date_dataframe)
+# print('Dataframe level columns: \n', filtered_by_date_dataframe)
 
 # *******************************************************************************************************************
 #  ----------------------------------------------------------------------------------------------
@@ -298,7 +306,7 @@ if find_levels and use_level_rejection:
             rejection_signals_with_prices.append((signal, price_level))
             rejection_signals_for_chart.append(signal)
 
-        print('Rejection_signals: \n', rejection_signals_with_prices)
+        # print('Rejection_signals: \n', rejection_signals_with_prices)
         rejection_signals_series_with_prices = pd.Series(rejection_signals_with_prices)
         rejection_signals_series_for_chart = pd.Series(rejection_signals_for_chart)
         return rejection_signals_series_with_prices, rejection_signals_series_for_chart
@@ -308,7 +316,7 @@ if find_levels and use_level_rejection:
         level_rejection_signals(filtered_by_date_dataframe)
     )
 
-    print('Rejection_signals_series: \n', rejection_signals_series_outside)
+    # print('Rejection_signals_series: \n', rejection_signals_series_outside)
     # print('Level_discovery_signals: \n', level_discovery_signals_series_out)
     filtered_by_date_dataframe.set_index('Datetime', inplace=True)  # Set index back to Datetime
 else:
@@ -738,7 +746,11 @@ def trades_analysis(trade_result_both, trade_result, trades_counter, trade_direc
         print()
         # Calculating mathematical expectation
 
-        prob_per_trade = 1 / trades_count
+        try:
+            prob_per_trade = 1 / trades_count
+        except ZeroDivisionError:
+            print('No closed trades')
+
         math_expectation = round(sum([outcome * prob_per_trade for outcome in trade_result]), 2)
 
         print(f'Expectation: ${math_expectation}')
