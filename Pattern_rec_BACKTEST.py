@@ -1,53 +1,19 @@
-import talib
 import pandas as pd
 import matplotlib.pyplot as plt
 import mplfinance as mpf
 import numpy as np
 import statistics
-from API_or_Json import dataframe_from_api
+import os
 
+file_path = 'E:\\YandexDisk\\Desktop_Zal\\MESU24.csv'
 
-# ------------------------------------------
-# The list of paths to datafiles:
-# file_path = 'History_data/merged_data.csv'
-# file_path = 'History_data/exel.csv'
-# file_path = 'History_data/spr.csv'
-# file_path = 'History_data/zim.csv'
-# file_path = 'History_data/extr.csv'
-# file_path = 'History_data/aehr.csv'
-# file_path = 'History_data/tsla_D1.csv'
-# file_path = 'History_data/neog_D1.csv'
-# file_path = 'History_data/meta_D1.csv'
-# file_path = 'History_data/tsla_m5.csv'
-# file_path = 'History_data/STOCKS/tsla_m1.csv'
-# file_path = 'History_data/MT4/BTCUSD_D1.csv'
-# file_path = 'History_data/MT4/BTCUSD_m60.csv'
-# file_path = 'History_data/MT4/BTCUSD_m5.csv'
-# file_path = 'History_data/MT4/BTCUSD1.csv'
-
-# file_path = 'History_data/MT5/BTCUSD_M5.csv'
-# file_path = 'History_data/MT5/BTCUSD_M1.csv'
-# file_path = 'History_data/MT5/BTCUSD_M1_4_years.csv'
-# file_path = 'History_data/MT5/BTCUSD_M30.csv'
-# file_path = 'History_data/MT5/BTCUSD_H1.csv'
-# file_path = 'History_data/MT5/BTCUSD_D1.csv'
-# file_path = 'History_data/MT5/BTCUSD_H4.csv'
-# file_path = 'History_data/MT5/BTCUSD_H4.csv'
-# file_path = 'History_data/MT5/BTCUSD_M15.csv'
-# file_path = 'History_data/MT5/BTCUSD_M5_today.csv'
-# file_path = 'History_data/MT5/BTCUSD_M30_today.csv'
-# file_path = 'History_data/MT5/BTCUSD_M15_today.csv'
-# file_path = 'History_data/MT5/US500_M5.csv'
-file_path = 'History_data/MT5/TSLA_M15.csv'
-# ------------------------------------------
 # pd.set_option('display.max_columns', 10)  # Uncomment to display all columns
 
 
 # **************************************** SETTINGS **************************************
-# symbol = 'TSLA'
-dataframe_source_api_or_csv = False    # True for API or response file, False for CSV
-start_date = '2024-01-15'       # Choose the start date to begin from
-end_date = '2024-01-16'         # Choose the end date
+
+start_date = '2024-06-18'       # Choose the start date to begin from
+end_date = '2024-06-18'         # Choose the end date
 
 # SIMULATION
 start_simulation = True
@@ -55,18 +21,14 @@ show_trade_analysis = True
 
 # ENTRY CONDITIONS
 use_candle_close_as_entry = False   # Must be False if next condition is True
-use_level_price_as_entry = False     # Must be False if previous condition is True
+use_level_price_as_entry = True     # Must be False if previous condition is True
 confirmation_close = False      # Candle close above/below level as confirmation
-longs_allowed = False            # Allow or disallow trade direction
-shorts_allowed = False          # Allow or disallow trade direction
+longs_allowed = True            # Allow or disallow trade direction
+shorts_allowed = True          # Allow or disallow trade direction
 
 #
-number_of_pattern = 4          # Choose the index of pattern (from Ta-lib patterns.csv)
-use_pattern_recognition = True
-use_piercing_signal = False
-use_level_rejection = False
-find_levels = False
-show_vwap = True
+use_level_rejection = True
+find_levels = True
 #
 
 
@@ -75,91 +37,32 @@ show_vwap = True
 spread = 0
 risk_reward_ratio = 1   # Chose risk/reward ratio (aiming to win compared to lose)
 stop_loss_as_candle_min_max = True  # Must be True if next condition is false
-stop_loss_offset = 1                 # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
+stop_loss_offset = 0                 # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
 
 stop_loss_price_as_dollar_amount = False     # STOP as distance from entry price (previous must be false)
 rr_dollar_amount = 10                       # Value for stop as distance
 
-stop_loss_as_plus_candle = False    # Must be True if previous condition is false
+stop_loss_as_plus_candle = True
 stop_loss_offset_multiplier = 0    # 1 places stop one candle away from H/L (only when stop_loss_as_plus_candle = True
 
 
 # CHARTS
 show_candlestick_chart = True
-find_level_rejection_signals = False
-show_level_rejection_signals = False
-show_line_chart = False
-show_signal_line_chart = False
+show_level_rejection_signals = True
 show_profits_losses_line_chart = False  # Only when Simulation is True
 show_balance_change_line_chart = False   # Only when Simulation is True
 
-
-# SIGNALS
-sr_levels_timeframe = 30
-show_swing_highs_lows = False
-print_settings = False
-
 # ******************************************************************************
-
-if print_settings:
-    def print_settings():
-        print('************************************ SETTINGS ************************************')
-        print()
-        print(f'dataframe_source_api_or_csv: {dataframe_source_api_or_csv}')
-        print(f'start_date: {start_date}')
-        print(f'end_date: {end_date}')
-        print()
-        print('ENTRY CONDITIONS')
-        print(f'code_of_pattern: {number_of_pattern}')
-        print(f'use_pattern_recognition: {use_pattern_recognition}')
-        print(f'use_piercing_signal: {use_piercing_signal}')
-        print()
-        print('RISK MANAGEMENT')
-        print(f'risk_reward_ratio: {risk_reward_ratio}')
-        print(f'stop_loss_as_candle_min_max: {stop_loss_as_candle_min_max}')
-        print(f'stop_loss_as_plus_candle: {stop_loss_as_plus_candle}')
-        print(f'stop_loss_offset_multiplier: {stop_loss_offset_multiplier}')
-        print()
-        print('SIMULATION')
-        print(f'start_simulation: {start_simulation}')
-        print(f'show_trade_analysis: {show_trade_analysis}')
-        print()
-        print('CHARTS')
-        print(f'show_candlestick_chart: {show_candlestick_chart}')
-        print(f'show_line_chart: {show_line_chart}')
-        print(f'show_signal_line_chart: {show_signal_line_chart}')
-        print(f'show_profits_losses_line_chart: {show_profits_losses_line_chart}')
-        print(f'show_balance_change_line_chart: {show_balance_change_line_chart}')
-        print()
-        print('SIGNALS')
-        print(f'sr_levels_timeframe: {sr_levels_timeframe}')
-        print(f'show_swing_highs_lows: {show_swing_highs_lows}')
-        # print(f'show_patterns_signals: {show_patterns_signals}')
-        # print(f'show_level_pierce_signals: {show_level_pierce_signals}')
-
-
-    print_settings()
 
 
 def getting_dataframe_from_file(path):
 
-    # directory_path = 'TXT/'
     print()
-    # print('Datafiles in folder: ')
-    # for filename in os.listdir(directory_path):     # Making a list of files located in TXT folder
-    #     print(filename)
-    # print()
-    # print(f'Current file is: {path}')
 
-    columns_to_parse = ['Date', 'Time', 'Open', 'High', 'Low', 'Close', 'Volume', 'Filename']
+    columns_to_parse = ['Date', 'Time', 'Open', 'High', 'Low', 'Close', 'Volume']
 
     #  for MT4 files set dayfirst=False
     csv_df = pd.read_csv(path, parse_dates=[0], dayfirst=False, usecols=columns_to_parse)
-    print()
-    if dataframe_source_api_or_csv is False:
-        print(f'Dataframe derived from CSV:\n {csv_df}')
-    else:
-        pass
     print()
     return csv_df
 
@@ -167,19 +70,15 @@ def getting_dataframe_from_file(path):
 dataframe_from_csv = getting_dataframe_from_file(file_path)
 
 
-def date_range_func(df_csv, df_api, start, end):
+def date_range_func(df_csv, start, end):
 
     date_range = pd.date_range(start=start, end=end, freq='D')
-    # print('Date range: \n', list(date_range))
 
-    if dataframe_source_api_or_csv:
-        df = df_api
-        ticker = df['Symbol'].iloc[0]
-        print(ticker)
-        print(f'Dataframe derived from API:\n {df}', )
-    else:
-        df = df_csv
-        ticker = df['Filename'].iloc[0]
+    df = df_csv
+
+    file_name = os.path.basename(file_path)
+    ticker = os.path.splitext(file_name)[0]     # Get the TICKER from the name of the file
+
     date_column = df['Date']        # Select the 'Date' column from the DataFrame
     dates_in_range = date_column.isin(date_range)   # checks which dates from date_column fall within the generated
     # date range, resulting in a boolean mask
@@ -193,7 +92,7 @@ def date_range_func(df_csv, df_api, start, end):
         return ticker, df_filtered_by_date
 
 
-ticker_name, filtered_by_date_dataframe = date_range_func(dataframe_from_csv, dataframe_from_api, start_date, end_date)
+ticker_name, filtered_by_date_dataframe = date_range_func(dataframe_from_csv, start_date, end_date)
 
 # Make a copy of the original DataFrame
 filtered_by_date_dataframe_original = filtered_by_date_dataframe.copy()
@@ -205,7 +104,7 @@ print()
 print('************************************ TRADES SIMULATION ************************************')
 
 #  ----------------------------------------------------------------------------------------------
-#  LEVELS SEARCHING
+#  SEARCH FOR PRICE LEVELS
 #  ----------------------------------------------------------------------------------------------
 
 filtered_by_date_dataframe = (filtered_by_date_dataframe.assign(
@@ -274,9 +173,7 @@ if find_levels:
 
         level_discovery_signal.extend([None, None])  # Appending two elements to the end, to match Dataframe length
 
-        # print('level_discovery_signal: \n', level_discovery_signal)
         level_discovery_signals_series = pd.Series(level_discovery_signal)
-        # level_discovery_signals_series.index = df['Date']
 
         return (levels_startpoints_tuples, levels_endpoints_tuples, support_levels,
                 resistance_levels, level_discovery_signals_series, sr_levels)
@@ -291,21 +188,16 @@ if find_levels:
      resistance_level_signal_running_out, level_discovery_signals_series_out,
      sr_levels_out) = levels_discovery(filtered_by_date_dataframe)
 
-    # print('Support level: \n', support_level_signal_running_out)
-    # print('Resistance level: \n', resistance_level_signal_running_out)
-    # print('SR levels: \n', sr_levels_out)
-
     levels_points_for_chart = [[a, b] for a, b in zip(levels_startpoints_to_chart, levels_endpoints_to_chart)]
-    # print('levels_points', levels_points)
 
 else:
     sr_levels_out = []                          # Initialize sr_levels_out with an empty list to avoid warning
     level_discovery_signals_series_out = []     # Initialize sr_levels_out with an empty list to avoid warning
 
+
 # ********************************************************************************************************************
 filtered_by_date_dataframe.reset_index(inplace=True)
 print('SR_levels_out: \n', sr_levels_out)
-# print('444', len(sr_levels_out))
 
 
 def add_levels_columns_to_dataframe(df):
@@ -424,120 +316,6 @@ else:
     rejection_signals_series_for_chart_outside = None
 
 
-def vwap_calculation(df):
-    typical_price = (df['High'] + df['Low'] + df['Close']) / 3
-
-    cumulative_tp_volume = typical_price * df['Volume']
-
-    cumulative_volume = df['Volume']
-
-    vwap = cumulative_tp_volume.cumsum() / cumulative_volume.cumsum()
-    return vwap
-
-
-vw_points_series_outside = vwap_calculation(filtered_by_date_dataframe_original)
-print('VWap points: ', vw_points_series_outside)
-
-
-#  ----------------------------------------------------------------------------------------------
-#  PATTERN RECOGNITION
-#  ----------------------------------------------------------------------------------------------
-
-patterns_dataframe = pd.read_csv('Ta-lib patterns.csv')
-
-
-def pattern_recognition(patterns_df, pattern_number):  # Reading Pattern codes from CSV
-
-    if use_pattern_recognition:
-        pattern_code = patterns_df['PatternCode'].iloc[pattern_number]
-        pattern_name = patterns_df['PatternName'].iloc[pattern_number]
-        pattern_index = patterns_df.index[pattern_number]
-        active_pattern = {'Pattern_code': pattern_code,
-                          'Pattern_name': pattern_name,
-                          'Pattern_index': pattern_index}
-        print()
-        print(f'Current Pattern is: {pattern_code}, {pattern_name}, {pattern_index}')
-
-        pattern_function = getattr(talib, pattern_code)
-        pattern_signal = pattern_function(filtered_by_date_dataframe['Open'], filtered_by_date_dataframe['High'],
-                                          filtered_by_date_dataframe['Low'], filtered_by_date_dataframe['Close'])
-        print('Pattern signals searching is ON')
-        print(f'Pattern signals: {list(pattern_signal)}')
-        return pattern_signal, active_pattern
-
-    else:
-        print('Pattern recognition is turned OFF')
-        return None, None
-
-
-# Returns series
-pattern_signal_series_outside, active_pattern_list = pattern_recognition(patterns_dataframe, number_of_pattern)
-# print('recognized_pattern_signal', pattern_signal_series_outside)
-
-
-def level_peirce_recognition():
-
-    if use_piercing_signal:
-        swing_highs = talib.MAX(filtered_by_date_dataframe['High'], sr_levels_timeframe)
-        swing_lows = talib.MIN(filtered_by_date_dataframe['Low'], sr_levels_timeframe)
-
-        filtered_by_date_dataframe.reset_index(drop=True, inplace=True)
-        swing_highs.reset_index(drop=True, inplace=True)
-        swing_lows.reset_index(drop=True, inplace=True)
-        pierce_signals = []
-
-        for i in range(1, len(filtered_by_date_dataframe)):
-
-            # Append -100 if signal discovered for short signal
-            if filtered_by_date_dataframe['High'][i] > swing_highs[i - 1]:
-                if filtered_by_date_dataframe['Close'][i] < swing_highs[i - 1]:
-                    pierce_signals.append(-100)  # Append -100 if signal is discovered
-                else:
-                    pierce_signals.append(0)
-
-            # Append 100 if signal discovered for long signal
-            elif filtered_by_date_dataframe['Low'][i] < swing_lows[i - 1]:
-                if filtered_by_date_dataframe['Close'][i] > swing_lows[i - 1]:
-                    pierce_signals.append(100)
-                else:
-                    pierce_signals.append(0)
-            else:
-                pierce_signals.append(0)
-        pierce_signals.insert(0, 0)
-        pierce_signals_series = pd.Series(pierce_signals)
-
-        # filtered_by_date_dataframe['Signal'] = pd.Series(signals, index=filtered_by_date_dataframe.index)
-        print('Pierce signals searching is ON')
-        print(f'Pierce signals: {pierce_signals}')
-        # print('Dataframe len ', len(filtered_by_date_dataframe))
-        return pierce_signals_series
-
-    else:
-        print('Pierce recognition is turned OFF')
-        return None
-
-
-pierce_signals_series_outside = level_peirce_recognition()
-
-#  ----------------------------------------------
-#  INSIDE BAR SEARCHING
-#  ----------------------------------------------
-
-
-def inside_bar_recognition(df):
-    inside_bar_signals = []
-    # df.reset_index()
-    print('inside bar', df)
-    first_candle_size = 0
-    for _, _ in df.iterrows():
-        first_candle_size = df.iloc[0]['High'] - df.iloc[0]['Low']
-
-    print('First_candle_size: ', first_candle_size)
-
-
-inside_bar_recognition(filtered_by_date_dataframe)
-
-
 #  ----------------------------------------------
 #  TRADES SIMULATION
 #  ----------------------------------------------
@@ -554,18 +332,10 @@ def trades_simulation(filtered_df_original, risk_reward_simulation, sl_offset_mu
         trade_direction = []
         profit_loss_long_short = []     # List of profits and losses by longs and shorts
 
-        signal_series = pattern_signal_series_outside   # Default value if both Settings set to False
-
         if use_level_rejection:
             signal_series = rejection_signals_series_outside
 
-        elif use_pattern_recognition:
-            signal_series = pattern_signal_series_outside
-
-        elif use_piercing_signal:
-            signal_series = pierce_signals_series_outside
-
-        if use_pattern_recognition or use_piercing_signal or use_level_rejection:
+        if use_level_rejection:
             for signal_index, (signal_value, price_level) in enumerate(signal_series):
 
                 # LONG TRADES LOGIC
@@ -821,17 +591,12 @@ def trades_simulation(filtered_df_original, risk_reward_simulation, sl_offset_mu
 
 
 def trades_analysis(trade_result_both, trade_result, trades_counter, trade_direction, profit_loss_long_short, 
-                    trade_result_longs, trade_result_short, df_csv, df_api):
+                    trade_result_longs, trade_result_short, df_csv):
 
-    if (show_trade_analysis and start_simulation and
-            (use_piercing_signal or use_pattern_recognition or use_level_rejection)):
+    if show_trade_analysis and start_simulation and use_level_rejection:
 
-        if dataframe_source_api_or_csv:
-            first_row = df_api.iloc[0]['Date']
-            last_row = df_api.iloc[-1]['Date']
-        else:
-            first_row = df_csv.iloc[0]['Date']
-            last_row = df_csv.iloc[-1]['Date']
+        first_row = df_csv.iloc[0]['Date']
+        last_row = df_csv.iloc[-1]['Date']
         print()
         print('*****************************************************************************************')
         print('-------------------------------------TRADES ANALYSIS-------------------------------------')
@@ -937,7 +702,6 @@ def trades_analysis(trade_result_both, trade_result, trades_counter, trade_direc
         print('**************************')
         print(f'*  risk_reward_ratio: {risk_reward_ratio}  *')
         print('**************************')
-        print(f'Pattern: {active_pattern_list}')
         print()
         print(f'Both trades: {sum(trade_result_both)}')
         print(f'Profitable trades: {profitable_trades_count} ({round(win_percent, 2)}%)'.title())
@@ -1007,25 +771,11 @@ rounded_trades_list_to_chart_profits_losses, rounded_results_as_balance_change_t
     trades_analysis(trade_result_both_to_trade_analysis, trade_results_to_trade_analysis,
                     trades_counter_to_trade_analysis, trade_direction_to_trade_analysis,
                     profit_loss_long_short_to_trade_analysis, trade_result_longs_to_trade_analysis,
-                    trade_result_shorts_to_trade_analysis, dataframe_from_csv, dataframe_from_api))
+                    trade_result_shorts_to_trade_analysis, dataframe_from_csv))
 
 #  ----------------------------------------------
 #  PLOT CHART
 #  ----------------------------------------------
-
-
-def plot_line_chart(df):
-
-    if show_line_chart:
-        plt.figure(figsize=(10, 6))
-        plt.plot(df['Datetime'], df['Close'], label='Ticker prices', marker='o')
-        plt.title(f'{ticker_name}'.upper())
-        plt.xlabel('Index')
-        plt.ylabel('Price')
-        plt.legend()
-
-
-plot_line_chart(filtered_by_date_dataframe)
 
 
 # BALANCE CHANGE CHART
@@ -1070,119 +820,42 @@ plot_line_chart_profits_losses(rounded_trades_list_to_chart_profits_losses)
 # print('Date_time_dates: \n', date_time_dates)
 
 
-def highlight_signal_on_line_chart(df):
-
-    if show_signal_line_chart:
-        for i, s in enumerate(pattern_signal_series_outside):
-            if s == 100:
-                signal_date = df['Datetime'].iloc[i].strftime("%d-%m-%Y-%H-%M")
-                annotation_text = f'Bullish signal on {signal_date} in {file_path}'
-                # the point where the arrow will be pointing to:
-                plt.annotate(annotation_text,
-                             xy=(df['Datetime'].iloc[i], df['Close'].iloc[i]),
-                             xytext=(df['Datetime'].iloc[i], df['Close'].iloc[i] + 100),
-                             arrowprops=dict(arrowstyle='->')
-                             )
-            elif s == -100:
-                signal_date = df['Datetime'].iloc[i].strftime("%d-%m-%Y-%H-%M")
-                annotation_text = f'Bearish signal on {signal_date} {file_path}'
-                # the point where the arrow will be pointing to:
-                plt.annotate(annotation_text,
-                             xy=(df['Datetime'].iloc[i], df['Close'].iloc[i]),
-                             xytext=(df['Datetime'].iloc[i], df['Close'].iloc[i] + 100),
-                             arrowprops=dict(arrowstyle='->')
-                             )
-
-
-highlight_signal_on_line_chart(filtered_by_date_dataframe)
-
-
 #  CANDLESTICK CHART
-def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series,
-                           sr_timeframe, level_discovery_signals_series, rejection_signals_series, vwap_series):
+def plot_candlestick_chart(
+        df,
+        level_discovery_signals_series,
+        rejection_signals_series
+):
 
     if show_candlestick_chart:
-
-        try:
-            pattern_signals_series.reset_index(drop=True, inplace=True)
-
-        except AttributeError:
-            pass
 
         # df.set_index('Datetime', inplace=True)
         plots_list = []
 
-        if show_level_rejection_signals:
-            for i, s in enumerate(level_discovery_signals_series):
-                if s != 'NaN':
-                    plots_list.append(mpf.make_addplot(level_discovery_signals_series, type='scatter', color='black',
-                                                       markersize=250, marker='*', panel=1))
-            for i, s in enumerate(rejection_signals_series):
-                if s != 'NaN':
-                    plots_list.append(mpf.make_addplot(rejection_signals_series, type='scatter', color='black',
-                                                       markersize=250, marker='+', panel=1))
+        for i, s in enumerate(level_discovery_signals_series):
+            if s != 'NaN':
+                plots_list.append(mpf.make_addplot(level_discovery_signals_series, type='scatter', color='black',
+                                                   markersize=250, marker='*', panel=1))
+        for i, s in enumerate(rejection_signals_series):
+            if s != 'NaN':
+                plots_list.append(mpf.make_addplot(rejection_signals_series, type='scatter', color='black',
+                                                   markersize=250, marker='+', panel=1))
 
         # Printing Swing Highs/Lows on chart
-        if show_swing_highs_lows:
-            swing_highs = talib.MAX(df['High'], sr_timeframe)
-            swing_lows = talib.MIN(df['Low'], sr_timeframe)
 
-            plots_list = [mpf.make_addplot(swing_highs, scatter=True, marker='v', markersize=50, color='green'),
-                          mpf.make_addplot(swing_lows, scatter=True, marker='^', markersize=50, color='red')]
-            # print('Print plots_list inside swing high: ', plots_list)
-        else:
-            print('Swing Highs/Lows showing is switched off')
+        # swing_highs = talib.MAX(df['High'], sr_timeframe)
+        # swing_lows = talib.MIN(df['Low'], sr_timeframe)
 
-        #  Converting zeros to NAN more suitable for plotting. Skip values which are true, others replace NaN
-        pattern_signals_with_nan = None
-
-        try:
-            pattern_signals_with_nan = pattern_signals_series.where(pattern_signals_series != 0, np.nan)
-
-        except AttributeError:
-            pass
-
-        # Iterate over signals and add non-zero signals to add_plots
-        # Need to check it to avoid empty array error
-        if use_pattern_recognition:
-            if pattern_signals_with_nan is not None and not pattern_signals_with_nan.isna().all():
-                for i, s in enumerate(pattern_signals_with_nan):
-                    if s != 'NaN':
-                        # Add signals as a subplot
-                        plots_list.append(mpf.make_addplot(pattern_signals_with_nan,
-                                                           type='scatter', color='black',
-                                                           markersize=250, marker='+', panel=1))
-        else:
-            print('Patterns showing is switched off')
-        # print('Print plots_list after patterns append: \n', plots_list)
-
-        pierce_signals_with_nan = None
-
-        try:
-            pierce_signals_with_nan = pierce_signals_series.where(pierce_signals_series != 0, np.nan)
-        except AttributeError:
-            pass
-        if use_piercing_signal:     # Need to check it to avoid empty array error
-            if pierce_signals_with_nan is not None and not pierce_signals_with_nan.isna().all():
-                for i, s in enumerate(pierce_signals_with_nan):
-                    if s != 'NaN':
-                        # Add signals as a subplot
-                        plots_list.append(mpf.make_addplot(pierce_signals_with_nan,  # Add the signals as a subplot
-                                                           type='scatter', color='blue',
-                                                           markersize=250, marker='*', panel=1))
-
-        else:
-            print('Pierce showing is switched off')
+        # plots_list = [mpf.make_addplot(swing_highs, scatter=True, marker='v', markersize=50, color='green'),
+        #               mpf.make_addplot(swing_lows, scatter=True, marker='^', markersize=50, color='red')]
+        # print('Print plots_list inside swing high: ', plots_list)
 
         print()
-        if show_vwap:
-            plots_list.append(mpf.make_addplot(vwap_series, type='line', linewidths=0.2, alpha=0.7, color='yellow'))
 
         if find_levels:
             mpf.plot(df, type='candle', figsize=(12, 6),
                      alines=dict(alines=levels_points_for_chart, linewidths=2, alpha=0.4),
                      style='yahoo', title=f'{ticker_name}'.upper(), addplot=plots_list)
-
 
         else:
             mpf.plot(df, type='candle', figsize=(12, 6),
@@ -1190,10 +863,11 @@ def plot_candlestick_chart(df, pattern_signals_series, pierce_signals_series,
 
 
 try:
-    plot_candlestick_chart(filtered_by_date_dataframe,
-                           pattern_signal_series_outside, pierce_signals_series_outside, sr_levels_timeframe,
-                           level_discovery_signals_series_out, rejection_signals_series_for_chart_outside,
-                           vw_points_series_outside)
+    plot_candlestick_chart(
+        filtered_by_date_dataframe,
+        level_discovery_signals_series_out,
+        rejection_signals_series_for_chart_outside
+    )
 
 except KeyboardInterrupt:
     print('Program stopped manually')
