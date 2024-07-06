@@ -9,9 +9,9 @@ import os
 # file_path = 'Bars/MESU24_M2_w.csv'
 # file_path = 'Bars/MESU24_M3_w.csv'
 # file_path = 'Bars/MESU24_M5_w.csv'
-file_path = 'Bars/MESU24_M15_w.csv'
+# file_path = 'Bars/MESU24_M15_w.csv'
 # file_path = 'Bars/MESU24_M30_w.csv'
-# file_path = 'Bars/MESU24_H1_w.csv'
+file_path = 'Bars/MESU24_H1_w.csv'
 # file_path = 'Bars/MESU24_H2_w.csv'
 # file_path = 'Bars/MESU24_H3_w.csv'
 # file_path = 'Bars/MESU24_H4_w.csv'
@@ -20,12 +20,12 @@ file_path = 'Bars/MESU24_M15_w.csv'
 
 # **************************************** SETTINGS **************************************
 
-start_date = '2024-06-21'       # Choose the start date to begin from
-end_date = '2024-06-30'         # Choose the end date
+start_date = '2024-06-17'       # Choose the start date to begin from
+end_date = '2024-07-03'         # Choose the end date
 
 # SIMULATION
 start_simulation = True
-show_trade_analysis = True
+
 
 # ENTRY CONDITIONS
 use_candle_close_as_entry = False   # Must be False if next condition is True
@@ -43,7 +43,7 @@ find_levels = True
 # RISK MANAGEMENT
 
 spread = 0
-risk_reward_ratio = 3   # Chose risk/reward ratio (aiming to win compared to lose)
+risk_reward_ratio = 2   # Chose risk/reward ratio (aiming to win compared to lose)
 stop_loss_as_candle_min_max = True  # Must be True if next condition is false
 stop_loss_offset = 1                 # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
 
@@ -70,7 +70,13 @@ def getting_dataframe_from_file(path):
     columns_to_parse = ['Date', 'Time', 'Open', 'High', 'Low', 'Close', 'Volume']
 
     #  for MT4 files set dayfirst=False
-    csv_df = pd.read_csv(path, parse_dates=[0], dayfirst=False, usecols=columns_to_parse)
+    csv_df = pd.read_csv(
+        path,
+        parse_dates=[0],
+        dayfirst=False,
+        usecols=columns_to_parse
+    )
+
     print()
     return csv_df
 
@@ -80,7 +86,11 @@ dataframe_from_csv = getting_dataframe_from_file(file_path)
 
 def date_range_func(df_csv, start, end):
 
-    date_range = pd.date_range(start=start, end=end, freq='D')
+    date_range = pd.date_range(
+        start=start,
+        end=end,
+        freq='D'
+    )
 
     df = df_csv
 
@@ -94,7 +104,7 @@ def date_range_func(df_csv, start, end):
 
     if df_filtered_by_date.empty:
         print('NB! Dataframe is empty, check the date range!')
-        exit()
+        exit()  # If dataframe is empty, stop the script
 
     else:
         return ticker, df_filtered_by_date
@@ -114,9 +124,14 @@ print('************************************ TRADES SIMULATION ******************
 #  ----------------------------------------------------------------------------------------------
 #  SEARCH FOR PRICE LEVELS
 #  ----------------------------------------------------------------------------------------------
-
-filtered_by_date_dataframe = (filtered_by_date_dataframe.assign(
-    Datetime=(filtered_by_date_dataframe['Date'] + pd.to_timedelta(filtered_by_date_dataframe['Time']))))
+"""
+Create Datetime (format) column merging Date and Time columns.
+Set index to Datetime column.
+"""
+filtered_by_date_dataframe = (
+    filtered_by_date_dataframe.assign(
+        Datetime=(filtered_by_date_dataframe['Date'] + pd.to_timedelta(filtered_by_date_dataframe['Time'])))
+)
 filtered_by_date_dataframe.set_index('Datetime', inplace=True)
 filtered_by_date_dataframe = filtered_by_date_dataframe.loc[:, ['Open', 'High', 'Low', 'Close']]
 
@@ -147,7 +162,11 @@ if find_levels:
                 datetime_2 = filtered_df.index[-1]
                 price_level_2 = filtered_df['Low'][i]
 
-                if not is_near_level(price_level_1, levels_startpoints_tuples, filtered_df):
+                if not is_near_level(
+                        price_level_1,
+                        levels_startpoints_tuples,
+                        filtered_df
+                ):
                     levels_startpoints_tuples.append((datetime_1, price_level_1))
                     levels_endpoints_tuples.append((datetime_2, price_level_2))
                     support_levels.append(price_level_1)
@@ -167,7 +186,11 @@ if find_levels:
                 datetime_2 = filtered_df.index[-1]
                 price_level_2 = filtered_df['High'][i]
 
-                if not is_near_level(price_level_1, levels_startpoints_tuples, filtered_df):
+                if not is_near_level(
+                        price_level_1,
+                        levels_startpoints_tuples,
+                        filtered_df
+                ):
                     levels_startpoints_tuples.append((datetime_1, price_level_1))
                     levels_endpoints_tuples.append((datetime_2, price_level_2))
                     resistance_levels.append(price_level_1)
@@ -183,8 +206,20 @@ if find_levels:
 
         level_discovery_signals_series = pd.Series(level_discovery_signal)
 
-        return (levels_startpoints_tuples, levels_endpoints_tuples, support_levels,
-                resistance_levels, level_discovery_signals_series, sr_levels)
+        print('levels_startpoints_tuples', levels_startpoints_tuples)
+        print('levels_endpoints_tuples', levels_endpoints_tuples)
+        print('support_levels', support_levels)
+        print('resistance_levels', resistance_levels)
+        print('level_discovery_signals_series', level_discovery_signals_series)
+        print('sr_levels', sr_levels)
+        return (
+            levels_startpoints_tuples,
+            levels_endpoints_tuples,
+            support_levels,
+            resistance_levels,
+            level_discovery_signals_series,
+            sr_levels
+        )
 
 
     def is_near_level(value, levels, df):
@@ -192,9 +227,14 @@ if find_levels:
         return any(abs(value - level) < average for _, level in levels)
 
 
-    (levels_startpoints_to_chart, levels_endpoints_to_chart, support_level_signal_running_out,
-     resistance_level_signal_running_out, level_discovery_signals_series_out,
-     sr_levels_out) = levels_discovery(filtered_by_date_dataframe)
+    (
+        levels_startpoints_to_chart,
+        levels_endpoints_to_chart,
+        support_level_signal_running_out,
+        resistance_level_signal_running_out,
+        level_discovery_signals_series_out,
+        sr_levels_out
+    ) = levels_discovery(filtered_by_date_dataframe)
 
     levels_points_for_chart = [[a, b] for a, b in zip(levels_startpoints_to_chart, levels_endpoints_to_chart)]
 
@@ -205,11 +245,14 @@ else:
 
 # ********************************************************************************************************************
 filtered_by_date_dataframe.reset_index(inplace=True)
-# print('SR_levels_out: \n', sr_levels_out)
+print('SR_levels_out: \n', sr_levels_out)
 
 
 def add_levels_columns_to_dataframe(df):
-    # Initialize counters for columns for 5 levels as a dictionary
+    """
+    Count how many columns are needed to add levels values to dataframe.
+    Return dictionary like {1: 1, 2: 1, 3: 1, 4: 1}
+    """
     n = 1
     column_counters = {}
     while n < (len(sr_levels_out) + 1):
@@ -230,9 +273,27 @@ def add_levels_columns_to_dataframe(df):
 
 
 column_counters_outside = add_levels_columns_to_dataframe(filtered_by_date_dataframe)
+print('column_counters_outside: ', column_counters_outside)
 
 
 def fill_column_with_first_non_null_value(df, column_idx):
+    """
+    Fill the columns down till the end with level price after first not null value discovered
+    Example:
+                             Open     High      Low  ...        6       7       8
+    Datetime                                        ...
+    2024-06-17 00:00:00  5502.00  5503.25  5500.25  ...      NaN     NaN     NaN
+    2024-06-17 01:00:00  5500.75  5501.00  5497.25  ...      NaN     NaN     NaN
+    2024-06-17 02:00:00  5500.00  5501.75  5498.50  ...      NaN     NaN     NaN
+    2024-06-17 03:00:00  5499.50  5501.75  5499.25  ...      NaN     NaN     NaN
+    2024-06-17 04:00:00  5500.50  5502.00  5498.50  ...      NaN     NaN     NaN
+    ...                      ...      ...      ...  ...      ...     ...     ...
+    2024-07-03 14:00:00  5563.75  5572.50  5542.25  ...  5510.25  NaN        NaN
+    2024-07-03 15:00:00  5575.75  5582.50  5572.25  ...  5510.25  5552.0     NaN
+    2024-07-03 16:00:00  5581.25  5595.50  5580.50  ...  5510.25  5552.0  5595.5
+    2024-07-03 17:00:00  5590.75  5592.50  5589.00  ...  5510.25  5552.0  5595.5
+    2024-07-03 22:00:00  5590.50  5591.50  5586.25  ...  5510.25  5552.0  5595.5
+    """
 
     # Check if any non-null value exists in the column
     if not df[column_idx].isna().all():
@@ -253,7 +314,7 @@ for column_index in range(1, len(column_counters_outside) + 1):
     fill_column_with_first_non_null_value(filtered_by_date_dataframe, column_index)
 
 filtered_by_date_dataframe.set_index('Datetime', inplace=True)
-# print('Dataframe level columns: \n', filtered_by_date_dataframe)
+print('Dataframe with level columns: \n', filtered_by_date_dataframe)
 
 # *******************************************************************************************************************
 #  ----------------------------------------------------------------------------------------------
@@ -316,7 +377,7 @@ if find_levels and use_level_rejection:
         level_rejection_signals(filtered_by_date_dataframe)
     )
 
-    # print('Rejection_signals_series: \n', rejection_signals_series_outside)
+    print('Rejection_signals_series: \n', rejection_signals_series_outside)
     # print('Level_discovery_signals: \n', level_discovery_signals_series_out)
     filtered_by_date_dataframe.set_index('Datetime', inplace=True)  # Set index back to Datetime
 else:
@@ -329,7 +390,11 @@ else:
 #  ----------------------------------------------
 
 
-def trades_simulation(filtered_df_original, risk_reward_simulation, sl_offset_multiplier):
+def trades_simulation(
+        filtered_df_original,
+        risk_reward_simulation,
+        sl_offset_multiplier
+):
     # print('!!!!', filtered_df_original)
     if start_simulation:
         trades_counter = 0
@@ -342,8 +407,6 @@ def trades_simulation(filtered_df_original, risk_reward_simulation, sl_offset_mu
 
         if use_level_rejection:
             signal_series = rejection_signals_series_outside
-
-        if use_level_rejection:
             for signal_index, (signal_value, price_level) in enumerate(signal_series):
 
                 # LONG TRADES LOGIC
@@ -585,23 +648,47 @@ def trades_simulation(filtered_df_original, risk_reward_simulation, sl_offset_mu
                             )
                             break
 
-            return (trade_result_both, trade_result, trades_counter, trade_direction, profit_loss_long_short,
-                    trade_result_longs, trade_result_shorts)
+            return (
+                trade_result_both,
+                trade_result,
+                trades_counter,
+                trade_direction,
+                profit_loss_long_short,
+                trade_result_longs,
+                trade_result_shorts
+            )
     else:
         print('Trade simulation is OFF')
         return None, None, None, None, None, None, None   # Return Nones in order to avoid error when function is OFF
 
 
-(trade_result_both_to_trade_analysis, trade_results_to_trade_analysis, trades_counter_to_trade_analysis,
- trade_direction_to_trade_analysis, profit_loss_long_short_to_trade_analysis, trade_result_longs_to_trade_analysis,
- trade_result_shorts_to_trade_analysis) = trades_simulation(filtered_by_date_dataframe_original, risk_reward_ratio,
-                                                            stop_loss_offset_multiplier)
+(
+    trade_result_both_to_trade_analysis,
+    trade_results_to_trade_analysis,
+    trades_counter_to_trade_analysis,
+    trade_direction_to_trade_analysis,
+    profit_loss_long_short_to_trade_analysis,
+    trade_result_longs_to_trade_analysis,
+    trade_result_shorts_to_trade_analysis
+) = trades_simulation(
+    filtered_by_date_dataframe_original,
+    risk_reward_ratio,
+    stop_loss_offset_multiplier
+)
 
 
-def trades_analysis(trade_result_both, trade_result, trades_counter, trade_direction, profit_loss_long_short, 
-                    trade_result_longs, trade_result_short, df_csv):
+def trades_analysis(
+        trade_result_both,
+        trade_result,
+        trades_counter,
+        trade_direction,
+        profit_loss_long_short,
+        trade_result_longs,
+        trade_result_short,
+        df_csv
+):
 
-    if show_trade_analysis and start_simulation and use_level_rejection:
+    if start_simulation and use_level_rejection:
 
         first_row = df_csv.iloc[0]['Date']
         last_row = df_csv.iloc[-1]['Date']
@@ -774,16 +861,22 @@ def trades_analysis(trade_result_both, trade_result, trades_counter, trade_direc
         return rounded_trades_list, rounded_results_as_balance_change
 
     else:
-        print('Trade analysis is OFF')
         print()
         return None, None    # Return Nones in order to avoid error when function is OFF
 
 
-rounded_trades_list_to_chart_profits_losses, rounded_results_as_balance_change_to_chart_profits = (
-    trades_analysis(trade_result_both_to_trade_analysis, trade_results_to_trade_analysis,
-                    trades_counter_to_trade_analysis, trade_direction_to_trade_analysis,
-                    profit_loss_long_short_to_trade_analysis, trade_result_longs_to_trade_analysis,
-                    trade_result_shorts_to_trade_analysis, dataframe_from_csv))
+(
+    rounded_trades_list_to_chart_profits_losses,
+    rounded_results_as_balance_change_to_chart_profits
+) = trades_analysis(
+    trade_result_both_to_trade_analysis,
+    trade_results_to_trade_analysis,
+    trades_counter_to_trade_analysis,
+    trade_direction_to_trade_analysis,
+    profit_loss_long_short_to_trade_analysis,
+    trade_result_longs_to_trade_analysis,
+    trade_result_shorts_to_trade_analysis,
+    dataframe_from_csv)
 
 #  ----------------------------------------------
 #  PLOT CHART
@@ -793,7 +886,7 @@ rounded_trades_list_to_chart_profits_losses, rounded_results_as_balance_change_t
 # BALANCE CHANGE CHART
 def plot_line_chart_balance_change(rounded_results_as_balance_change):
 
-    if show_balance_change_line_chart and start_simulation and show_trade_analysis:
+    if show_balance_change_line_chart and start_simulation:
         plt.figure(figsize=(10, 6))
         try:
             plt.plot(rounded_results_as_balance_change)
@@ -846,32 +939,50 @@ def plot_candlestick_chart(
 
         for i, s in enumerate(level_discovery_signals_series):
             if s != 'NaN':
-                plots_list.append(mpf.make_addplot(level_discovery_signals_series, type='scatter', color='black',
-                                                   markersize=250, marker='*', panel=1))
+                plots_list.append(
+                    mpf.make_addplot(
+                        level_discovery_signals_series,
+                        type='scatter',
+                        color='black',
+                        markersize=250,
+                        marker='*',
+                        panel=1
+                    )
+                )
+
         for i, s in enumerate(rejection_signals_series):
             if s != 'NaN':
-                plots_list.append(mpf.make_addplot(rejection_signals_series, type='scatter', color='black',
-                                                   markersize=250, marker='+', panel=1))
-
-        # Printing Swing Highs/Lows on chart
-
-        # swing_highs = talib.MAX(df['High'], sr_timeframe)
-        # swing_lows = talib.MIN(df['Low'], sr_timeframe)
-
-        # plots_list = [mpf.make_addplot(swing_highs, scatter=True, marker='v', markersize=50, color='green'),
-        #               mpf.make_addplot(swing_lows, scatter=True, marker='^', markersize=50, color='red')]
-        # print('Print plots_list inside swing high: ', plots_list)
+                plots_list.append(
+                    mpf.make_addplot(
+                        rejection_signals_series,
+                        type='scatter',
+                        color='black',
+                        markersize=250,
+                        marker='+',
+                        panel=1))
 
         print()
 
         if find_levels:
-            mpf.plot(df, type='candle', figsize=(12, 6),
-                     alines=dict(alines=levels_points_for_chart, linewidths=2, alpha=0.4),
-                     style='yahoo', title=f'{ticker_name}'.upper(), addplot=plots_list)
+            mpf.plot(
+                df,
+                type='candle',
+                figsize=(12, 6),
+                alines=dict(alines=levels_points_for_chart, linewidths=2, alpha=0.4),
+                style='yahoo',
+                title=f'{ticker_name}'.upper(),
+                addplot=plots_list
+            )
 
         else:
-            mpf.plot(df, type='candle', figsize=(12, 6),
-                     style='yahoo', title=f'{ticker_name}'.upper(), addplot=plots_list)
+            mpf.plot(
+                df,
+                type='candle',
+                figsize=(12, 6),
+                style='yahoo',
+                title=f'{ticker_name}'.upper(),
+                addplot=plots_list
+            )
 
 
 try:
