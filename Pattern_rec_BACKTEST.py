@@ -91,19 +91,48 @@ def date_range_func(df_csv, start, end):
 
     # Filter by date
     df_filtered_by_date = df_csv[(df_csv['DateTime'] >= start) & (df_csv['DateTime'] <= end)]
+    # print('!!!!!!!!!!!!', df_filtered_by_date)
 
     if df_filtered_by_date.empty:
         print('NB! Dataframe is empty, check the date range!')
         exit()  # If dataframe is empty, stop the script
 
     else:
-        return ticker, df_filtered_by_date
+        return ticker, df_filtered_by_date      # DF MUST BE INDEX RESET
 
 
-ticker_name, filtered_by_date_dataframe = date_range_func(dataframe_from_csv, start_date, end_date)
+(
+    ticker_name,
+    filtered_by_date_dataframe
+) = date_range_func(
+    dataframe_from_csv,
+    start_date,
+    end_date
+)
+
+print('!!!!!!!!!!!!', filtered_by_date_dataframe)
+
+
+def resample_m1_datapoints(df_filtered_by_date):
+    df_filtered_by_date.set_index('DateTime', inplace=True)
+    df_h1 = df_filtered_by_date.resample('H').agg({
+        'Open': 'first',
+        'High': 'max',
+        'Low': 'min',
+        'Close': 'last'
+    })
+    df_h1_cleaned = df_h1.dropna()              # Remove NaN rows from the Dataframe
+    df_h1_cleaned.reset_index(inplace=True)     # Reset index
+    return df_h1_cleaned
+
+
+aggregated_filtered_df = resample_m1_datapoints(filtered_by_date_dataframe)
+
+print('Aggregated', aggregated_filtered_df)
+
 
 # Make a copy of the original DataFrame for Simulation block
-filtered_by_date_dataframe_original = filtered_by_date_dataframe.copy()
+filtered_by_date_dataframe_original = filtered_by_date_dataframe.copy()     # DF MUST BE INDEX RESET
 print('original', filtered_by_date_dataframe_original)
 
 
@@ -117,7 +146,7 @@ print('************************************ TRADES SIMULATION ******************
 #  ----------------------------------------------------------------------------------------------
 
 
-filtered_by_date_dataframe.set_index('DateTime', inplace=True)
+print('set_index', filtered_by_date_dataframe)      # DF MUST BE SET TO DATETIME
 filtered_by_date_dataframe = filtered_by_date_dataframe.loc[:, ['Open', 'High', 'Low', 'Close']]
 
 
@@ -384,6 +413,7 @@ def trades_simulation(
 
     #   Convert Date column to Datetime object
     filtered_df_original['Date'] = pd.to_datetime(filtered_df_original['Date'])
+    filtered_df_original.reset_index(inplace=True)
     if start_simulation:
         trades_counter = 0
         trade_result_both = []

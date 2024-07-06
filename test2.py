@@ -45,4 +45,4 @@ df_h1 = filtered_by_date_dataframe.resample('H').agg({
     'Close': 'last'
 })
 
-print(df_h1)
+print(df_h1, df_h1.info())
