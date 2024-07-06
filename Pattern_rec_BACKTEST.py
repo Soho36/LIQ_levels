@@ -21,7 +21,7 @@ file_path = 'Bars/MESU24_H1_w.csv'
 # **************************************** SETTINGS **************************************
 
 start_date = '2024-06-17'       # Choose the start date to begin from
-end_date = '2024-07-03'         # Choose the end date
+end_date = '2024-06-19'         # Choose the end date
 
 # SIMULATION
 start_simulation = True
@@ -68,12 +68,8 @@ def getting_dataframe_from_file(path):
     print()
 
     columns_to_parse = ['Date', 'Time', 'Open', 'High', 'Low', 'Close', 'Volume']
-
-    #  for MT4 files set dayfirst=False
     csv_df = pd.read_csv(
         path,
-        parse_dates=[0],
-        dayfirst=False,
         usecols=columns_to_parse
     )
 
@@ -86,21 +82,15 @@ dataframe_from_csv = getting_dataframe_from_file(file_path)
 
 def date_range_func(df_csv, start, end):
 
-    date_range = pd.date_range(
-        start=start,
-        end=end,
-        freq='D'
-    )
-
-    df = df_csv
-
+    # Get the TICKER from the name of the file
     file_name = os.path.basename(file_path)
-    ticker = os.path.splitext(file_name)[0]     # Get the TICKER from the name of the file
+    ticker = os.path.splitext(file_name)[0]
 
-    date_column = df['Date']        # Select the 'Date' column from the DataFrame
-    dates_in_range = date_column.isin(date_range)   # checks which dates from date_column fall within the generated
-    # date range, resulting in a boolean mask
-    df_filtered_by_date = df[dates_in_range]
+    # Combine 'Date' and 'Time' into 'DateTime' and convert to datetime
+    df_csv['DateTime'] = pd.to_datetime(df_csv['Date'] + ' ' + df_csv['Time'])
+
+    # Filter by date
+    df_filtered_by_date = df_csv[(df_csv['DateTime'] >= start) & (df_csv['DateTime'] <= end)]
 
     if df_filtered_by_date.empty:
         print('NB! Dataframe is empty, check the date range!')
@@ -112,8 +102,9 @@ def date_range_func(df_csv, start, end):
 
 ticker_name, filtered_by_date_dataframe = date_range_func(dataframe_from_csv, start_date, end_date)
 
-# Make a copy of the original DataFrame
+# Make a copy of the original DataFrame for Simulation block
 filtered_by_date_dataframe_original = filtered_by_date_dataframe.copy()
+print('original', filtered_by_date_dataframe_original)
 
 
 print()
@@ -124,15 +115,9 @@ print('************************************ TRADES SIMULATION ******************
 #  ----------------------------------------------------------------------------------------------
 #  SEARCH FOR PRICE LEVELS
 #  ----------------------------------------------------------------------------------------------
-"""
-Create Datetime (format) column merging Date and Time columns.
-Set index to Datetime column.
-"""
-filtered_by_date_dataframe = (
-    filtered_by_date_dataframe.assign(
-        Datetime=(filtered_by_date_dataframe['Date'] + pd.to_timedelta(filtered_by_date_dataframe['Time'])))
-)
-filtered_by_date_dataframe.set_index('Datetime', inplace=True)
+
+
+filtered_by_date_dataframe.set_index('DateTime', inplace=True)
 filtered_by_date_dataframe = filtered_by_date_dataframe.loc[:, ['Open', 'High', 'Low', 'Close']]
 
 
@@ -313,7 +298,7 @@ def fill_column_with_first_non_null_value(df, column_idx):
 for column_index in range(1, len(column_counters_outside) + 1):
     fill_column_with_first_non_null_value(filtered_by_date_dataframe, column_index)
 
-filtered_by_date_dataframe.set_index('Datetime', inplace=True)
+filtered_by_date_dataframe.set_index('DateTime', inplace=True)
 print('Dataframe with level columns: \n', filtered_by_date_dataframe)
 
 # *******************************************************************************************************************
@@ -379,7 +364,7 @@ if find_levels and use_level_rejection:
 
     print('Rejection_signals_series: \n', rejection_signals_series_outside)
     # print('Level_discovery_signals: \n', level_discovery_signals_series_out)
-    filtered_by_date_dataframe.set_index('Datetime', inplace=True)  # Set index back to Datetime
+    filtered_by_date_dataframe.set_index('DateTime', inplace=True)  # Set index back to Datetime
 else:
     rejection_signals_series_outside = None  # When function switched off
     rejection_signals_series_for_chart_outside = None
@@ -396,6 +381,9 @@ def trades_simulation(
         sl_offset_multiplier
 ):
     # print('!!!!', filtered_df_original)
+
+    #   Convert Date column to Datetime object
+    filtered_df_original['Date'] = pd.to_datetime(filtered_df_original['Date'])
     if start_simulation:
         trades_counter = 0
         trade_result_both = []
