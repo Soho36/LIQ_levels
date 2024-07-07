@@ -28,12 +28,12 @@ start_simulation = True
 
 
 # ENTRY CONDITIONS
-new_trades_threshold = 5
+new_trades_threshold = 5            # Reject new trades placement within this period (min)
 use_candle_close_as_entry = False   # Must be False if next condition is True
 use_level_price_as_entry = True     # Must be False if previous condition is True
-confirmation_close = False      # Candle close above/below level as confirmation
-longs_allowed = True            # Allow or disallow trade direction
-shorts_allowed = True          # Allow or disallow trade direction
+confirmation_close = False          # Candle close above/below level as confirmation
+longs_allowed = True                # Allow or disallow trade direction
+shorts_allowed = True               # Allow or disallow trade direction
 
 #
 use_level_rejection = True
