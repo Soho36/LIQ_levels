@@ -67,7 +67,7 @@ def getting_dataframe_from_file(path):
 
     print()
 
-    columns_to_parse = ['Date', 'Time', 'Open', 'High', 'Low', 'Close', 'Volume']
+    columns_to_parse = ['Date', 'Time', 'Open', 'High', 'Low', 'Close']
     csv_df = pd.read_csv(
         path,
         usecols=columns_to_parse
@@ -78,6 +78,7 @@ def getting_dataframe_from_file(path):
 
 
 dataframe_from_csv = getting_dataframe_from_file(file_path)
+print('Source dataframe: \n', dataframe_from_csv)
 
 
 def date_range_func(df_csv, start, end):
@@ -91,7 +92,6 @@ def date_range_func(df_csv, start, end):
 
     # Filter by date
     df_filtered_by_date = df_csv[(df_csv['DateTime'] >= start) & (df_csv['DateTime'] <= end)]
-    # print('!!!!!!!!!!!!', df_filtered_by_date)
 
     if df_filtered_by_date.empty:
         print('NB! Dataframe is empty, check the date range!')
@@ -110,11 +110,11 @@ def date_range_func(df_csv, start, end):
     end_date
 )
 
-print('!!!!!!!!!!!!', filtered_by_date_dataframe)
+print('Filtered dataframe: \n', filtered_by_date_dataframe)
 
 
 def resample_m1_datapoints(df_filtered_by_date):
-    df_filtered_by_date.set_index('DateTime', inplace=True)
+    df_filtered_by_date.set_index('DateTime', inplace=True)     # Set index to DateTime for .agg function
     df_h1 = df_filtered_by_date.resample('H').agg({
         'Open': 'first',
         'High': 'max',
@@ -122,22 +122,20 @@ def resample_m1_datapoints(df_filtered_by_date):
         'Close': 'last'
     })
     df_h1_cleaned = df_h1.dropna()              # Remove NaN rows from the Dataframe
-    df_h1_cleaned.reset_index(inplace=True)     # Reset index
     return df_h1_cleaned
 
 
 aggregated_filtered_df = resample_m1_datapoints(filtered_by_date_dataframe)
 
-print('Aggregated', aggregated_filtered_df)
+print('Aggregated dataframe: \n', aggregated_filtered_df)
 
 
-# Make a copy of the original DataFrame for Simulation block
-filtered_by_date_dataframe_original = filtered_by_date_dataframe.copy()     # DF MUST BE INDEX RESET
-print('original', filtered_by_date_dataframe_original)
+filtered_by_date_dataframe_original = filtered_by_date_dataframe.copy()     # Passed to Simulation
+print('Copy of original: \n', filtered_by_date_dataframe_original)
 
 
 print()
-print(f'Dataframe filtered by date:\n {filtered_by_date_dataframe}')
+# print(f'Dataframe filtered by date:\n {filtered_by_date_dataframe}')
 print()
 print('************************************ TRADES SIMULATION ************************************')
 
@@ -146,7 +144,6 @@ print('************************************ TRADES SIMULATION ******************
 #  ----------------------------------------------------------------------------------------------
 
 
-print('set_index', filtered_by_date_dataframe)      # DF MUST BE SET TO DATETIME
 filtered_by_date_dataframe = filtered_by_date_dataframe.loc[:, ['Open', 'High', 'Low', 'Close']]
 
 
@@ -851,14 +848,14 @@ def trades_analysis(
         print()
         # Calculating mathematical expectation
 
-        try:
-            prob_per_trade = 1 / trades_count
-        except ZeroDivisionError:
-            print('No closed trades')
-
-        math_expectation = round(sum([outcome * prob_per_trade for outcome in trade_result]), 2)
-
-        print(f'Expectation: ${math_expectation}')
+        # try:
+        #     prob_per_trade = 1 / trades_count
+        # except ZeroDivisionError:
+        #     print('No closed trades')
+        #
+        # math_expectation = round(sum([outcome * prob_per_trade for outcome in trade_result]), 2)
+        #
+        # print(f'Expectation: ${math_expectation}')
         print()
 
         spread_loss = -1 * ((loss_trades_count * (spread * 2)) + (profitable_trades_count * spread))
