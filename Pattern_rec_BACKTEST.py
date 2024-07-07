@@ -5,13 +5,13 @@ import numpy as np
 import statistics
 import os
 
-# file_path = 'Bars/MESU24_M1_w.csv'
+file_path = 'Bars/MESU24_M1_w.csv'
 # file_path = 'Bars/MESU24_M2_w.csv'
 # file_path = 'Bars/MESU24_M3_w.csv'
 # file_path = 'Bars/MESU24_M5_w.csv'
 # file_path = 'Bars/MESU24_M15_w.csv'
 # file_path = 'Bars/MESU24_M30_w.csv'
-file_path = 'Bars/MESU24_H1_w.csv'
+# file_path = 'Bars/MESU24_H1_w.csv'
 # file_path = 'Bars/MESU24_H2_w.csv'
 # file_path = 'Bars/MESU24_H3_w.csv'
 # file_path = 'Bars/MESU24_H4_w.csv'
@@ -20,8 +20,8 @@ file_path = 'Bars/MESU24_H1_w.csv'
 
 # **************************************** SETTINGS **************************************
 
-start_date = '2024-06-17'       # Choose the start date to begin from
-end_date = '2024-06-19'         # Choose the end date
+start_date = '2024-06-21'       # Choose the start date to begin from
+end_date = '2024-06-21'         # Choose the end date
 
 # SIMULATION
 start_simulation = True
@@ -154,8 +154,8 @@ filtered_by_date_dataframe = filtered_by_date_dataframe.loc[:, ['Open', 'High', 
 
 
 if find_levels:
-    def levels_discovery(filtered_df):
-        print('levels_discovery DF: \n', filtered_df)
+    def levels_discovery(agg_filtered_df):
+        print('levels_discovery DF: \n', agg_filtered_df)
 
         levels_startpoints_tuples = []
         levels_endpoints_tuples = []
@@ -169,20 +169,20 @@ if find_levels:
         sr_levels = []
 
         # Support levels
-        for i in range(2, len(filtered_df) - 2):
-            if (filtered_df['Low'][i] < filtered_df['Low'][i - 1]) and \
-               (filtered_df['Low'][i] < filtered_df['Low'][i + 1]) and \
-               (filtered_df['Low'][i + 1] < filtered_df['Low'][i + 2]) and \
-               (filtered_df['Low'][i - 1] < filtered_df['Low'][i - 2]):
-                datetime_1 = filtered_df.index[i]
-                price_level_1 = filtered_df['Low'][i]
-                datetime_2 = filtered_df.index[-1]
-                price_level_2 = filtered_df['Low'][i]
+        for i in range(2, len(agg_filtered_df) - 2):
+            if (agg_filtered_df['Low'][i] < agg_filtered_df['Low'][i - 1]) and \
+               (agg_filtered_df['Low'][i] < agg_filtered_df['Low'][i + 1]) and \
+               (agg_filtered_df['Low'][i + 1] < agg_filtered_df['Low'][i + 2]) and \
+               (agg_filtered_df['Low'][i - 1] < agg_filtered_df['Low'][i - 2]):
+                datetime_1 = agg_filtered_df.index[i]
+                price_level_1 = agg_filtered_df['Low'][i]
+                datetime_2 = agg_filtered_df.index[-1]
+                price_level_2 = agg_filtered_df['Low'][i]
 
                 if not is_near_level(
                         price_level_1,
                         levels_startpoints_tuples,
-                        filtered_df
+                        agg_filtered_df
                 ):
                     levels_startpoints_tuples.append((datetime_1, price_level_1))
                     levels_endpoints_tuples.append((datetime_2, price_level_2))
@@ -194,19 +194,19 @@ if find_levels:
                     level_discovery_signal.append(None)
 
             # Resistance levels
-            elif ((filtered_df['High'][i] > filtered_df['High'][i - 1]) and
-                  (filtered_df['High'][i] > filtered_df['High'][i + 1]) and
-                  (filtered_df['High'][i + 1] > filtered_df['High'][i + 2]) and
-                  (filtered_df['High'][i - 1] > filtered_df['High'][i - 2])):
-                datetime_1 = filtered_df.index[i]
-                price_level_1 = filtered_df['High'][i]
-                datetime_2 = filtered_df.index[-1]
-                price_level_2 = filtered_df['High'][i]
+            elif ((agg_filtered_df['High'][i] > agg_filtered_df['High'][i - 1]) and
+                  (agg_filtered_df['High'][i] > agg_filtered_df['High'][i + 1]) and
+                  (agg_filtered_df['High'][i + 1] > agg_filtered_df['High'][i + 2]) and
+                  (agg_filtered_df['High'][i - 1] > agg_filtered_df['High'][i - 2])):
+                datetime_1 = agg_filtered_df.index[i]
+                price_level_1 = agg_filtered_df['High'][i]
+                datetime_2 = agg_filtered_df.index[-1]
+                price_level_2 = agg_filtered_df['High'][i]
 
                 if not is_near_level(
                         price_level_1,
                         levels_startpoints_tuples,
-                        filtered_df
+                        agg_filtered_df
                 ):
                     levels_startpoints_tuples.append((datetime_1, price_level_1))
                     levels_endpoints_tuples.append((datetime_2, price_level_2))
@@ -339,7 +339,7 @@ def fill_column_with_first_non_null_value(df, column_idx):
 for column_index in range(1, len(column_counters_outside) + 1):
     fill_column_with_first_non_null_value(filtered_by_date_dataframe, column_index)
 
-filtered_by_date_dataframe.set_index('DateTime', inplace=True)
+filtered_by_date_dataframe.set_index('DateTime', inplace=True)  # Contains levels columns
 print('Dataframe with level columns: \n', filtered_by_date_dataframe)
 
 # *******************************************************************************************************************
@@ -351,6 +351,7 @@ print('Dataframe with level columns: \n', filtered_by_date_dataframe)
 if find_levels and use_level_rejection:
 
     def level_rejection_signals(df):
+        # print('level_rejection_signals DF \n', df)
 
         rejection_signals_with_prices = []
         rejection_signals_for_chart = []
@@ -399,7 +400,8 @@ if find_levels and use_level_rejection:
         return rejection_signals_series_with_prices, rejection_signals_series_for_chart
 
 
-    rejection_signals_series_outside, rejection_signals_series_for_chart_outside = (
+    (rejection_signals_series_outside,
+     rejection_signals_series_for_chart_outside) = (
         level_rejection_signals(filtered_by_date_dataframe)
     )
 
@@ -951,34 +953,33 @@ plot_line_chart_profits_losses(rounded_trades_list_to_chart_profits_losses)
 #  ----------------------------------------------
 
 
-# date_time_dates = pd.to_datetime(filtered_by_date_dataframe['Datetime'])
-# print('Date_time_dates: \n', date_time_dates)
-
-
 #  CANDLESTICK CHART
 def plot_candlestick_chart(
         df,
         level_discovery_signals_series,
         rejection_signals_series
 ):
+    print('CHART DF: \n', df)
+    print('CHART level_discovery_signals_series: \n', level_discovery_signals_series)
+    print('CHART rejection_signals_series: \n', rejection_signals_series)
 
     if show_candlestick_chart:
 
         # df.set_index('Datetime', inplace=True)
         plots_list = []
 
-        for i, s in enumerate(level_discovery_signals_series):
-            if s != 'NaN':
-                plots_list.append(
-                    mpf.make_addplot(
-                        level_discovery_signals_series,
-                        type='scatter',
-                        color='black',
-                        markersize=250,
-                        marker='*',
-                        panel=1
-                    )
-                )
+        # for i, s in enumerate(level_discovery_signals_series):
+        #     if s != 'NaN':
+        #         plots_list.append(
+        #             mpf.make_addplot(
+        #                 level_discovery_signals_series,
+        #                 type='scatter',
+        #                 color='black',
+        #                 markersize=250,
+        #                 marker='*',
+        #                 panel=1
+        #             )
+        #         )
 
         for i, s in enumerate(rejection_signals_series):
             if s != 'NaN':
