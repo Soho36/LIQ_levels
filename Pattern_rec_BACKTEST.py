@@ -5,13 +5,13 @@ import numpy as np
 import statistics
 import os
 
-file_path = 'Bars/MESU24_M1_w.csv'
+# file_path = 'Bars/MESU24_M1_w.csv'
 # file_path = 'Bars/MESU24_M2_w.csv'
 # file_path = 'Bars/MESU24_M3_w.csv'
 # file_path = 'Bars/MESU24_M5_w.csv'
 # file_path = 'Bars/MESU24_M15_w.csv'
 # file_path = 'Bars/MESU24_M30_w.csv'
-# file_path = 'Bars/MESU24_H1_w.csv'
+file_path = 'Bars/MESU24_H1_w.csv'
 # file_path = 'Bars/MESU24_H2_w.csv'
 # file_path = 'Bars/MESU24_H3_w.csv'
 # file_path = 'Bars/MESU24_H4_w.csv'
@@ -251,7 +251,16 @@ if find_levels:
         resistance_level_signal_running_out,
         level_discovery_signals_series_out,
         sr_levels_out
-    ) = levels_discovery(filtered_by_date_dataframe)
+    ) = levels_discovery(aggregated_filtered_df)
+
+    # (
+    #     levels_startpoints_to_chart,
+    #     levels_endpoints_to_chart,
+    #     support_level_signal_running_out,
+    #     resistance_level_signal_running_out,
+    #     level_discovery_signals_series_out,
+    #     sr_levels_out
+    # ) = levels_discovery(filtered_by_date_dataframe)
 
     levels_points_for_chart = [[a, b] for a, b in zip(levels_startpoints_to_chart, levels_endpoints_to_chart)]
 
