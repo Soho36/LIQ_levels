@@ -5,13 +5,13 @@ import numpy as np
 import statistics
 import os
 
-# file_path = 'Bars/MESU24_M1_w.csv'
+file_path = 'Bars/MESU24_M1_w.csv'
 # file_path = 'Bars/MESU24_M2_w.csv'
 # file_path = 'Bars/MESU24_M3_w.csv'
 # file_path = 'Bars/MESU24_M5_w.csv'
 # file_path = 'Bars/MESU24_M15_w.csv'
 # file_path = 'Bars/MESU24_M30_w.csv'
-file_path = 'Bars/MESU24_H1_w.csv'
+# file_path = 'Bars/MESU24_H1_w.csv'
 # file_path = 'Bars/MESU24_H2_w.csv'
 # file_path = 'Bars/MESU24_H3_w.csv'
 # file_path = 'Bars/MESU24_H4_w.csv'
@@ -90,6 +90,12 @@ def date_range_func(df_csv, start, end):
     # Combine 'Date' and 'Time' into 'DateTime' and convert to datetime
     df_csv['DateTime'] = pd.to_datetime(df_csv['Date'] + ' ' + df_csv['Time'])
 
+    """
+    Extend end date to include the whole day
+    filtering up to one second before midnight of the next day
+    """
+    end = pd.to_datetime(end) + pd.Timedelta(days=1) - pd.Timedelta(seconds=1)
+
     # Filter by date
     df_filtered_by_date = df_csv[(df_csv['DateTime'] >= start) & (df_csv['DateTime'] <= end)]
 
@@ -149,7 +155,7 @@ filtered_by_date_dataframe = filtered_by_date_dataframe.loc[:, ['Open', 'High', 
 
 if find_levels:
     def levels_discovery(filtered_df):
-        # print('!!!!!', filtered_df)
+        print('levels_discovery DF: \n', filtered_df)
 
         levels_startpoints_tuples = []
         levels_endpoints_tuples = []
