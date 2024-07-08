@@ -245,15 +245,6 @@ if find_levels:
         return any(abs(value - level) < average for _, level in levels)
 
 
-    # (
-    #     levels_startpoints_to_chart,
-    #     levels_endpoints_to_chart,
-    #     support_level_signal_running_out,
-    #     resistance_level_signal_running_out,
-    #     level_discovery_signals_series_out,
-    #     sr_levels_out
-    # ) = levels_discovery(aggregated_filtered_df)
-
     (
         levels_startpoints_to_chart,
         levels_endpoints_to_chart,
@@ -261,7 +252,7 @@ if find_levels:
         resistance_level_signal_running_out,
         level_discovery_signals_series_out,
         sr_levels_out
-    ) = levels_discovery(filtered_by_date_dataframe)
+    ) = levels_discovery(aggregated_filtered_df)
 
     levels_points_for_chart = [[a, b] for a, b in zip(levels_startpoints_to_chart, levels_endpoints_to_chart)]
 
