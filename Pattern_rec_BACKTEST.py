@@ -5,13 +5,13 @@ import numpy as np
 import statistics
 import os
 
-# file_path = 'Bars/MESU24_M1_w.csv'
+file_path = 'Bars/MESU24_M1_w.csv'
 # file_path = 'Bars/MESU24_M2_w.csv'
 # file_path = 'Bars/MESU24_M3_w.csv'
 # file_path = 'Bars/MESU24_M5_w.csv'
 # file_path = 'Bars/MESU24_M15_w.csv'
 # file_path = 'Bars/MESU24_M30_w.csv'
-file_path = 'Bars/MESU24_H1_w.csv'
+# file_path = 'Bars/MESU24_H1_w.csv'
 # file_path = 'Bars/MESU24_H2_w.csv'
 # file_path = 'Bars/MESU24_H3_w.csv'
 # file_path = 'Bars/MESU24_H4_w.csv'
@@ -28,11 +28,12 @@ start_simulation = True
 
 
 # ENTRY CONDITIONS
+new_trades_threshold = 5            # Reject new trades placement within this period (min)
 use_candle_close_as_entry = False   # Must be False if next condition is True
 use_level_price_as_entry = True     # Must be False if previous condition is True
-confirmation_close = False      # Candle close above/below level as confirmation
-longs_allowed = True            # Allow or disallow trade direction
-shorts_allowed = True          # Allow or disallow trade direction
+confirmation_close = False          # Candle close above/below level as confirmation
+longs_allowed = True                # Allow or disallow trade direction
+shorts_allowed = True               # Allow or disallow trade direction
 
 #
 use_level_rejection = True
@@ -44,7 +45,7 @@ find_levels = True
 
 spread = 0
 risk_reward_ratio = 2   # Chose risk/reward ratio (aiming to win compared to lose)
-stop_loss_as_candle_min_max = True  # Must be True if next condition is false
+stop_loss_as_candle_min_max = False  # Must be True if next condition is false
 stop_loss_offset = 1                 # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
 
 stop_loss_price_as_dollar_amount = True     # STOP as distance from entry price (previous must be false)
@@ -154,8 +155,8 @@ filtered_by_date_dataframe = filtered_by_date_dataframe.loc[:, ['Open', 'High', 
 
 
 if find_levels:
-    def levels_discovery(filtered_df):
-        print('levels_discovery DF: \n', filtered_df)
+    def levels_discovery(agg_filtered_df):
+        print('levels_discovery DF: \n', agg_filtered_df)
 
         levels_startpoints_tuples = []
         levels_endpoints_tuples = []
@@ -169,20 +170,20 @@ if find_levels:
         sr_levels = []
 
         # Support levels
-        for i in range(2, len(filtered_df) - 2):
-            if (filtered_df['Low'][i] < filtered_df['Low'][i - 1]) and \
-               (filtered_df['Low'][i] < filtered_df['Low'][i + 1]) and \
-               (filtered_df['Low'][i + 1] < filtered_df['Low'][i + 2]) and \
-               (filtered_df['Low'][i - 1] < filtered_df['Low'][i - 2]):
-                datetime_1 = filtered_df.index[i]
-                price_level_1 = filtered_df['Low'][i]
-                datetime_2 = filtered_df.index[-1]
-                price_level_2 = filtered_df['Low'][i]
+        for i in range(2, len(agg_filtered_df) - 2):
+            if (agg_filtered_df['Low'][i] < agg_filtered_df['Low'][i - 1]) and \
+               (agg_filtered_df['Low'][i] < agg_filtered_df['Low'][i + 1]) and \
+               (agg_filtered_df['Low'][i + 1] < agg_filtered_df['Low'][i + 2]) and \
+               (agg_filtered_df['Low'][i - 1] < agg_filtered_df['Low'][i - 2]):
+                datetime_1 = agg_filtered_df.index[i]
+                price_level_1 = agg_filtered_df['Low'][i]
+                datetime_2 = agg_filtered_df.index[-1]
+                price_level_2 = agg_filtered_df['Low'][i]
 
                 if not is_near_level(
                         price_level_1,
                         levels_startpoints_tuples,
-                        filtered_df
+                        agg_filtered_df
                 ):
                     levels_startpoints_tuples.append((datetime_1, price_level_1))
                     levels_endpoints_tuples.append((datetime_2, price_level_2))
@@ -194,19 +195,19 @@ if find_levels:
                     level_discovery_signal.append(None)
 
             # Resistance levels
-            elif ((filtered_df['High'][i] > filtered_df['High'][i - 1]) and
-                  (filtered_df['High'][i] > filtered_df['High'][i + 1]) and
-                  (filtered_df['High'][i + 1] > filtered_df['High'][i + 2]) and
-                  (filtered_df['High'][i - 1] > filtered_df['High'][i - 2])):
-                datetime_1 = filtered_df.index[i]
-                price_level_1 = filtered_df['High'][i]
-                datetime_2 = filtered_df.index[-1]
-                price_level_2 = filtered_df['High'][i]
+            elif ((agg_filtered_df['High'][i] > agg_filtered_df['High'][i - 1]) and
+                  (agg_filtered_df['High'][i] > agg_filtered_df['High'][i + 1]) and
+                  (agg_filtered_df['High'][i + 1] > agg_filtered_df['High'][i + 2]) and
+                  (agg_filtered_df['High'][i - 1] > agg_filtered_df['High'][i - 2])):
+                datetime_1 = agg_filtered_df.index[i]
+                price_level_1 = agg_filtered_df['High'][i]
+                datetime_2 = agg_filtered_df.index[-1]
+                price_level_2 = agg_filtered_df['High'][i]
 
                 if not is_near_level(
                         price_level_1,
                         levels_startpoints_tuples,
-                        filtered_df
+                        agg_filtered_df
                 ):
                     levels_startpoints_tuples.append((datetime_1, price_level_1))
                     levels_endpoints_tuples.append((datetime_2, price_level_2))
@@ -339,7 +340,7 @@ def fill_column_with_first_non_null_value(df, column_idx):
 for column_index in range(1, len(column_counters_outside) + 1):
     fill_column_with_first_non_null_value(filtered_by_date_dataframe, column_index)
 
-filtered_by_date_dataframe.set_index('DateTime', inplace=True)
+filtered_by_date_dataframe.set_index('DateTime', inplace=True)  # Contains levels columns
 print('Dataframe with level columns: \n', filtered_by_date_dataframe)
 
 # *******************************************************************************************************************
@@ -351,6 +352,7 @@ print('Dataframe with level columns: \n', filtered_by_date_dataframe)
 if find_levels and use_level_rejection:
 
     def level_rejection_signals(df):
+        # print('level_rejection_signals DF \n', df)
 
         rejection_signals_with_prices = []
         rejection_signals_for_chart = []
@@ -399,7 +401,8 @@ if find_levels and use_level_rejection:
         return rejection_signals_series_with_prices, rejection_signals_series_for_chart
 
 
-    rejection_signals_series_outside, rejection_signals_series_for_chart_outside = (
+    (rejection_signals_series_outside,
+     rejection_signals_series_for_chart_outside) = (
         level_rejection_signals(filtered_by_date_dataframe)
     )
 
@@ -436,11 +439,19 @@ def trades_simulation(
         profit_loss_long_short = []     # List of profits and losses by longs and shorts
 
         if use_level_rejection:
+
             signal_series = rejection_signals_series_outside
             for signal_index, (signal_value, price_level) in enumerate(signal_series):
 
                 # LONG TRADES LOGIC
                 if signal_value == 100 and longs_allowed:
+                    # Check the previous 5 signals to avoid open new trades too close to each other
+                    previous_signals = signal_series[max(0, signal_index - new_trades_threshold):signal_index]
+
+                    if any(prev_signal in (100, -100) for prev_signal, _ in previous_signals):
+                        # If there is any signal with value 100 or -100 in the previous 5 signals, skip this signal
+                        print(f"Skipping signal at index {signal_index} due to new trades threshold")
+                        continue
 
                     trades_counter += 1
                     trade_direction.append('Long')
@@ -485,9 +496,8 @@ def trades_simulation(
                     print(f'Entry price: {entry_price}')
                     print(f'Take: {round(take_profit_price, 3)} ({risk_reward_simulation}RR)')
                     print(f'Stop: {stop_loss_price}')
+
                     print()
-                    # print(f'Signal candle OHLC | O {signal_candle_open}, H {signal_candle_high}, '
-                    #       f'L {signal_candle_low}, C {entry_price}')
 
                     for j in range(signal_index, len(filtered_df_original)):
                         current_candle_date = (filtered_df_original.iloc[j]['Date']).strftime('%Y-%m-%d')
@@ -503,54 +513,22 @@ def trades_simulation(
                               'L', current_candle_low,
                               'C', current_candle_close)
 
-                        if current_candle_open > stop_loss_price and current_candle_low > stop_loss_price:
+                        if current_candle_low <= stop_loss_price and current_candle_high >= take_profit_price:
+                            trade_result_both.append(1)
+                            print('BOTH')
 
-                            if current_candle_low <= stop_loss_price and current_candle_high >= take_profit_price:
-                                trade_result_both.append(1)
-
-                            elif current_candle_low <= stop_loss_price:
-                                trade_result.append((stop_loss_price - spread) -
-                                                    (entry_price + spread))
-                                trade_result_longs.append((stop_loss_price - spread) -
-                                                          (entry_price + spread))
-                                profit_loss_long_short.append('LongLoss')
-                                print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date} {current_candle_time}')
-                                print()
-                                print(f'Trade Close Price: {round(stop_loss_price, 3)}')
-                                print(
-                                  f'P/L: ${round((stop_loss_price - spread) - (entry_price + spread), 3)}'
-                                )
-                                print(
-                                    '---------------------------------------------'
-                                    '---------------------------------------------'
-                                )
-                                break
-
-                            elif current_candle_high >= take_profit_price:
-                                trade_result.append(take_profit_price - (entry_price + spread))
-                                trade_result_longs.append(take_profit_price - (entry_price + spread))
-                                profit_loss_long_short.append('LongProfit')
-                                print(f'○ ○ ○ Take profit hit ○ ○ ○ at {current_candle_date} {current_candle_time}')
-                                print()
-                                print(f'Trade Trade Close Price: {round(take_profit_price, 3)}')
-                                print(f'P/L: ${round(take_profit_price - (entry_price + spread), 3)}')
-                                print(
-                                    '---------------------------------------------'
-                                    '---------------------------------------------'
-                                )
-                                break
-
-                            else:
-                                pass
-                        else:       # IN CASE OF GAP DOWN, WHEN NEXT CANDLE OPENS LOWER THAN PREV. CANDLE STOP
-                            trade_result.append((stop_loss_price - spread) - (entry_price + spread))
-                            trade_result_longs.append((stop_loss_price - spread) - (entry_price + spread))
+                        if current_candle_low <= stop_loss_price:
+                            trade_result.append((stop_loss_price - spread) -
+                                                (entry_price + spread))
+                            trade_result_longs.append((stop_loss_price - spread) -
+                                                      (entry_price + spread))
                             profit_loss_long_short.append('LongLoss')
                             print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date} {current_candle_time}')
                             print()
                             print(f'Trade Close Price: {round(stop_loss_price, 3)}')
+
                             print(
-                                f'P/L: ${round((stop_loss_price - spread) - (entry_price + spread), 3)}'
+                              f'P/L: ${round((stop_loss_price - spread) - (entry_price + spread), 3)}'
                             )
                             print(
                                 '---------------------------------------------'
@@ -558,8 +536,34 @@ def trades_simulation(
                             )
                             break
 
+                        elif current_candle_high >= take_profit_price:
+                            trade_result.append(take_profit_price - (entry_price + spread))
+                            trade_result_longs.append(take_profit_price - (entry_price + spread))
+                            profit_loss_long_short.append('LongProfit')
+                            print(f'○ ○ ○ Take profit hit ○ ○ ○ at {current_candle_date} {current_candle_time}')
+                            print()
+                            print(f'Trade Trade Close Price: {round(take_profit_price, 3)}')
+
+                            print(f'P/L: ${round(take_profit_price - (entry_price + spread), 3)}')
+                            print(
+                                '---------------------------------------------'
+                                '---------------------------------------------'
+                            )
+                            break
+
+                        else:
+                            pass
+
                 # SHORT TRADES LOGIC
                 elif signal_value == -100 and shorts_allowed:
+                    # Check the previous 5 signals to avoid open new trades too close to each other
+                    previous_signals = signal_series[max(0, signal_index - new_trades_threshold):signal_index]
+
+                    if any(prev_signal in (100, -100) for prev_signal, _ in previous_signals):
+                        # If there is any signal with value 100 or -100 in the previous 5 signals, skip this signal
+                        print(f"Skipping signal at index {signal_index} due to new trades threshold")
+                        continue
+
                     trades_counter += 1
                     trade_direction.append('Short')
                     signal_candle_date = (filtered_df_original.iloc[signal_index]['Date']).strftime('%Y-%m-%d')
@@ -571,6 +575,7 @@ def trades_simulation(
 
                     elif use_candle_close_as_entry:
                         entry_price = round(filtered_df_original.iloc[signal_index]['Close'], 3)   # ENTRY
+
                     else:
                         entry_price = None
                         print("Choose entry type".upper())
@@ -603,9 +608,8 @@ def trades_simulation(
                     print(f'Entry price: {entry_price}')
                     print(f'Stop: {stop_loss_price}')
                     print(f'Take: {round(take_profit_price, 3)} ({risk_reward_simulation}RR)')
+
                     print()
-                    # print(f'Current (signal) candle OHLC | O {signal_candle_open}, H {signal_candle_high}, '
-                    #       f'L {signal_candle_low}, C {entry_price}')
 
                     for j in range(signal_index, len(filtered_df_original)):
                         current_candle_date = (filtered_df_original.iloc[j]['Date']).strftime('%Y-%m-%d')
@@ -621,62 +625,47 @@ def trades_simulation(
                               'L', current_candle_low,
                               'C', current_candle_close)
 
-                        if current_candle_open < stop_loss_price and current_candle_high < stop_loss_price:
+                        if current_candle_high >= stop_loss_price and current_candle_low <= take_profit_price:
+                            trade_result_both.append(1)
+                            print('BOTH')
 
-                            if current_candle_high >= stop_loss_price and current_candle_low <= take_profit_price:
-                                trade_result_both.append(1)
-
-                            elif current_candle_high >= stop_loss_price:
-                                trade_result.append((entry_price - spread) -
-                                                    (stop_loss_price + spread))
-                                trade_result_shorts.append((entry_price - spread) -
-                                                           (stop_loss_price + spread))
-                                profit_loss_long_short.append('ShortLoss')
-                                print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date} {current_candle_time}')
-                                print()
-                                print(f'Trade Close Price: {round(stop_loss_price, 3)}')
-                                print(
-                                  f'P/L: ${round((entry_price - spread) - (stop_loss_price + spread), 3)}'
-                                )
-                                print(
-                                    '---------------------------------------------'
-                                    '---------------------------------------------'
-                                )
-                                break
-
-                            elif current_candle_low <= take_profit_price:
-                                trade_result.append((entry_price - spread) - take_profit_price)
-                                trade_result_shorts.append((entry_price - spread) - take_profit_price)
-                                profit_loss_long_short.append('ShortProfit')
-                                print(f'○ ○ ○ Take profit hit ○ ○ ○ at {current_candle_date} {current_candle_time}')
-                                print()
-                                print(f'Trade Close Price: {round(take_profit_price, 3)}')
-                                print(f'P/L: ${round((entry_price - spread) - take_profit_price, 3)}')
-                                print(
-                                    '---------------------------------------------'
-                                    '---------------------------------------------'
-                                )
-
-                                break
-
-                            else:
-                                pass
-                        else:   # IN CASE OF GAP UP, WHEN NEXT CANDLE OPENS HIGHER THAN PREV. CANDLE STOP
-                            trade_result.append((entry_price - spread) - (stop_loss_price + spread))
+                        if current_candle_high >= stop_loss_price:
+                            trade_result.append((entry_price - spread) -
+                                                (stop_loss_price + spread))
                             trade_result_shorts.append((entry_price - spread) -
                                                        (stop_loss_price + spread))
                             profit_loss_long_short.append('ShortLoss')
                             print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date} {current_candle_time}')
                             print()
                             print(f'Trade Close Price: {round(stop_loss_price, 3)}')
+
                             print(
-                                f'P/L: ${round((entry_price - spread) - (stop_loss_price + spread), 3)}'
+                              f'P/L: ${round((entry_price - spread) - (stop_loss_price + spread), 3)}'
                             )
                             print(
                                 '---------------------------------------------'
                                 '---------------------------------------------'
                             )
                             break
+
+                        elif current_candle_low <= take_profit_price:
+                            trade_result.append((entry_price - spread) - take_profit_price)
+                            trade_result_shorts.append((entry_price - spread) - take_profit_price)
+                            profit_loss_long_short.append('ShortProfit')
+                            print(f'○ ○ ○ Take profit hit ○ ○ ○ at {current_candle_date} {current_candle_time}')
+                            print()
+                            print(f'Trade Close Price: {round(take_profit_price, 3)}')
+
+                            print(f'P/L: ${round((entry_price - spread) - take_profit_price, 3)}')
+                            print(
+                                '---------------------------------------------'
+                                '---------------------------------------------'
+                            )
+
+                            break
+
+                        else:
+                            pass
 
             return (
                 trade_result_both,
@@ -777,7 +766,7 @@ def trades_analysis(
         rounded_results_as_balance_change = [round(x, 3) for x in results_as_balance_change]
         trades_count = len(outcomes_string)  # Total trades number
         profitable_trades_count = outcomes_string.count('profit')    # Profitable trades number
-        loss_trades_count = outcomes_string.count('loss')    # Losing trades number
+        losing_trades_count = outcomes_string.count('loss')    # Losing trades number
 
         win_percent = 0
         try:
@@ -787,7 +776,7 @@ def trades_analysis(
 
         loss_percent = 0
         try:
-            loss_percent = (loss_trades_count * 100) / trades_count     # Losing trades %
+            loss_percent = (losing_trades_count * 100) / trades_count     # Losing trades %
         except ZeroDivisionError:
             pass
         candles_number_analyzed = len(filtered_by_date_dataframe)      # Total candles in analysis
@@ -830,7 +819,7 @@ def trades_analysis(
         print()
         print(f'Both trades: {sum(trade_result_both)}')
         print(f'Profitable trades: {profitable_trades_count} ({round(win_percent, 2)}%)'.title())
-        print(f'Losing trades: {loss_trades_count} ({round(loss_percent, 2)}%)'.title())
+        print(f'Losing trades: {losing_trades_count} ({round(loss_percent, 2)}%)'.title())
         print()
         print(f'Long trades: {count_longs} ({count_profitable_longs_percent}% profitable out of all longs) '
               f'P/L: ${round(sum(trade_result_longs), 2)}'.title())
@@ -873,8 +862,8 @@ def trades_analysis(
         # print(f'Expectation: ${math_expectation}')
         print()
 
-        spread_loss = -1 * ((loss_trades_count * (spread * 2)) + (profitable_trades_count * spread))
-        pending_order_spread_loss = -1 * (loss_trades_count * spread)
+        spread_loss = -1 * ((losing_trades_count * (spread * 2)) + (profitable_trades_count * spread))
+        pending_order_spread_loss = -1 * (losing_trades_count * spread)
 
         print(f'Spread loss: ${spread_loss}'.title())
         print(f'If Pending Order spread loss : ${pending_order_spread_loss}'.title())
@@ -951,34 +940,33 @@ plot_line_chart_profits_losses(rounded_trades_list_to_chart_profits_losses)
 #  ----------------------------------------------
 
 
-# date_time_dates = pd.to_datetime(filtered_by_date_dataframe['Datetime'])
-# print('Date_time_dates: \n', date_time_dates)
-
-
 #  CANDLESTICK CHART
 def plot_candlestick_chart(
         df,
         level_discovery_signals_series,
         rejection_signals_series
 ):
+    print('CHART DF: \n', df)
+    print('CHART level_discovery_signals_series: \n', level_discovery_signals_series)
+    print('CHART rejection_signals_series: \n', rejection_signals_series)
 
     if show_candlestick_chart:
 
         # df.set_index('Datetime', inplace=True)
         plots_list = []
 
-        for i, s in enumerate(level_discovery_signals_series):
-            if s != 'NaN':
-                plots_list.append(
-                    mpf.make_addplot(
-                        level_discovery_signals_series,
-                        type='scatter',
-                        color='black',
-                        markersize=250,
-                        marker='*',
-                        panel=1
-                    )
-                )
+        # for i, s in enumerate(level_discovery_signals_series):
+        #     if s != 'NaN':
+        #         plots_list.append(
+        #             mpf.make_addplot(
+        #                 level_discovery_signals_series,
+        #                 type='scatter',
+        #                 color='black',
+        #                 markersize=250,
+        #                 marker='*',
+        #                 panel=1
+        #             )
+        #         )
 
         for i, s in enumerate(rejection_signals_series):
             if s != 'NaN':

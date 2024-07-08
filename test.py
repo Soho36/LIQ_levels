@@ -1,70 +1,94 @@
-import pandas as pd
+opened_long_trade_flag = False
+opened_short_trade_flag = False
+signal_series = rejection_signals_series_outside
 
-file_path = 'Bars/MESU24_M1_w.csv'
+for signal_index, (signal_value, price_level) in enumerate(signal_series):
+    # LONG TRADES LOGIC
+    if signal_value == 100 and longs_allowed and not opened_long_trade_flag:
+        opened_long_trade_flag = True
+        trades_counter += 1
+        trade_direction.append('Long')
+        signal_candle_date = (filtered_df_original.iloc[signal_index]['Date']).strftime('%Y-%m-%d')
+        signal_candle_time = filtered_df_original.iloc[signal_index]['Time']
+        signal_candle_low = round(filtered_df_original.iloc[signal_index]['Low'], 3)
 
-start_date = '2024-06-17'       # Choose the start date to begin from
-end_date = '2024-06-19'         # Choose the end date
+        if use_level_price_as_entry:
+            entry_price = price_level
+        elif use_candle_close_as_entry:
+            entry_price = round(filtered_df_original.iloc[signal_index]['Close'], 3)
+        else:
+            entry_price = None
+            print("Choose entry type".upper())
 
+        stop_loss_price = None
+        take_profit_price = None
 
-def getting_dataframe_from_file(path):
-    columns_to_parse = ['Date', 'Time', 'Open', 'High', 'Low', 'Close', 'Volume']
-    csv_df = pd.read_csv(
-        path,
-        parse_dates=[0],
-        dayfirst=False,
-        usecols=columns_to_parse
-    )
+        if stop_loss_as_candle_min_max:
+            stop_loss_price = (signal_candle_low - stop_loss_offset)
+            take_profit_price = (((entry_price - stop_loss_price) * risk_reward_simulation) + entry_price) + stop_loss_offset
+        elif stop_loss_price_as_dollar_amount:
+            stop_loss_price = entry_price - rr_dollar_amount
+            take_profit_price = entry_price + (rr_dollar_amount * risk_reward_ratio)
+        elif stop_loss_as_plus_candle:
+            stop_loss_price = (signal_candle_low - ((entry_price - signal_candle_low) * sl_offset_multiplier))
+            take_profit_price = (((entry_price - stop_loss_price) * risk_reward_simulation) + entry_price)
+        else:
+            print('Stop loss condition is not properly defined')
 
-    print()
-    return csv_df
+        print('------------------------------------------------------------------------------------------')
+        print(f'▲ ▲ ▲ OPEN LONG TRADE: ▲ ▲ ▲ {signal_candle_date} {signal_candle_time}')
+        print(f'Entry price: {entry_price}')
+        print(f'Take: {round(take_profit_price, 3)} ({risk_reward_simulation}RR)')
+        print(f'Stop: {stop_loss_price}')
+        print()
 
+        for j in range(signal_index, len(filtered_df_original)):
+            current_candle_date = (filtered_df_original.iloc[j]['Date']).strftime('%Y-%m-%d')
+            current_candle_time = (filtered_df_original.iloc[j]['Time'])
+            current_candle_open = filtered_df_original.iloc[j]['Open']
+            current_candle_high = filtered_df_original.iloc[j]['High']
+            current_candle_low = filtered_df_original.iloc[j]['Low']
+            current_candle_close = filtered_df_original.iloc[j]['Close']
 
-dataframe_from_csv = getting_dataframe_from_file(file_path)
-print(dataframe_from_csv)
+            print('Next candle: ', current_candle_date, current_candle_time, '|',
+                  'O', current_candle_open, 'H', current_candle_high,
+                  'L', current_candle_low, 'C', current_candle_close)
 
-
-def date_range_func(df_csv, start, end):
-
-    date_range = pd.date_range(
-        start=start,
-        end=end,
-        freq='D'
-    )
-
-    df = df_csv
-
-    date_column = df['Date']        # Select the 'Date' column from the DataFrame
-    dates_in_range = date_column.isin(date_range)   # checks which dates from date_column fall within the generated
-    # date range, resulting in a boolean mask
-    df_filtered_by_date = df[dates_in_range]
-
-    if df_filtered_by_date.empty:
-        print('NB! Dataframe is empty, check the date range!')
-        exit()  # If dataframe is empty, stop the script
-
-    else:
-        return df_filtered_by_date
-
-
-filtered_by_date_dataframe = date_range_func(dataframe_from_csv, start_date, end_date)
-print(filtered_by_date_dataframe)
-
-filtered_by_date_dataframe_datetime = (
-    filtered_by_date_dataframe.assign(
-        Datetime=(filtered_by_date_dataframe['Date'] + pd.to_timedelta(filtered_by_date_dataframe['Time'])))
-)
-print(filtered_by_date_dataframe_datetime)
-print()
-
-filtered_by_date_dataframe_datetime.set_index('Date', inplace=True)
-print(filtered_by_date_dataframe_datetime)
-
-
-df_h1 = filtered_by_date_dataframe_datetime.resample('H').agg({
-    'Open': 'first',
-    'High': 'max',
-    'Low': 'min',
-    'Close': 'last'
-})
-
-print(df_h1)
+            if current_candle_open > stop_loss_price and current_candle_low > stop_loss_price:
+                if current_candle_low <= stop_loss_price and current_candle_high >= take_profit_price:
+                    trade_result_both.append(1)
+                elif current_candle_low <= stop_loss_price:
+                    trade_result.append((stop_loss_price - spread) - (entry_price + spread))
+                    trade_result_longs.append((stop_loss_price - spread) - (entry_price + spread))
+                    profit_loss_long_short.append('LongLoss')
+                    print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date} {current_candle_time}')
+                    print()
+                    print(f'Trade Close Price: {round(stop_loss_price, 3)}')
+                    opened_long_trade_flag = False
+                    print(f'P/L: ${round((stop_loss_price - spread) - (entry_price + spread), 3)}')
+                    print('------------------------------------------------------------------------------------------')
+                    break
+                elif current_candle_high >= take_profit_price:
+                    trade_result.append(take_profit_price - (entry_price + spread))
+                    trade_result_longs.append(take_profit_price - (entry_price + spread))
+                    profit_loss_long_short.append('LongProfit')
+                    print(f'○ ○ ○ Take profit hit ○ ○ ○ at {current_candle_date} {current_candle_time}')
+                    print()
+                    print(f'Trade Close Price: {round(take_profit_price, 3)}')
+                    opened_long_trade_flag = False
+                    print(f'P/L: ${round(take_profit_price - (entry_price + spread), 3)}')
+                    print('------------------------------------------------------------------------------------------')
+                    break
+                else:
+                    opened_long_trade_flag = True
+            else:
+                trade_result.append((stop_loss_price - spread) - (entry_price + spread))
+                trade_result_longs.append((stop_loss_price - spread) - (entry_price + spread))
+                profit_loss_long_short.append('LongLoss')
+                print(f'□ □ □ Stop Loss hit □ □ □ at {current_candle_date} {current_candle_time}')
+                print()
+                print(f'Trade Close Price: {round(stop_loss_price, 3)}')
+                opened_long_trade_flag = False
+                print(f'P/L: ${round((stop_loss_price - spread) - (entry_price + spread), 3)}')
+                print('------------------------------------------------------------------------------------------')
+                break
