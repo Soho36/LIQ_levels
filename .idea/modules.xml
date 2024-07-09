@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/../GU_GT_recognition/.idea/GU_GT_recognition.iml" filepath="$PROJECT_DIR$/../GU_GT_recognition/.idea/GU_GT_recognition.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/LIQ_levels.iml" filepath="$PROJECT_DIR$/.idea/LIQ_levels.iml" />
     </modules>
   </component>
 </project>
