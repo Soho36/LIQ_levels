@@ -5,13 +5,13 @@ import numpy as np
 import statistics
 import os
 
-file_path = 'Bars/MESU24_M1_w.csv'
+# file_path = 'Bars/MESU24_M1_w.csv'
 # file_path = 'Bars/MESU24_M2_w.csv'
 # file_path = 'Bars/MESU24_M3_w.csv'
 # file_path = 'Bars/MESU24_M5_w.csv'
 # file_path = 'Bars/MESU24_M15_w.csv'
 # file_path = 'Bars/MESU24_M30_w.csv'
-# file_path = 'Bars/MESU24_H1_w.csv'
+file_path = 'Bars/MESU24_H1_w.csv'
 # file_path = 'Bars/MESU24_H2_w.csv'
 # file_path = 'Bars/MESU24_H3_w.csv'
 # file_path = 'Bars/MESU24_H4_w.csv'
@@ -20,8 +20,8 @@ file_path = 'Bars/MESU24_M1_w.csv'
 
 # **************************************** SETTINGS **************************************
 
-start_date = '2024-06-21'       # Choose the start date to begin from
-end_date = '2024-06-21'         # Choose the end date
+start_date = '2024-06-26'       # Choose the start date to begin from
+end_date = '2024-06-26'         # Choose the end date
 
 # SIMULATION
 start_simulation = True
@@ -266,10 +266,12 @@ filtered_by_date_dataframe.reset_index(inplace=True)
 print('SR_levels_out: \n', sr_levels_out)
 
 
-def add_levels_columns_to_dataframe(df):
+def add_columns_and_levels_to_dataframe(df):
     """
     Count how many columns are needed to add levels values to dataframe.
     Return dictionary like {1: 1, 2: 1, 3: 1, 4: 1}
+    Insert new columns to Dataframe
+    Update corresponding row with price level
     """
     n = 1
     column_counters = {}
@@ -282,7 +284,7 @@ def add_levels_columns_to_dataframe(df):
     for idx, price in sr_levels_out:
         # Determine which column to assign the price level to
         column_number = min(column_counters, key=column_counters.get)
-        # Update the DataFrame with the price level
+        # Update that column of dataframe with the price level
         df.loc[idx, column_number] = price
         # Increment the counter for the assigned column
         column_counters[column_number] += 1
@@ -290,11 +292,12 @@ def add_levels_columns_to_dataframe(df):
     return column_counters
 
 
-column_counters_outside = add_levels_columns_to_dataframe(filtered_by_date_dataframe)
+column_counters_outside = add_columns_and_levels_to_dataframe(filtered_by_date_dataframe)
 print('column_counters_outside: ', column_counters_outside)
 
 
 def fill_column_with_first_non_null_value(df, column_idx):
+    print('fill_column_with_first_non_null_value: \n', df.iloc[0:50])
     """
     Fill the columns down till the end with level price after first not null value discovered
     Example:
@@ -332,7 +335,7 @@ for column_index in range(1, len(column_counters_outside) + 1):
     fill_column_with_first_non_null_value(filtered_by_date_dataframe, column_index)
 
 filtered_by_date_dataframe.set_index('DateTime', inplace=True)  # Contains levels columns
-print('Dataframe with level columns: \n', filtered_by_date_dataframe)
+print('Dataframe with level columns: \n', filtered_by_date_dataframe.iloc[0:50])
 
 # *******************************************************************************************************************
 #  ----------------------------------------------------------------------------------------------
@@ -349,6 +352,7 @@ if find_levels and use_level_rejection:
         rejection_signals_for_chart = []
 
         df.reset_index(inplace=True)
+        print('DATAFRAME INSIDE level_rejection_signals(df): \n', df.iloc[0:50])
 
         for index, row in df.iterrows():
             previous_close = df.iloc[index - 1]['Close']
