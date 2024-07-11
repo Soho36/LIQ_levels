@@ -5,13 +5,13 @@ import numpy as np
 import statistics
 import os
 
-# file_path = 'Bars/MESU24_M1_w.csv'
+file_path = 'Bars/MESU24_M1_w.csv'
 # file_path = 'Bars/MESU24_M2_w.csv'
 # file_path = 'Bars/MESU24_M3_w.csv'
 # file_path = 'Bars/MESU24_M5_w.csv'
 # file_path = 'Bars/MESU24_M15_w.csv'
 # file_path = 'Bars/MESU24_M30_w.csv'
-file_path = 'Bars/MESU24_H1_w.csv'
+# file_path = 'Bars/MESU24_H1_w.csv'
 # file_path = 'Bars/MESU24_H2_w.csv'
 # file_path = 'Bars/MESU24_H3_w.csv'
 # file_path = 'Bars/MESU24_H4_w.csv'
@@ -20,8 +20,8 @@ file_path = 'Bars/MESU24_H1_w.csv'
 
 # **************************************** SETTINGS **************************************
 
-start_date = '2024-06-26'       # Choose the start date to begin from
-end_date = '2024-06-26'         # Choose the end date
+start_date = '2024-06-24'       # Choose the start date to begin from
+end_date = '2024-06-24'         # Choose the end date
 
 # SIMULATION
 start_simulation = True
@@ -168,6 +168,7 @@ if find_levels:
         support_levels = []
         resistance_levels = []
         sr_levels = []
+        sr_levels_with_datetime = []
 
         # Support levels
         for i in range(2, len(agg_filtered_df) - 2):
@@ -190,6 +191,7 @@ if find_levels:
                     support_levels.append(price_level_1)
                     level_discovery_signal.append(0)
                     sr_levels.append((i, price_level_1))  # SR levels
+                    sr_levels_with_datetime.append((datetime_1, price_level_1))
 
                 else:
                     level_discovery_signal.append(None)
@@ -259,14 +261,19 @@ if find_levels:
 else:
     sr_levels_out = []                          # Initialize sr_levels_out with an empty list to avoid warning
     level_discovery_signals_series_out = []     # Initialize sr_levels_out with an empty list to avoid warning
+    levels_startpoints_to_chart = []
 
 
 # ********************************************************************************************************************
 filtered_by_date_dataframe.reset_index(inplace=True)
 print('SR_levels_out: \n', sr_levels_out)
+print('levels_startpoints: \n', levels_startpoints_to_chart)
 
 
 def add_columns_and_levels_to_dataframe(df):
+    print('add_columns_and_levels_: \n', df)
+    df.set_index('DateTime', inplace=True)
+
     """
     Count how many columns are needed to add levels values to dataframe.
     Return dictionary like {1: 1, 2: 1, 3: 1, 4: 1}
@@ -275,17 +282,17 @@ def add_columns_and_levels_to_dataframe(df):
     """
     n = 1
     column_counters = {}
-    while n < (len(sr_levels_out) + 1):
+    while n < (len(levels_startpoints_to_chart) + 1):
         column_counters[n] = 0
         n += 1
     # print(column_counters)
 
     # Loop through the price levels
-    for idx, price in sr_levels_out:
+    for datetime, price in levels_startpoints_to_chart:
         # Determine which column to assign the price level to
         column_number = min(column_counters, key=column_counters.get)
         # Update that column of dataframe with the price level
-        df.loc[idx, column_number] = price
+        df.loc[datetime, column_number] = price
         # Increment the counter for the assigned column
         column_counters[column_number] += 1
 
@@ -294,6 +301,8 @@ def add_columns_and_levels_to_dataframe(df):
 
 column_counters_outside = add_columns_and_levels_to_dataframe(filtered_by_date_dataframe)
 print('column_counters_outside: ', column_counters_outside)
+
+filtered_by_date_dataframe.reset_index(inplace=True)
 
 
 def fill_column_with_first_non_null_value(df, column_idx):
