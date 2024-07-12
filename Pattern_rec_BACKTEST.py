@@ -20,8 +20,8 @@ file_path = 'Bars/MESU24_M1_w.csv'
 
 # **************************************** SETTINGS **************************************
 
-start_date = '2024-06-24'       # Choose the start date to begin from
-end_date = '2024-06-24'         # Choose the end date
+start_date = '2024-07-01'       # Choose the start date to begin from
+end_date = '2024-07-02'         # Choose the end date
 
 # SIMULATION
 start_simulation = True
@@ -44,12 +44,12 @@ find_levels = True
 # RISK MANAGEMENT
 
 spread = 0
-risk_reward_ratio = 2   # Chose risk/reward ratio (aiming to win compared to lose)
+risk_reward_ratio = 3   # Chose risk/reward ratio (aiming to win compared to lose)
 stop_loss_as_candle_min_max = False  # Must be True if next condition is false
 stop_loss_offset = 1                 # Is added to SL for Shorts and subtracted for Longs (can be equal to spread)
 
 stop_loss_price_as_dollar_amount = True     # STOP as distance from entry price (previous must be false)
-rr_dollar_amount = 5                       # Value for stop as distance
+rr_dollar_amount = 2                       # Value for stop as distance
 
 stop_loss_as_plus_candle = True
 stop_loss_offset_multiplier = 0    # 1 places stop one candle away from H/L (only when stop_loss_as_plus_candle = True
